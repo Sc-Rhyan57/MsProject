@@ -1,11 +1,8 @@
 --// Welcome \\--
 local Players = game:GetService("Players")
-Players.PlayerAdded:Connect(function(player)
-    player.Chatted:Connect(function(message)
-        local ChatService = game:GetService("Chat")
-        ChatService:Chat(player.Character.Head, "Rhyan57 is the best ;D")
-    end)
-end)
+local player = Players.LocalPlayer
+local message = "👋 Rhyan57 is the best."
+game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
 
 local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
