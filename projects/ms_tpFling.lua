@@ -1,9 +1,3 @@
---// Welcome \\--
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local message = "👋 Rhyan57 is the best."
-game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
-
 local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
     Title = "Msproject Iniciado!";
@@ -229,3 +223,8 @@ MainTab:AddToggle({
         end)
     end
 })
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local message = "👋 Rhyan57 is the best."
+game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
