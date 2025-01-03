@@ -1,3 +1,39 @@
+--// Welcome \\--
+local Players = game:GetService("Players")
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        local ChatService = game:GetService("Chat")
+        ChatService:Chat(player.Character.Head, "Rhyan57 is the best ;D")
+    end)
+end)
+
+local StarterGui = game:GetService("StarterGui")
+StarterGui:SetCore("SendNotification", {
+    Title = "Msproject Iniciado!";
+    Text = "Divirta-se matando!";
+    Duration = 5;
+})
+
+local StarterGui = game:GetService("StarterGui")
+StarterGui:SetCore("SendNotification", {
+    Title = "DreamAlt is Gay";
+    Text = "KKKKKKKKKKKKKKKK";
+    Duration = 5;
+})
+
+local StarterGui = game:GetService("StarterGui")
+StarterGui:SetCore("SendNotification", {
+    Title = "hm";
+    Text = "Tá bom, chega de eastereggs.";
+    Duration = 5;
+})
+
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://4590657391"
+sound.Volume = 1
+sound.Parent = game.Workspace
+sound:Play()
+
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/Sc-Rhyan57/Msdoors/refs/heads/main/Library/OrionLibrary_msdoors.lua')))()
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -172,7 +208,7 @@ local function processTarget(target)
 end
 
 MainTab:AddToggle({
-    Name = "Tp Dling",
+    Name = "Tp Fling",
     Default = false,
     Callback = function(Value)
         isEnabled = Value
