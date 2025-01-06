@@ -5,12 +5,6 @@ StarterGui:SetCore("SendNotification", {
     Duration = 5;
 })
 
-local StarterGui = game:GetService("StarterGui")
-StarterGui:SetCore("SendNotification", {
-    Title = "DreamAlt is Gay";
-    Text = "KKKKKKKKKKKKKKKK";
-    Duration = 15;
-})
 
 local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
