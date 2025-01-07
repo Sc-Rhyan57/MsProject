@@ -336,8 +336,22 @@ MainTab:AddToggle({
         end)
     end
 })
+-- Chat message (Updated for new chat system)
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local message = "👋 Rhyan57 is the best."
-game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+local function SendChatMessage(message)
+
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+
+        local textChannel = TextChatService.TextChannels.RBXGeneral
+
+        textChannel:SendAsync(message)
+
+    else
+
+        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+
+    end
+
+end
+
+SendChatMessage("👋 Rhyan57 is the best")
