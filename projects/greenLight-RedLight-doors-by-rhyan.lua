@@ -7,8 +7,8 @@ _G.ReplicatedStorage = game:GetService("ReplicatedStorage")
 _G.Players = game:GetService("Players")
 _G.TextChatService = game:GetService("TextChatService")
 _G.luzAtual = "🟢"
-_G.tempoTrocaLuzVerde = math.random(25, 35) -- Aumentado o tempo para "cor segura"
-_G.tempoTrocaLuzVermelha = math.random(50, 70) -- Aumentado o tempo para luz vermelha
+_G.tempoTrocaLuzVerde = math.random(50, 70) -- Aumentado o tempo para "cor segura"
+_G.tempoTrocaLuzVermelha = math.random(25, 35) -- Aumentado o tempo para luz vermelha
 _G.salaAtual = 0
 _G.jogadoresMortos = {}
 _G.loopsAtivos = true
@@ -77,6 +77,7 @@ function reviverTodos()
     _G.ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(deleteArgs))
 
     _G.ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+ task.wait(2)
     Notificar("Reviver Jogadores", "Todos os jogadores foram revividos e entidades removidas!", 10, Color3.new(0, 1, 0))
     SendChatMessage("⚠️ Todos os jogadores foram revividos e as entidades foram removidas!")
 end
@@ -199,15 +200,15 @@ spawn(function()
         for i = tempoRestante, 1, -1 do
             if i == 10 then
                 if _G.luzAtual == "🟢" then
-                    SendChatMessage("⚠️ Faltam 10 segundos para permissão para se mover!")
-                else
                     SendChatMessage("⚠️ Faltam 10 segundos para cor de perigo!")
+                else
+                    SendChatMessage("⚠️ Faltam 10 segundos para cor segura!")
                 end
             elseif i == 3 then
                 if _G.luzAtual == "🟢" then
-                    SendChatMessage("⚠️ Permissão para se mover em 3 segundos!")
+                    SendChatMessage("⚠️ Faltam 3 segundos para cor de perigo!")
                 else
-                    SendChatMessage("⚠️ Alerta de perigo em 3 segundos!")
+                    SendChatMessage("⚠️ Faltam 3 segundos para cor segura!")
                 end
             end
             wait(1)
