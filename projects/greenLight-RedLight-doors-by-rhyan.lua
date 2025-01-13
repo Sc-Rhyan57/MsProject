@@ -277,13 +277,11 @@ TextChatService.MessageReceived:Connect(function(message)
         ["!godmode"] = function()
             local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Max Health"] = 100, ["Star Shield"] = 0, ["Health"] = 100, ["God Mode"] = true}}
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-            SendMessage("🛡️ " .. player.Name .. " usou o comando de godmode!")
         end,
         
         ["!vida"] = function()
             local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Max Health"] = 100, ["Star Shield"] = 100, ["Health"] = 100, ["Speed Boost"] = 15, ["God Mode"] = false}}
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-SendMessage("♥️ " .. player.Name .. " usou o comando de vida!")
         end,
         
         ["!revive"] = function()
@@ -295,13 +293,11 @@ SendMessage("♥️ " .. player.Name .. " usou o comando de vida!")
         ["!speed"] = function()
             local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Max Health"] = 100, ["Health"] = 100, ["Speed Boost"] = 25}}
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-            SendMessage("⚡ " .. player.Name .. " usou o comando de velocidade!")
         end,
         
         ["!resetspeed"] = function()
             local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Speed Boost"] = 0}}
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-            SendMessage("🚶 " .. player.Name .. " resetou sua velocidade!")
         end,
         
         ["!item"] = function()
@@ -311,9 +307,8 @@ SendMessage("♥️ " .. player.Name .. " usou o comando de vida!")
         end,
         
         ["!shield"] = function()
-            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Star Shield"] = 50}}
+            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Star Shield"] = 50}, ["Health"] = 100}}
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-            SendMessage("🛡️ " .. player.Name .. " ativou um escudo de proteção!")
         end,
         
         ["!comandos"] = function()
