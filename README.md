@@ -16,5 +16,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```
 - **Green Light Red Light doors mod**
 ```lua
-loadstring(game:HttpGet(""))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/greenLight-RedLight-doors-by-rhyan.lua"))()
 ```
