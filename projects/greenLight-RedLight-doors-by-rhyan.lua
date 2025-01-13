@@ -149,7 +149,7 @@ local function alterarLuz(cor)
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
     
     if cor == "🟢" then
-        SendMessage("🟢 Seguro - MOVA-SE")
+        SendMessage("🟢 - MOVAM-SE")
         Notificar("Luz Verde", "Movimento permitido!", 5)
     else
         SendMessage("🔴 Luz Vermelha - PARE IMEDIATAMENTE!")
