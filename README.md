@@ -14,3 +14,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/super-ring-parts-with-target-player.lua"))()
 ```
+- **Green Light Red Light doors mod**
+```lua
+loadstring(game:HttpGet(""))()
+```
