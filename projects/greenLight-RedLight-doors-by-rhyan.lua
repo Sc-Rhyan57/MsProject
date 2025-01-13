@@ -307,7 +307,7 @@ TextChatService.MessageReceived:Connect(function(message)
         end,
         
         ["!shield"] = function()
-            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Star Shield"] = 50}, ["Health"] = 100}}
+            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Star Shield"] = 50, ["Health"] = 100}}
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
         end,
         
