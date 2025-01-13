@@ -149,7 +149,7 @@ local function alterarLuz(cor)
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
     
     if cor == "🟢" then
-        SendMessage("🟩 PODE ANDAR")
+        SendMessage("Luz verde - Ande")
         Notificar("Luz Verde", "Movimento permitido!", 5)
     else
         SendMessage("🔴 Luz Vermelha - PARE IMEDIATAMENTE!")
@@ -251,8 +251,9 @@ local function monitorarSala()
         -- Check for Door 2 activation
         if currentRoom >= 2 and not _G.systemActive then
             _G.systemActive = true
-            SendMessage("✅ Sistema ativado - Passando da porta 2!")
-            Notificar("Sistema Ativo", "Sistema de Luz Verde/Vermelha iniciado!", 5)
+            SendMessage("✅ Mod ativado - Passando da porta 2!")
+            SendMessage("📍 Quando estiver vermelho pare quando estiver verde ande.")
+            Notificar("Sistema Ativo", "Quando estiver vermelho PARE quando estiver VERDE ande!", 5)
         end
 
         if currentRoom == 101 then
