@@ -149,7 +149,7 @@ local function alterarLuz(cor)
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
     
     if cor == "🟢" then
-        SendMessage("🟢 - MOVAM-SE")
+        SendMessage("🟩 PODE ANDAR")
         Notificar("Luz Verde", "Movimento permitido!", 5)
     else
         SendMessage("🔴 Luz Vermelha - PARE IMEDIATAMENTE!")
@@ -201,8 +201,8 @@ spawn(function()
                     
                     if i == 10 then
                         SendMessage("⚠️ 10 segundos para mudança de luz!")
-                    elseif i == 3 then
-                        SendMessage("⚠️ 3 segundos para mudança de luz!")
+                    elseif i == 2 then
+                        SendMessage("⚠️ 2 segundos para mudança de luz!")
                     end
                     wait(1)
                 end
@@ -345,4 +345,4 @@ end)
 SendMessage("📍 Doors Six - By rhyan57")
 SendMessage("CMDS: !vida, !revive, !godmode")
 SendMessage("⚠️ Mod carregado! Será ativo na porta 2.")
-Notificar("Mod Carregado", "O sistema será ativado na porta 2.", 10, Color3.new(1, 1, 0))
+Notificar("Mod Carregado", "O mod será ativado na porta 2.", 10, Color3.new(1, 1, 0))
