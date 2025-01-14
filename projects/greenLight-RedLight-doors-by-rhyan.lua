@@ -311,11 +311,12 @@ TextChatService.MessageReceived:Connect(function(message)
            
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
         end,
-        
+
         ["!comandos"] = function()
-            SendMessage("📍 Comandos disponíveis: !vida, !revive, !godmode, !speed, !resetspeed, !item, !shield, !kill [player], !pxitem [item], !comandos")
+            SendMessage("📍 Comandos disponíveis: !vida, !revive, !godmode, !speed, !resetspeed, !item, !shield, !pxitem [item], !comandos")
+            SendMessage("📍 Comandos do Host: !togglemod, !spawn [entidade], !randomentity, !kill [player]")
         end,
-        
+
         ["!kill"] = function()
             if player.Name ~= _G.hostPlayer then
                 SendMessage("❌ Apenas o host pode usar este comando!")
@@ -327,22 +328,33 @@ TextChatService.MessageReceived:Connect(function(message)
                 return
             end
 
-            local targetName = args[2]
-            if not targetName then
-                SendMessage("❌ Use: !kill [nome do jogador]")
+            if not args[2] then
+                SendMessage("❌ Use: !kill [nome/displayname/userid do jogador]")
                 return
             end
 
-            local targetPlayer = Players:FindFirstChild(targetName)
+            local targetIdentifier = args[2]
+            local targetPlayer
+
+            -- Procura por Username, DisplayName ou UserId
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr.Name:lower() == targetIdentifier:lower() or 
+                   (plr.DisplayName and plr.DisplayName:lower() == targetIdentifier:lower()) or 
+                   tostring(plr.UserId) == targetIdentifier then
+                    targetPlayer = plr
+                    break
+                end
+            end
+
             if not targetPlayer then
-                SendMessage("❌ Jogador não encontrado!")
+                SendMessage("❌ Jogador não encontrado! Tente usar nome, display name ou ID")
                 return
             end
 
             _G.voteInProgress = true
             _G.currentVotes = {yes = 0, no = 0}
             
-            SendMessage("🎯 Votação iniciada para eliminar " .. targetName)
+            SendMessage("🎯 Votação iniciada para eliminar " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ")")
             SendMessage("Digite Y para eliminar ou N para não eliminar")
             SendMessage("⏰ Votação termina em 19 segundos")
 
@@ -362,11 +374,11 @@ TextChatService.MessageReceived:Connect(function(message)
             voteConnection:Disconnect()
 
             if _G.currentVotes.yes > _G.currentVotes.no then
-                local args = {[1] = "KillPlayer", [2] = {["Players"] = {[targetName] = targetName}}}
+                local args = {[1] = "KillPlayer", [2] = {["Players"] = {[targetPlayer.Name] = targetPlayer.Name}}}
                 ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-                SendMessage("☠️ Votação concluída: " .. targetName .. " foi eliminado!")
+                SendMessage("☠️ Votação concluída: " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ") foi eliminado!")
             else
-                SendMessage("✨ Votação concluída: " .. targetName .. " foi poupado!")
+                SendMessage("✨ Votação concluída: " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ") foi poupado!")
             end
         end,
         
@@ -396,6 +408,70 @@ TextChatService.MessageReceived:Connect(function(message)
             ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
             SendMessage("🎁 " .. player.Name .. " recebeu o item: " .. itemName)
         end,
+
+        ["!togglemod"] = function()
+            if player.Name ~= _G.hostPlayer then
+                SendMessage("❌ Apenas o host pode usar este comando!")
+                return
+            end
+
+            _G.systemActive = not _G.systemActive
+            _G.loopsAtivos = _G.systemActive
+
+            if _G.systemActive then
+                SendMessage("✅ Sistema ativado pelo host!")
+                Notificar("Sistema Ativado", "O mod foi ativado pelo host", 5, Color3.new(0, 1, 0))
+            else
+                SendMessage("❌ Sistema desativado pelo host!")
+                Notificar("Sistema Desativado", "O mod foi desativado pelo host", 5, Color3.new(1, 0, 0))
+            end
+        end,
+
+        ["!spawn"] = function()
+            if player.Name ~= _G.hostPlayer then
+                SendMessage("❌ Apenas o host pode usar este comando!")
+                return
+            end
+
+            if not args[2] then
+                SendMessage("❌ Use: !spawn [nome da entidade]")
+                SendMessage("📍 Entidades disponíveis: " .. table.concat(_G.entidadesAleatorias, ", "))
+                return
+            end
+
+            local entityName = args[2]:lower()
+            local validEntity = false
+            local actualEntityName
+
+            for _, entity in ipairs(_G.entidadesAleatorias) do
+                if entity:lower() == entityName then
+                    validEntity = true
+                    actualEntityName = entity
+                    break
+                end
+            end
+
+            if not validEntity then
+                SendMessage("❌ Entidade não encontrada! Use uma entidade válida da lista.")
+                return
+            end
+
+            local spawnArgs = {[1] = actualEntityName, [2] = {}}
+            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(spawnArgs))
+            SendMessage("👻 " .. actualEntityName .. " foi invocado na sala!")
+        end,
+
+        ["!randomentity"] = function()
+            if player.Name ~= _G.hostPlayer then
+                SendMessage("❌ Apenas o host pode usar este comando!")
+                return
+            end
+
+            local randomEntity = _G.entidadesAleatorias[math.random(#_G.entidadesAleatorias)]
+            local spawnArgs = {[1] = randomEntity, [2] = {}}
+            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(spawnArgs))
+            SendMessage("👻 " .. randomEntity .. " foi invocado aleatoriamente na sala!")
+        end,
     }
 
     if commands[command] then
@@ -406,4 +482,4 @@ end)
 SendMessage("📍 Doors Six - By rhyan57")
 SendMessage("📍 Use !comandos para ver todos os comandos disponíveis")
 SendMessage("⚠️ Mod carregado! Será ativo na porta 2.")
-Notificar("Mod Carregado", "O mod será ativado na porta 2.", 10, Color3.new(1, 1, 0))            
+Notificar("Mod Carregado", "O mod será ativado na porta 2.", 10, Color3.new(1, 1, 0))
