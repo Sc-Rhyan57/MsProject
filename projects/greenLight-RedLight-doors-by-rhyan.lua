@@ -1,67 +1,115 @@
+-- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local RunService = game:GetService("RunService")
 
+-- Load external dependencies
 local MsdoorsNotify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/Notification-doorsAPI/refs/heads/main/Msdoors/MsdoorsApi.lua"))()
 local OrionLib = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/Sc-Rhyan57/Msdoors/refs/heads/main/Library/OrionLibrary_msdoors.lua'))()
 
+-- Prevent multiple instances
 if _G.DoorsSix then
     MsdoorsNotify("Sistema", "O mod já está carregado!", "", "rbxassetid://6023426923", Color3.new(1, 0, 0), 5)
     return
 end
 _G.DoorsSixLoaded = true
 
-_G.luzAtual = "🟢"
-_G.tempoTrocaLuzVerde = math.random(50, 70)
-_G.tempoTrocaLuzVermelha = math.random(25, 35)
-_G.salaAtual = 0
-_G.jogadoresMortos = {}
-_G.loopsAtivos = true
-_G.itensLoopAtivo = true
-_G.pausarPorSala = false
-_G.notificacaoSalaEspecial = false
-_G.systemActive = false
-_G.gameWon = false
-_G.hostPlayer = game.Players.LocalPlayer.Name
-_G.voteInProgress = false
-_G.currentVotes = {yes = 0, no = 0}
+-- Global Configuration
+_G.Config = {
+    luzAtual = "🟢",
+    tempoTrocaLuzVerde = math.random(50, 70),
+    tempoTrocaLuzVermelha = math.random(25, 35),
+    salaAtual = 0,
+    jogadoresMortos = {},
+    loopsAtivos = true,
+    itensLoopAtivo = true,
+    pausarPorSala = false,
+    notificacaoSalaEspecial = false,
+    systemActive = false,
+    gameWon = false,
+    hostPlayer = game.Players.LocalPlayer.Name,
+    voteInProgress = false,
+    currentVotes = {yes = 0, no = 0},
+    debugMode = false,
+    autoReviveEnabled = true,
+    itemDropInterval = {min = 60, max = 120},
+    specialRooms = {"SeekIntro", "Seek", "Halt", "A-60", "A-90"}
+}
 
-_G.itensAleatorios = {"TipJar", "Crucifix", "RiftSmoothie", "Flashlight", "StarVial", "Vitamins", "Bulklight", "Smoothie", "Lighter", "Shears", "BatteryPack", "Candle", "Shakelight", "BandagePack", "SkeletonKey", "AlarmClock", "StarBottle", "Glowsticks", "HolyGrenade", "RiftCandle", "Straplight", "LaserPointer", "GweenSoda", "Lockpick", "Cheese", "Bread", "Sword", "Shield", "GoldKey", "BlueKey", "GreenKey", "RedKey"}
+-- Enhanced item system with categories and rarities
+_G.Items = {
+    common = {
+        "Flashlight", "Vitamins", "Lighter", "Shakelight", "Candle", "Bread"
+    },
+    uncommon = {
+        "Crucifix", "TipJar", "StarVial", "Bulklight", "Smoothie", "Shears"
+    },
+    rare = {
+        "HolyGrenade", "SkeletonKey", "GoldKey", "Shield", "Sword"
+    },
+    legendary = {
+        "RiftSmoothie", "RiftCandle", "StarBottle"
+    }
+}
 
-_G.entidadesAleatorias = {"A90Player", "Jeff The Killer", "A-120", "A-60", "Lookman", "Blitz", "Gloombats", "Giggle", "Dread", "Jack", "Eyes", "Figure", "Ambush", "Rush", "Halt", "Timothy", "Screech", "Glitch", "Shadow", "Window"}
+-- Combine all items into one table for backwards compatibility
+_G.itensAleatorios = {}
+for _, items in pairs(_G.Items) do
+    for _, item in ipairs(items) do
+        table.insert(_G.itensAleatorios, item)
+    end
+end
 
+-- Enhanced entities system with categories
+_G.Entities = {
+    common = {"Eyes", "Halt", "Timothy", "Screech"},
+    uncommon = {"Rush", "Ambush", "Glitch", "Shadow"},
+    rare = {"Figure", "A-60", "A-90", "Blitz"},
+    legendary = {"A-120", "Jeff The Killer", "Lookman"}
+}
+
+-- Combine all entities into one table for backwards compatibility
+_G.entidadesAleatorias = {}
+for _, entities in pairs(_G.Entities) do
+    for _, entity in ipairs(entities) do
+        table.insert(_G.entidadesAleatorias, entity)
+    end
+end
+
+-- UI Components
 local TimerGui = Instance.new("ScreenGui")
 local TimerFrame = Instance.new("Frame")
 local TimerLabel = Instance.new("TextLabel")
 
-TimerGui.Name = "EventTimer"
-TimerGui.ResetOnSpawn = false
-TimerGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Configure UI
+do
+    TimerGui.Name = "EventTimer"
+    TimerGui.ResetOnSpawn = false
+    TimerGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-TimerFrame.Name = "TimerFrame"
-TimerFrame.Size = UDim2.new(0, 150, 0, 50)
-TimerFrame.Position = UDim2.new(0.85, 0, 0.1, 0)
-TimerFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-TimerFrame.BackgroundTransparency = 0.5
-TimerFrame.Parent = TimerGui
+    TimerFrame.Name = "TimerFrame"
+    TimerFrame.Size = UDim2.new(0, 150, 0, 50)
+    TimerFrame.Position = UDim2.new(0.85, 0, 0.1, 0)
+    TimerFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    TimerFrame.BackgroundTransparency = 0.5
+    TimerFrame.Parent = TimerGui
 
-TimerLabel.Name = "TimerLabel"
-TimerLabel.Size = UDim2.new(1, 0, 1, 0)
-TimerLabel.BackgroundTransparency = 1
-TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TimerLabel.TextSize = 20
-TimerLabel.Font = Enum.Font.SourceSansBold
-TimerLabel.Parent = TimerFrame
+    TimerLabel.Name = "TimerLabel"
+    TimerLabel.Size = UDim2.new(1, 0, 1, 0)
+    TimerLabel.BackgroundTransparency = 1
+    TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TimerLabel.TextSize = 20
+    TimerLabel.Font = Enum.Font.SourceSansBold
+    TimerLabel.Parent = TimerFrame
+end
 
-game.Players.PlayerAdded:Connect(function(player)
-    if not _G.hostPlayer then
-        _G.hostPlayer = player.Name
-        SendMessage("👑 " .. player.Name .. " é o host do servidor!")
-    end
-end)
-
+-- Utility Functions
 local function SendMessage(message)
+    if _G.Config.debugMode then
+        message = "[DEBUG] " .. message
+    end
+    
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         local channel = TextChatService.TextChannels.RBXGeneral
         channel:SendAsync(message)
@@ -74,12 +122,14 @@ local function Notificar(titulo, descricao, tempo, cor)
     MsdoorsNotify(titulo, descricao, "", "rbxassetid://6023426923", cor or Color3.new(0, 1, 0), tempo or 5)
 end
 
+-- Enhanced revival system
 local function reviverTodos()
     local args = {[1] = "RevivePlayer", [2] = {["Players"] = {}}}
     for _, player in ipairs(Players:GetPlayers()) do
         args[2]["Players"][player.Name] = player.Name
     end
     
+    -- Clear entities
     local deleteArgs = {[1] = "DELETE ALL", [2] = {}}
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(deleteArgs))
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
@@ -87,18 +137,8 @@ local function reviverTodos()
     wait(1)
     Notificar("Reviver", "Todos os jogadores foram revividos!", 5)
     SendMessage("✨ Todos os jogadores foram revividos e as entidades foram removidas!")
-    _G.luzAtual = "🟢"
+    _G.Config.luzAtual = "🟢"
     alterarLuz("🟢")
-end
-
-local function darItensAleatorios()
-    for _, player in ipairs(Players:GetPlayers()) do
-        local itemAleatorio = _G.itensAleatorios[math.random(#_G.itensAleatorios)]
-        local args = {[1] = "Give Items", [2] = {["Players"] = {[player.Name] = player.Name}, ["Items"] = {[itemAleatorio] = itemAleatorio}}}
-        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-    end
-    Notificar("Itens", "Você recebeu um item aleatório!", 5)
-    SendMessage("🎁 Itens aleatórios distribuídos!")
 end
 
 local function verificarMortos()
@@ -111,13 +151,33 @@ local function verificarMortos()
         end
     end
     
-    if jogadoresMortos == #todosJogadores then
+    if jogadoresMortos == #todosJogadores and _G.Config.autoReviveEnabled then
         reviverTodos()
     end
 end
 
+-- Enhanced item distribution system
+local function darItensAleatorios(rarity)
+    local itemPool = rarity and _G.Items[rarity] or _G.itensAleatorios
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        local itemAleatorio = itemPool[math.random(#itemPool)]
+        local args = {
+            [1] = "Give Items",
+            [2] = {
+                ["Players"] = {[player.Name] = player.Name},
+                ["Items"] = {[itemAleatorio] = itemAleatorio}
+            }
+        }
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+    end
+    
+    Notificar("Itens", "Você recebeu um item " .. (rarity and rarity or "aleatório") .. "!", 5)
+    SendMessage("🎁 Itens " .. (rarity and rarity or "aleatórios") .. " distribuídos!")
+end
+
 local function alterarLuz(cor)
-    _G.luzAtual = cor
+    _G.Config.luzAtual = cor
     
     local args = {[1] = "LightRoom", [2] = {["Light Color"] = cor == "🟢" and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)}}
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
@@ -130,9 +190,10 @@ local function alterarLuz(cor)
         Notificar("Luz Vermelha", "PARE DE SE MOVER!", 5)
         
         spawn(function()
-            while _G.loopsAtivos and _G.luzAtual == "🔴" do
+            while _G.Config.loopsAtivos and _G.Config.luzAtual == "🔴" do
                 for _, player in ipairs(Players:GetPlayers()) do
-                    if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and player.Character.Humanoid.MoveDirection.Magnitude > 0 then
+                    if player.Character and player.Character:FindFirstChild("Humanoid") and 
+                       player.Character.Humanoid.Health > 0 and player.Character.Humanoid.MoveDirection.Magnitude > 0 then
                         local entidade = _G.entidadesAleatorias[math.random(#_G.entidadesAleatorias)]
                         local morteAleatoria = math.random(1, 2) == 1 and "KillPlayer" or "ExplodePlayer"
                         
@@ -152,72 +213,54 @@ local function alterarLuz(cor)
     end
 end
 
-spawn(function()
-    while wait(1) do
-        if _G.systemActive and _G.loopsAtivos then
-            local tempoAtual = _G.luzAtual == "🟢" and _G.tempoTrocaLuzVerde or _G.tempoTrocaLuzVermelha
-            
-            for i = tempoAtual, 1, -1 do
-                if _G.loopsAtivos then
-                    TimerLabel.Text = string.format("%s Próximo: %ds", _G.luzAtual, i)
-                    
-                    if i == 10 then
-                        SendMessage("⚠️ 10 segundos para mudança de luz!")
-                    elseif i == 2 then
-                        SendMessage("⚠️ 2 segundos para mudança de luz!")
-                    end
-                    wait(1)
-                end
-            end
-            
-            if _G.loopsAtivos then
-                alterarLuz(_G.luzAtual == "🟢" and "🔴" or "🟢")
-            end
-        else
-            TimerLabel.Text = "Sistema Pausado"
-            wait(1)
-        end
-    end
-end)
-
+-- Room monitoring system
 local function monitorarSala()
     local player = Players.LocalPlayer
     local currentRoom = player:GetAttribute("CurrentRoom")
     
     if currentRoom then
-        _G.salaAtual = currentRoom
+        _G.Config.salaAtual = currentRoom
         local room = workspace.CurrentRooms:FindFirstChild(tostring(currentRoom))
         
         if room and room:GetAttribute("RawName") then
             local roomName = room:GetAttribute("RawName")
-            if roomName:find("SeekIntro") or roomName:find("Seek") or roomName:find("Halt") then
-                if not _G.notificacaoSalaEspecial then
-                    _G.pausarPorSala = true
-                    _G.loopsAtivos = false
-                    _G.notificacaoSalaEspecial = true
+            local isSpecialRoom = false
+            
+            for _, specialRoom in ipairs(_G.Config.specialRooms) do
+                if roomName:find(specialRoom) then
+                    isSpecialRoom = true
+                    break
+                end
+            end
+            
+            if isSpecialRoom then
+                if not _G.Config.notificacaoSalaEspecial then
+                    _G.Config.pausarPorSala = true
+                    _G.Config.loopsAtivos = false
+                    _G.Config.notificacaoSalaEspecial = true
                     Notificar("Sala Especial", "Sistema pausado temporariamente", 5, Color3.new(1, 0, 0))
                     SendMessage("⚠️ Sistema pausado - Sala especial detectada!")
                 end
             else
-                if _G.pausarPorSala then
-                    _G.pausarPorSala = false
-                    _G.loopsAtivos = true
-                    _G.notificacaoSalaEspecial = false
+                if _G.Config.pausarPorSala then
+                    _G.Config.pausarPorSala = false
+                    _G.Config.loopsAtivos = true
+                    _G.Config.notificacaoSalaEspecial = false
                     Notificar("Sistema Retomado", "Continuando operação normal", 5)
                     SendMessage("✅ Sistema retomado - Você saiu da sala especial!")
                 end
             end
         end
         
-        if currentRoom >= 2 and not _G.systemActive then
-            _G.systemActive = true
+        if currentRoom >= 2 and not _G.Config.systemActive then
+            _G.Config.systemActive = true
             SendMessage("✅ Mod ativado - Passando da porta 2!")
-            SendMessage("📍 Quando estiver vermelho pare quando estiver verde ande.")
+            SendMessage("📍 Quando estiver vermelho pare quando estiver verde ande.[ Fique de olho ao chat! ]")
             Notificar("Sistema Ativo", "Quando estiver vermelho PARE quando estiver VERDE ande!", 5)
         end
-
-        if currentRoom == 100 and not _G.gameWon then
-            _G.gameWon = true
+        
+        if currentRoom == 100 and not _G.Config.gameWon then
+            _G.Config.gameWon = true
             local allPlayersAlive = true
             for _, player in ipairs(Players:GetPlayers()) do
                 if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health <= 0 then
@@ -246,240 +289,349 @@ local function monitorarSala()
                     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
                 end
                 
-                darItensAleatorios()
+                darItensAleatorios("legendary")
                 SendMessage("🎁 Recompensas de vitória distribuídas!")
             end
         end
     end
 end
 
-spawn(function()
-    while wait(1) do
-        monitorarSala()
-    end
-end)
+-- Enhanced Command System
+local Commands = {
+    ["!godmode"] = function(player)
+        local args = {
+            [1] = "Apply Changes",
+            [2] = {
+                ["Players"] = {[player.Name] = player.Name},
+                ["Max Health"] = 100,
+                ["Star Shield"] = 0,
+                ["Health"] = 100,
+                ["God Mode"] = true
+            }
+        }
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
 
-spawn(function()
-    while wait(math.random(60, 120)) do
-        if _G.systemActive and _G.loopsAtivos and _G.itensLoopAtivo then
-            darItensAleatorios()
+    end,
+    
+    ["!vida"] = function(player)
+        local args = {
+            [1] = "Apply Changes",
+            [2] = {
+                ["Players"] = {[player.Name] = player.Name},
+                ["Max Health"] = 100,
+                ["Star Shield"] = 100,
+                ["Health"] = 100,
+                ["God Mode"] = false
+            }
+        }
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+
+    end,
+
+["!pxitem"] = function(player, args)
+    if not args[2] then
+        SendMessage("❌ Use: !pxitem [nome do item]")
+        return
+    end
+
+    local itemName = args[2]
+    local validItem = false
+    local actualItemName
+
+    -- Procura o item em todas as categorias de raridade
+    for rarity, items in pairs(_G.Items) do
+        for _, item in ipairs(items) do
+            if item:lower() == itemName:lower() then
+                validItem = true
+                actualItemName = item
+                break
+            end
         end
+        if validItem then break end
     end
-end)
 
+    if not validItem then
+        SendMessage("❌ Item não encontrado! Use !items para ver a lista de itens disponíveis.")
+        return
+    end
+
+    local args = {
+        [1] = "Give Items",
+        [2] = {
+            ["Players"] = {[player.Name] = player.Name},
+            ["Items"] = {[actualItemName] = actualItemName}
+        }
+    }
+    ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+    SendMessage("🎁 " .. player.Name .. " recebeu o item: " .. actualItemName)
+   end,
+
+    ["!revive"] = function(player)
+        local args = {[1] = "RevivePlayer", [2] = {["Players"] = {[player.Name] = player.Name}}}
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+        SendMessage("🔄 " .. player.Name .. " usou o comando de reviver!")
+    end,
+    
+    ["!speed"] = function(player)
+        local args = {
+            [1] = "Apply Changes",
+            [2] = {
+                ["Players"] = {[player.Name] = player.Name},
+                ["Max Health"] = 100,
+                ["Health"] = 100,
+                ["Speed Boost"] = 25
+            }
+        }
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+    end,
+    
+    ["!resetspeed"] = function(player)
+        local args = {
+            [1] = "Apply Changes",
+            [2] = {
+                ["Players"] = {[player.Name] = player.Name},
+                ["Speed Boost"] = 0
+            }
+        }
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+    end,
+    
+    ["!item"] = function(player)
+        local itemAleatorio = _G.itensAleatorios[math.random(#_G.itensAleatorios)]
+        local args = {
+            [1] = "Give Items",
+            [2] = {
+                ["Players"] = {[player.Name] = player.Name},
+                ["Items"] = {[itemAleatorio] = itemAleatorio}
+            }
+        }
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+        SendMessage("🎁 " .. player.Name .. " recebeu um item aleatório: " .. itemAleatorio)
+    end,
+    
+    ["!shield"] = function(player)
+        local args = {
+            [1] = "Apply Changes",
+            [2] = {
+                ["Players"] = {[player.Name] = player.Name},
+                ["Star Shield"] = 100,
+                ["Max Health"] = 100
+            }
+        }
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+    end,
+    
+    ["!items"] = function()
+        SendMessage("📦 Lista de Itens por Raridade:")
+        for rarity, items in pairs(_G.Items) do
+            SendMessage("- " .. rarity:upper() .. ": " .. table.concat(items, ", "))
+        end
+    end,
+    
+    ["!entities"] = function()
+        SendMessage("👻 Lista de Entidades por Raridade:")
+        for rarity, entities in pairs(_G.Entities) do
+            SendMessage("- " .. rarity:upper() .. ": " .. table.concat(entities, ", "))
+        end
+    end,
+
+    ["!comandos"] = function()
+        SendMessage("📍 Comandos disponíveis:")
+        SendMessage("- Gerais: !pxitem, !vida, !revive, !godmode, !speed, !resetspeed, !item, !shield")
+        SendMessage("- Informações: !items, !entities, !comandos")
+        SendMessage("- Host: !togglemod, !spawn [entidade], !randomentity, !kill [player], !debug")
+    end,
+
+    ["!kill"] = function(player, args)
+        if player.Name ~= _G.Config.hostPlayer then
+            SendMessage("❌ Apenas o host pode usar este comando!")
+            return
+        end
+
+        if _G.Config.voteInProgress then
+            SendMessage("❌ Uma votação já está em andamento!")
+            return
+        end
+
+        if not args[2] then
+            SendMessage("❌ Use: !kill [nome/displayname/userid do jogador]")
+            return
+        end
+
+        local targetIdentifier = args[2]
+        local targetPlayer
+
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.Name:lower() == targetIdentifier:lower() or 
+               (plr.DisplayName and plr.DisplayName:lower() == targetIdentifier:lower()) or 
+               tostring(plr.UserId) == targetIdentifier then
+                targetPlayer = plr
+                break
+            end
+        end
+
+        if not targetPlayer then
+            SendMessage("❌ Jogador não encontrado! Tente usar nome, display name ou ID")
+            return
+        end
+
+        _G.Config.voteInProgress = true
+        _G.Config.currentVotes = {yes = 0, no = 0}
+        
+        SendMessage("🎯 Votação iniciada para eliminar " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ")")
+        SendMessage("Digite Y para eliminar ou N para não eliminar")
+        SendMessage("⏰ Votação termina em 19 segundos")
+
+        local voteConnection = TextChatService.MessageReceived:Connect(function(voteMsg)
+            if _G.Config.voteInProgress then
+                local vote = voteMsg.Text:lower()
+                if vote == "y" then
+                    _G.Config.currentVotes.yes = _G.Config.currentVotes.yes + 1
+                elseif vote == "n" then
+                    _G.Config.currentVotes.no = _G.Config.currentVotes.no + 1
+                end
+            end
+        end)
+
+        wait(19)
+        _G.Config.voteInProgress = false
+        voteConnection:Disconnect()
+
+        if _G.Config.currentVotes.yes > _G.Config.currentVotes.no then
+            local args = {[1] = "KillPlayer", [2] = {["Players"] = {[targetPlayer.Name] = targetPlayer.Name}}}
+            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
+            SendMessage("☠️ Votação concluída: " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ") foi eliminado!")
+        else
+            SendMessage("✨ Votação concluída: " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ") foi poupado!")
+        end
+    end,
+
+    ["!spawn"] = function(player, args)
+        if player.Name ~= _G.Config.hostPlayer then
+            SendMessage("❌ Apenas o host pode usar este comando!")
+            return
+        end
+
+        if not args[2] then
+            SendMessage("❌ Use: !spawn [nome da entidade]")
+            SendMessage("📍 Entidades disponíveis: " .. table.concat(_G.entidadesAleatorias, ", "))
+            return
+        end
+
+        local entityName = args[2]:lower()
+        local validEntity = false
+        local actualEntityName
+
+        for _, entity in ipairs(_G.entidadesAleatorias) do
+            if entity:lower() == entityName then
+                validEntity = true
+                actualEntityName = entity
+                break
+            end
+        end
+
+        if not validEntity then
+            SendMessage("❌ Entidade não encontrada! Use uma entidade válida da lista.")
+            return
+        end
+
+        local spawnArgs = {[1] = actualEntityName, [2] = {}}
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(spawnArgs))
+        SendMessage("👻 " .. actualEntityName .. " foi invocado na sala!")
+    end,
+
+    ["!randomentity"] = function(player)
+        if player.Name ~= _G.Config.hostPlayer then
+            SendMessage("❌ Apenas o host pode usar este comando!")
+            return
+        end
+
+        local randomEntity = _G.entidadesAleatorias[math.random(#_G.entidadesAleatorias)]
+        local spawnArgs = {[1] = randomEntity, [2] = {}}
+        ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(spawnArgs))
+        SendMessage("👻 " .. randomEntity .. " foi invocado aleatoriamente na sala!")
+    end,
+
+    ["!debug"] = function(player)
+        if player.Name ~= _G.Config.hostPlayer then
+            SendMessage("❌ Apenas o host pode usar este comando!")
+            return
+        end
+        _G.Config.debugMode = not _G.Config.debugMode
+        SendMessage("🔧 Modo Debug: " .. (_G.Config.debugMode and "Ativado" or "Desativado"))
+    end
+}
+
+-- Command Handler
 TextChatService.MessageReceived:Connect(function(message)
     local text = message.Text:lower()
     local player = message.TextSource
     local args = text:split(" ")
     local command = args[1]
 
-    local commands = {
-        ["!godmode"] = function()
-            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Max Health"] = 100, ["Star Shield"] = 0, ["Health"] = 100, ["God Mode"] = true}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-        end,
-        
-        ["!vida"] = function()
-            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Max Health"] = 100, ["Star Shield"] = 100, ["Health"] = 100, ["Speed Boost"] = 15, ["God Mode"] = false}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-        end,
-        
-        ["!revive"] = function()
-            local args = {[1] = "RevivePlayer", [2] = {["Players"] = {[player.Name] = player.Name}}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-            SendMessage("🔄 " .. player.Name .. " usou o comando de reviver!")
-        end,
-        
-        ["!speed"] = function()
-            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Max Health"] = 100, ["Health"] = 100, ["Speed Boost"] = 25}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-        end,
-        
-        ["!resetspeed"] = function()
-            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Speed Boost"] = 0}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-        end,
-        
-        ["!item"] = function()
-            local args = {[1] = "Give Items", [2] = {["Players"] = {[player.Name] = player.Name}, ["Items"] = {[_G.itensAleatorios[math.random(#_G.itensAleatorios)]] = _G.itensAleatorios[math.random(#_G.itensAleatorios)]}}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-            SendMessage("🎁 " .. player.Name .. " recebeu um item aleatório!")
-        end,
-        
-        ["!shield"] = function()
-            local args = {[1] = "Apply Changes", [2] = {["Players"] = {[player.Name] = player.Name}, ["Star Shield"] = 50, ["Health"] = 100}}
-           
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-        end,
-
-        ["!comandos"] = function()
-            SendMessage("📍 Comandos disponíveis: !vida, !revive, !godmode, !speed, !resetspeed, !item, !shield, !pxitem [item], !comandos")
-            SendMessage("📍 Comandos do Host: !togglemod, !spawn [entidade], !randomentity, !kill [player]")
-        end,
-
-        ["!kill"] = function()
-            if player.Name ~= _G.hostPlayer then
-                SendMessage("❌ Apenas o host pode usar este comando!")
-                return
-            end
-
-            if _G.voteInProgress then
-                SendMessage("❌ Uma votação já está em andamento!")
-                return
-            end
-
-            if not args[2] then
-                SendMessage("❌ Use: !kill [nome/displayname/userid do jogador]")
-                return
-            end
-
-            local targetIdentifier = args[2]
-            local targetPlayer
-
-            -- Procura por Username, DisplayName ou UserId
-            for _, plr in ipairs(Players:GetPlayers()) do
-                if plr.Name:lower() == targetIdentifier:lower() or 
-                   (plr.DisplayName and plr.DisplayName:lower() == targetIdentifier:lower()) or 
-                   tostring(plr.UserId) == targetIdentifier then
-                    targetPlayer = plr
-                    break
-                end
-            end
-
-            if not targetPlayer then
-                SendMessage("❌ Jogador não encontrado! Tente usar nome, display name ou ID")
-                return
-            end
-
-            _G.voteInProgress = true
-            _G.currentVotes = {yes = 0, no = 0}
-            
-            SendMessage("🎯 Votação iniciada para eliminar " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ")")
-            SendMessage("Digite Y para eliminar ou N para não eliminar")
-            SendMessage("⏰ Votação termina em 19 segundos")
-
-            local voteConnection = TextChatService.MessageReceived:Connect(function(voteMsg)
-                if _G.voteInProgress then
-                    local vote = voteMsg.Text:lower()
-                    if vote == "y" then
-                        _G.currentVotes.yes = _G.currentVotes.yes + 1
-                    elseif vote == "n" then
-                        _G.currentVotes.no = _G.currentVotes.no + 1
-                    end
-                end
-            end)
-
-            wait(19)
-            _G.voteInProgress = false
-            voteConnection:Disconnect()
-
-            if _G.currentVotes.yes > _G.currentVotes.no then
-                local args = {[1] = "KillPlayer", [2] = {["Players"] = {[targetPlayer.Name] = targetPlayer.Name}}}
-                ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-                SendMessage("☠️ Votação concluída: " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ") foi eliminado!")
-            else
-                SendMessage("✨ Votação concluída: " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ") foi poupado!")
-            end
-        end,
-        
-        ["!pxitem"] = function()
-            if not args[2] then
-                SendMessage("❌ Use: !pxitem [nome do item]")
-                return
-            end
-
-            local itemName = args[2]
-            local validItem = false
-
-            for _, item in ipairs(_G.itensAleatorios) do
-                if item:lower() == itemName:lower() then
-                    validItem = true
-                    itemName = item
-                    break
-                end
-            end
-
-            if not validItem then
-                SendMessage("❌ Item não encontrado! Use um item válido da lista.")
-                return
-            end
-
-            local args = {[1] = "Give Items", [2] = {["Players"] = {[player.Name] = player.Name}, ["Items"] = {[itemName] = itemName}}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-            SendMessage("🎁 " .. player.Name .. " recebeu o item: " .. itemName)
-        end,
-
-        ["!togglemod"] = function()
-            if player.Name ~= _G.hostPlayer then
-                SendMessage("❌ Apenas o host pode usar este comando!")
-                return
-            end
-
-            _G.systemActive = not _G.systemActive
-            _G.loopsAtivos = _G.systemActive
-
-            if _G.systemActive then
-                SendMessage("✅ Sistema ativado pelo host!")
-                Notificar("Sistema Ativado", "O mod foi ativado pelo host", 5, Color3.new(0, 1, 0))
-            else
-                SendMessage("❌ Sistema desativado pelo host!")
-                Notificar("Sistema Desativado", "O mod foi desativado pelo host", 5, Color3.new(1, 0, 0))
-            end
-        end,
-
-        ["!spawn"] = function()
-            if player.Name ~= _G.hostPlayer then
-                SendMessage("❌ Apenas o host pode usar este comando!")
-                return
-            end
-
-            if not args[2] then
-                SendMessage("❌ Use: !spawn [nome da entidade]")
-                SendMessage("📍 Entidades disponíveis: " .. table.concat(_G.entidadesAleatorias, ", "))
-                return
-            end
-
-            local entityName = args[2]:lower()
-            local validEntity = false
-            local actualEntityName
-
-            for _, entity in ipairs(_G.entidadesAleatorias) do
-                if entity:lower() == entityName then
-                    validEntity = true
-                    actualEntityName = entity
-                    break
-                end
-            end
-
-            if not validEntity then
-                SendMessage("❌ Entidade não encontrada! Use uma entidade válida da lista.")
-                return
-            end
-
-            local spawnArgs = {[1] = actualEntityName, [2] = {}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(spawnArgs))
-            SendMessage("👻 " .. actualEntityName .. " foi invocado na sala!")
-        end,
-
-        ["!randomentity"] = function()
-            if player.Name ~= _G.hostPlayer then
-                SendMessage("❌ Apenas o host pode usar este comando!")
-                return
-            end
-
-            local randomEntity = _G.entidadesAleatorias[math.random(#_G.entidadesAleatorias)]
-            local spawnArgs = {[1] = randomEntity, [2] = {}}
-            ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(spawnArgs))
-            SendMessage("👻 " .. randomEntity .. " foi invocado aleatoriamente na sala!")
-        end,
-    }
-
-    if commands[command] then
-        commands[command]()
+    if Commands[command] then
+        Commands[command](player, args)
     end
 end)
 
-SendMessage("📍 Doors Six - By rhyan57")
-SendMessage("📍 Use !comandos para ver todos os comandos disponíveis")
-SendMessage("⚠️ Mod carregado! Será ativo na porta 2.")
-Notificar("Mod Carregado", "O mod será ativado na porta 2.", 10, Color3.new(1, 1, 0))
+-- Main Timer Loop
+spawn(function()
+    while wait(1) do
+        if _G.Config.systemActive and _G.Config.loopsAtivos then
+            local tempoAtual = _G.Config.luzAtual == "🟢" and _G.Config.tempoTrocaLuzVerde or _G.Config.tempoTrocaLuzVermelha
+            
+            for i = tempoAtual, 1, -1 do
+                if _G.Config.loopsAtivos then
+                    TimerLabel.Text = string.format("%s Próximo: %ds", _G.Config.luzAtual, i)
+                    
+                    if i == 10 then
+                        SendMessage("⚠️ 10 segundos para mudança de luz!")
+                    elseif i == 2 then
+                        SendMessage("⚠️ 2 segundos para mudança de luz!")
+                    end
+                    wait(1)
+                end
+            end
+            
+            if _G.Config.loopsAtivos then
+                alterarLuz(_G.Config.luzAtual == "🟢" and "🔴" or "🟢")
+            end
+        else
+            TimerLabel.Text = "Sistema Pausado"
+            wait(1)
+        end
+    end
+end)
+
+-- Room Monitor Loop
+spawn(function()
+    while wait(1) do
+        monitorarSala()
+    end
+end)
+
+-- Item Distribution Loop
+spawn(function()
+    while wait(math.random(_G.Config.itemDropInterval.min, _G.Config.itemDropInterval.max)) do
+        if _G.Config.systemActive and _G.Config.loopsAtivos and _G.Config.itensLoopAtivo then
+            darItensAleatorios()
+        end
+    end
+end)
+
+-- Initialize
+do
+    -- Set up player tracking
+    game.Players.PlayerAdded:Connect(function(player)
+        if not _G.Config.hostPlayer then
+            _G.Config.hostPlayer = player.Name
+            SendMessage("👑 " .. player.Name .. " é o host do servidor!")
+        end
+    end)
+
+    -- Initial messages
+    SendMessage("📍 Doors Six - By rhyan57 (Enhanced)")
+    SendMessage("📍 Use !comandos para ver todos os comandos disponíveis")
+    SendMessage("⚠️ Mod carregado com melhorias!")
+    Notificar("Mod Carregado", "Versão melhorada ativa!", 10, Color3.new(1, 1, 0))
+end
