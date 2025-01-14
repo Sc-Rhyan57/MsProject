@@ -1,21 +1,27 @@
--- Services
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local RunService = game:GetService("RunService")
 
--- Load external dependencies
 local MsdoorsNotify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/Notification-doorsAPI/refs/heads/main/Msdoors/MsdoorsApi.lua"))()
 local OrionLib = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/Sc-Rhyan57/Msdoors/refs/heads/main/Library/OrionLibrary_msdoors.lua'))()
 
--- Prevent multiple instances
 if _G.DoorsSix then
     MsdoorsNotify("Sistema", "O mod já está carregado!", "", "rbxassetid://6023426923", Color3.new(1, 0, 0), 5)
     return
 end
 _G.DoorsSixLoaded = true
 
--- Global Configuration
+MsdoorsNotify(
+    "Entre no meu Discord",              -- Subtítulo
+    "https://dsc.gg/msdoors-gg",
+    "",
+    "rbxassetid://8248378219", 
+    Color3.new(114,137,218), 
+    19
+)
+
 _G.Config = {
     luzAtual = "🟢",
     tempoTrocaLuzVerde = math.random(50, 70),
@@ -363,13 +369,12 @@ local Commands = {
         }
     }
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-    SendMessage("🎁 " .. player.Name .. " recebeu o item: " .. actualItemName)
    end,
 
     ["!revive"] = function(player)
         local args = {[1] = "RevivePlayer", [2] = {["Players"] = {[player.Name] = player.Name}}}
         ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-        SendMessage("🔄 " .. player.Name .. " usou o comando de reviver!")
+        print("🔄 " .. player.Name .. " usou o comando de reviver!")
     end,
     
     ["!speed"] = function(player)
@@ -632,6 +637,8 @@ do
     -- Initial messages
     SendMessage("📍 Doors Six - By rhyan57 (Enhanced)")
     SendMessage("📍 Use !comandos para ver todos os comandos disponíveis")
-    SendMessage("⚠️ Mod carregado com melhorias!")
-    Notificar("Mod Carregado", "Versão melhorada ativa!", 10, Color3.new(1, 1, 0))
+    task.wait(1)
+    SendMessage("⚠️ Mod carregado! o host deve passar da porta 2 para ativar o mod.")
+    Notificar("Mod Carregado", "Passe da porta 2 para ativa-lo.", 10, Color3.new(1, 1, 0))
+    print("Uma vez um cara chamado DreamAlt disse que era possível colocar uma parede invisível no seek que iria empedir todos de passar pora ela usando mspaint v3.5, olha que idiota! KKKKKKKKKKKK • obs: ele deixou de ser meu amigo por causa disso.")
 end
