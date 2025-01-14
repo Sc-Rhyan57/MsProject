@@ -14,7 +14,7 @@ end
 _G.DoorsSixLoaded = true
 
 MsdoorsNotify(
-    "Entre no meu Discord",              -- Subtítulo
+    "Entre no meu Discord", 
     "https://dsc.gg/msdoors-gg",
     "",
     "rbxassetid://8248378219", 
