@@ -3,6 +3,43 @@ local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local function GetGitAudioID(githubLink, soundName)
+    local fileName = "customObject_Sound_" .. tostring(soundName) .. ".mp3"
+    
+    local success, audioData = pcall(function()
+        return game:HttpGet(githubLink)
+    end)
+    
+    if not success then
+        warn("Falha ao baixar o áudio: " .. githubLink)
+        return nil
+    end
+    
+    writefile(fileName, audioData)
+    return (getcustomasset or getsynasset)(fileName)
+end
+
+local function PlayGitSound(githubLink, soundName, volume)
+    local soundId = GetGitAudioID(githubLink, soundName)
+    
+    if soundId then
+        local sound = Instance.new("Sound")
+        sound.SoundId = soundId
+        sound.Volume = volume or 0.5
+        sound.Parent = workspace
+        sound:Play()
+        
+        sound.Ended:Connect(function()
+            sound:Destroy()
+            delfile("customObject_Sound_" .. tostring(soundName) .. ".mp3")
+        end)
+        
+        return sound
+    end
+    
+    return nil
+end
+
 local function msg(message)
     local mainGame = require(LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
     mainGame.caption(message, true)
@@ -185,9 +222,13 @@ local function alterarLuz(cor)
     local args = {[1] = "LightRoom", [2] = {["Light Color"] = cor == "🟢" and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)}}
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
     if cor == "🟢" then
+        
+PlayGitSound("https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/sounds/doll-green-light.mp3", "LuzVermelha", 5)
         SendMessage("Luz verde - Ande")
         Notificar("Luz Verde", "Movimento permitido!", 5)
     else
+        
+        PlayGitSound("https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/sounds/doll-red-light.mp3", "LuzVermelha", 5)
         SendMessage("🔴 Luz Vermelha - PARE IMEDIATAMENTE!")
         Notificar("Luz Vermelha", "PARE DE SE MOVER!", 5)
         spawn(function()
