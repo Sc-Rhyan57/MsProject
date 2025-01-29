@@ -54,7 +54,6 @@ wait(3)
 msg("Made by Rhyan57")
 
 local MsdoorsNotify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/Notification-doorsAPI/refs/heads/main/Msdoors/MsdoorsApi.lua"))()
-local OrionLib = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/Sc-Rhyan57/Msdoors/refs/heads/main/Library/OrionLibrary_msdoors.lua'))()
 
 if _G.DoorsSix then
     MsdoorsNotify("Sistema", "O mod já está carregado!", "", "rbxassetid://6023426923", Color3.new(1, 0, 0), 5)
