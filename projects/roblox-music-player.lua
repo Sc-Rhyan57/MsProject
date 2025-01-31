@@ -10,7 +10,7 @@ local MusicPlayer = {}
 -- Advanced Configuration
 MusicPlayer.Config = {
     MusicLibraryUrl = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Library/music.json",
-    DefaultErrorImage = "rbxassetid://YOUR_ERROR_IMAGE_ID",
+    DefaultErrorImage = "rbxassetid://YOUR_ERRO",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(18, 18, 18),
@@ -20,8 +20,8 @@ MusicPlayer.Config = {
         }
     },
     Sounds = {
-        Startup = "rbxassetid://YOUR_STARTUP_SOUND_ID",
-        ButtonClick = "rbxassetid://YOUR_CLICK_SOUND_ID"
+        Startup = "rbxassetid://4590662766",
+        ButtonClick = "rbxassetid://12221967"
     }
 }
 
