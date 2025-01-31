@@ -3,10 +3,10 @@
     "library": [
         {
             "id": "unique_song_001",
-            "name": "Epic Journey",
-            "artist": "Digital Waves",
-            "audioUrl": "https://example.com/audio.mp3",
-            "imageUrl": "https://example.com/cover.png",
+            "name": "Funk Universo(SLOWED)",
+            "artist": "IROKZ",
+            "audioUrl": "https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/Library/FUNK%20UNIVERSO%20(Super%20Slowed)(M4A_128K).m4a",
+            "imageUrl": "https://mspaint.cc/favicon.ick",
             "lyricsUrl": "https://example.com/lyrics.txt",
             "genre": "Electronic",
             "duration": "4:15",
