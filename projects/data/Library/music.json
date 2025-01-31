@@ -1,16 +1,7 @@
-{
-  "musicas": [
-    {
-      "nome": "Funk Universo(SLOWED)",
-      "link": "https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/Library/FUNK%20UNIVERSO%20--AudioConverter.mp3"
-    },
-    {
-      "nome": "Outra Música",
-      "link": "https://exemplo.com/musica2.mp3"
-    },
-    {
-      "nome": "Música do YouTube",
-      "link": "https://www.youtube.com/watch?v=EXEMPLO"
-    }
-  ]
-}
+[
+  {
+    "name": "Funk Universo(SLOWED)",
+    "url": "https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/Library/FUNK%20UNIVERSO%20--AudioConverter.mp3",
+    "artist": "Irokz"
+  }
+]
