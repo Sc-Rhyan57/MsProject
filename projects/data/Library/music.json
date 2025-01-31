@@ -1,0 +1,31 @@
+{
+    "version": "2.0",
+    "library": [
+        {
+            "id": "unique_song_001",
+            "name": "Epic Journey",
+            "artist": "Digital Waves",
+            "audioUrl": "https://example.com/audio.mp3",
+            "imageUrl": "https://example.com/cover.png",
+            "lyricsUrl": "https://example.com/lyrics.txt",
+            "genre": "Electronic",
+            "duration": "4:15",
+            "album": "Cybernetic Horizons",
+            "releaseYear": 2024,
+            "tags": ["instrumental", "electronic", "ambient"]
+        },
+        {
+            "id": "unique_song_002", 
+            "name": "Urban Nights",
+            "artist": "City Rhythm",
+            "audioUrl": "https://example.com/urban.mp3",
+            "imageUrl": "https://example.com/urban-cover.png",
+            "lyricsUrl": "https://example.com/urban-lyrics.txt",
+            "genre": "Hip Hop",
+            "duration": "3:45",
+            "album": "Street Sounds",
+            "releaseYear": 2023,
+            "tags": ["hip hop", "urban", "rap"]
+        }
+    ]
+}
