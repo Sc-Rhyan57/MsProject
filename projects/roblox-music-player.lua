@@ -5,7 +5,7 @@ local RunService = game:GetService("RunService")
 
 local MusicPlayer = {}
 
--- Configuração
+-- Configuraçãk
 MusicPlayer.Config = {
     MusicLibraryUrl = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Library/music.json",
     PlaylistFolder = "msproject/data/playlists/",
