@@ -1,15 +1,15 @@
--- Advanced Modern Music Player V2
+-- Advanced Spotify-like Music Player V3
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
 
 local MusicPlayer = {}
 
--- Advanced Configuration
+-- Enhanced Configuration
 MusicPlayer.Config = {
     MusicLibraryUrl = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Library/music.json",
-    DefaultErrorImage = "rbxassetid://YOUR_ERRO",
+    DefaultErrorImage = "rbxassetid://YOUR_ERROR_IMAGE",
     Themes = {
         Dark = {
             Background = Color3.fromRGB(18, 18, 18),
@@ -24,44 +24,34 @@ MusicPlayer.Config = {
     }
 }
 
--- Advanced Error and Notification System
+-- Advanced Notification System
 function MusicPlayer:ShowNotification(message, type)
     local player = Players.LocalPlayer
     local playerGui = player.PlayerGui
     
-    -- Create or find notification container
-    local notificationContainer = playerGui:FindFirstChild("NotificationContainer")
-    if not notificationContainer then
-        notificationContainer = Instance.new("ScreenGui")
-        notificationContainer.Name = "NotificationContainer"
-        notificationContainer.Parent = playerGui
-    end
+    local notificationContainer = playerGui:FindFirstChild("NotificationContainer") or 
+        Instance.new("ScreenGui", playerGui)
+    notificationContainer.Name = "NotificationContainer"
     
-    -- Create notification
-    local notification = Instance.new("Frame")
+    local notification = Instance.new("Frame", notificationContainer)
     notification.Size = UDim2.new(0.3, 0, 0.1, 0)
     notification.Position = UDim2.new(0.35, 0, 0.1, 0)
     notification.BackgroundColor3 = type == "error" and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(29, 185, 84)
     notification.BackgroundTransparency = 0.2
     
-    local notificationText = Instance.new("TextLabel")
+    local notificationText = Instance.new("TextLabel", notification)
     notificationText.Size = UDim2.new(1, 0, 1, 0)
     notificationText.Text = message
     notificationText.TextColor3 = Color3.fromRGB(255, 255, 255)
     notificationText.BackgroundTransparency = 1
-    notificationText.Parent = notification
     
-    local corner = Instance.new("UICorner")
+    local corner = Instance.new("UICorner", notification)
     corner.CornerRadius = UDim.new(0.1, 0)
-    corner.Parent = notification
     
-    notification.Parent = notificationContainer
-    
-    -- Auto-remove
     game.Debris:AddItem(notification, 3)
 end
 
--- Advanced Image Management
+-- Advanced Image and Asset Management
 function MusicPlayer:LoadAlbumCover(imageUrl, imageName)
     if not imageUrl then return self.Config.DefaultErrorImage end
     
@@ -72,7 +62,7 @@ function MusicPlayer:LoadAlbumCover(imageUrl, imageName)
     end)
     
     if not success then
-        self:ShowNotification("Falha ao carregar capa", "error")
+        self:ShowNotification("Failed to load album cover", "error")
         return self.Config.DefaultErrorImage
     end
     
@@ -80,119 +70,81 @@ function MusicPlayer:LoadAlbumCover(imageUrl, imageName)
     return (getcustomasset or getsynasset)(fileName)
 end
 
--- Advanced Sound Management
-function MusicPlayer:CreateMusicPlayer(musicData)
-    -- Create sound object
-    local sound = Instance.new("Sound")
-    sound.SoundId = musicData.audioUrl
-    sound.Volume = 0.5
-    sound.Parent = workspace
-    
-    -- Mini Player UI
+-- Enhanced Music Player with Advanced Controls
+function MusicPlayer:CreateMusicPlayer(musicLibrary)
     local player = Players.LocalPlayer
     local playerGui = player.PlayerGui
     
-    local miniPlayer = Instance.new("ScreenGui")
-    miniPlayer.Name = "MiniMusicPlayer"
-    miniPlayer.Parent = playerGui
+    -- Create Main Music Player UI
+    local musicPlayerGui = Instance.new("ScreenGui", playerGui)
+    musicPlayerGui.Name = "SpotifyLikeMusicPlayer"
     
-    local miniFrame = Instance.new("Frame")
-    miniFrame.Size = UDim2.new(0.3, 0, 0.1, 0)
-    miniFrame.Position = UDim2.new(0.35, 0, 0.9, 0)
-    miniFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-    miniFrame.Parent = miniPlayer
+    local mainFrame = Instance.new("Frame", musicPlayerGui)
+    mainFrame.Size = UDim2.new(1, 0, 0.2, 0)
+    mainFrame.Position = UDim2.new(0, 0, 0.8, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     
-    -- Album Cover
-    local albumCover = Instance.new("ImageLabel")
-    albumCover.Size = UDim2.new(0.2, 0, 1, 0)
-    albumCover.Image = self:LoadAlbumCover(musicData.imageUrl, musicData.name)
-    albumCover.Parent = miniFrame
+    -- Music Library List
+    local musicListFrame = Instance.new("ScrollingFrame", mainFrame)
+    musicListFrame.Size = UDim2.new(1, 0, 1, 0)
+    musicListFrame.BackgroundTransparency = 1
+    musicListFrame.ScrollBarThickness = 5
+    musicListFrame.CanvasSize = UDim2.new(#musicLibrary.library * 0.2, 0, 1, 0)
     
-    -- Play/Pause Button
-    local playPauseButton = Instance.new("TextButton")
-    playPauseButton.Size = UDim2.new(0.2, 0, 1, 0)
-    playPauseButton.Position = UDim2.new(0.2, 0, 0, 0)
-    playPauseButton.Text = "❚❚"
-    playPauseButton.BackgroundTransparency = 1
-    playPauseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    -- Current Playing Track
+    local currentSound = nil
+    local currentTrack = nil
     
-    -- Next Button
-    local nextButton = Instance.new("TextButton")
-    nextButton.Size = UDim2.new(0.2, 0, 1, 0)
-    nextButton.Position = UDim2.new(0.4, 0, 0, 0)
-    nextButton.Text = "▶▶"
-    nextButton.BackgroundTransparency = 1
-    nextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    -- Create Music Track Buttons
+    for i, track in ipairs(musicLibrary.library) do
+        local trackButton = Instance.new("ImageButton", musicListFrame)
+        trackButton.Size = UDim2.new(0.2, 0, 1, 0)
+        trackButton.Position = UDim2.new((i-1)*0.2, 0, 0, 0)
+        trackButton.Image = self:LoadAlbumCover(track.imageUrl, track.name)
+        
+        trackButton.MouseButton1Click:Connect(function()
+            -- Stop previous track
+            if currentSound then
+                currentSound:Stop()
+            end
+            
+            -- Create and play new track
+            currentSound = Instance.new("Sound", workspace)
+            currentSound.SoundId = track.audioUrl
+            currentSound.Volume = 0.5
+            currentSound:Play()
+            
+            currentTrack = track
+            
+            -- Update UI to show current track
+            self:ShowNotification("Now Playing: " .. track.name, "info")
+        end)
+    end
     
-    playPauseButton.MouseButton1Click:Connect(function()
-        if sound.IsPlaying then
-            sound:Pause()
-            playPauseButton.Text = "▶"
-        else
-            sound:Play()
-            playPauseButton.Text = "❚❚"
-        end
-    end)
-    
-    return sound, miniPlayer
-end
-
--- Main UI Creator with Multiple Pages
-function MusicPlayer:CreateModernSpotifyUI()
-    local player = Players.LocalPlayer
-    local playerGui = player.PlayerGui
-    
-    -- Main ScreenGui
-    local mainGui = Instance.new("ScreenGui")
-    mainGui.Name = "SpotifyLikePlayer"
-    mainGui.Parent = playerGui
-    
-    -- Navigation Frame
-    local navigationFrame = Instance.new("Frame")
-    navigationFrame.Size = UDim2.new(0.2, 0, 1, 0)
-    navigationFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-    navigationFrame.Parent = mainGui
-    
-    -- Page Frames
-    local pagesFrame = Instance.new("Frame")
-    pagesFrame.Size = UDim2.new(0.8, 0, 1, 0)
-    pagesFrame.Position = UDim2.new(0.2, 0, 0, 0)
-    pagesFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    pagesFrame.Parent = mainGui
-    
-    -- Navigation Buttons
-    local navButtons = {
-        {name = "Início", page = "Home"},
-        {name = "Buscar", page = "Search"},
-        {name = "Playlists", page = "Playlists"},
-        {name = "Biblioteca", page = "Library"}
-    }
-    
-    -- Minimize/Maximize Buttons
-    local minimizeButton = Instance.new("TextButton")
-    minimizeButton.Size = UDim2.new(0.1, 0, 0.1, 0)
+    -- Minimize/Maximize Button
+    local minimizeButton = Instance.new("TextButton", mainFrame)
+    minimizeButton.Size = UDim2.new(0.1, 0, 0.2, 0)
     minimizeButton.Position = UDim2.new(0.9, 0, 0, 0)
-    minimizeButton.Text = "-"
+    minimizeButton.Text = "➖"
     minimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    minimizeButton.Parent = mainGui
     
     local isMinimized = false
     minimizeButton.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized    
-        local tween = TweenService:Create(mainGui, TweenInfo.new(0.3), {
-            Size = isMinimized and UDim2.new(0.3, 0, 0.2, 0) or UDim2.new(1, 0, 1, 0)
+        isMinimized = not isMinimized
+        
+        local targetSize = isMinimized and UDim2.new(1, 0, 0.1, 0) or UDim2.new(1, 0, 0.2, 0)
+        local targetPosition = isMinimized and UDim2.new(0, 0, 0.9, 0) or UDim2.new(0, 0, 0.8, 0)
+        
+        local sizeTween = TweenService:Create(mainFrame, TweenInfo.new(0.3), {
+            Size = targetSize,
+            Position = targetPosition
         })
-        tween:Play()
+        sizeTween:Play()
+        
+        minimizeButton.Text = isMinimized and "➕" or "➖"
     end)
     
-    -- Startup Sound
-    local startupSound = Instance.new("Sound")
-    startupSound.SoundId = self.Config.Sounds.Startup
-    startupSound.Volume = 0.5
-    startupSound.Parent = player.Character
-    startupSound:Play()
-    
-    return mainGui
+    return musicPlayerGui
 end
 
 -- Initialization Function
@@ -200,27 +152,30 @@ function MusicPlayer:Init()
     local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
     
     -- Validate Configuration
-    if not self.Config.MusicLibraryUrl or 
-       not self.Config.DefaultErrorImage or 
-       not self.Config.Sounds.Startup then
-        self:ShowNotification("Configuração Incompleta!", "error")
+    if not self.Config.MusicLibraryUrl then
+        self:ShowNotification("Incomplete Configuration!", "error")
         return
     end
     
-    -- Create Modern UI
-    local ui = self:CreateModernSpotifyUI()
-    
-    -- Optional: Load Music Library
-    pcall(function()
-        local musicLibrary = game:HttpGet(self.Config.MusicLibraryUrl)
-        local parsedLibrary = HttpService:JSONDecode(musicLibrary)
-        
-        -- Example of how to use the library
-        if #parsedLibrary.library > 0 then
-            local firstSong = parsedLibrary.library[1]
-            local sound, miniPlayer = self:CreateMusicPlayer(firstSong)
-        end
+    -- Load Music Library with Error Handling
+    local success, musicLibrary = pcall(function()
+        local libraryData = game:HttpGet(self.Config.MusicLibraryUrl)
+        return HttpService:JSONDecode(libraryData)
     end)
+    
+    if not success then
+        self:ShowNotification("Failed to load music library", "error")
+        return
+    end
+    
+    -- Create Music Player UI
+    local musicPlayerGui = self:CreateMusicPlayer(musicLibrary)
+    
+    -- Optional: Startup Sound
+    local startupSound = Instance.new("Sound", player.Character)
+    startupSound.SoundId = self.Config.Sounds.Startup
+    startupSound.Volume = 0.5
+    startupSound:Play()
 end
 
 return MusicPlayer
