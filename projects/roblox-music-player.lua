@@ -9,7 +9,7 @@ local MusicPlayer = {}
 
 -- Advanced Configuration
 MusicPlayer.Config = {
-    MusicLibraryUrl = "https://your-github-raw-json-link",
+    MusicLibraryUrl = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Library/music.json",
     DefaultErrorImage = "rbxassetid://YOUR_ERROR_IMAGE_ID",
     Themes = {
         Dark = {
@@ -179,8 +179,7 @@ function MusicPlayer:CreateModernSpotifyUI()
     
     local isMinimized = false
     minimizeButton.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized
-        
+        isMinimized = not isMinimized    
         local tween = TweenService:Create(mainGui, TweenInfo.new(0.3), {
             Size = isMinimized and UDim2.new(0.3, 0, 0.2, 0) or UDim2.new(1, 0, 1, 0)
         })
