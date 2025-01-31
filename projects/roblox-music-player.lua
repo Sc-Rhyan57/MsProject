@@ -1,4 +1,3 @@
--- Advanced Modern Music Player
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 
