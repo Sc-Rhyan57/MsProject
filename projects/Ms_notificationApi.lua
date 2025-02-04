@@ -1,104 +1,155 @@
--- MSproject Notification API v2.0.0
-
--- MSproject Notification API v2.2.0 (Corrigido)
+-- MSproject Notification API v2.0.1 (modificado)
 
 getgenv().MSproject = getgenv().MSproject or {}
-MSproject.NotificationConfig = {
-    Settings = {
-        DisplayTime = 5,
-        MaxNotifications = 5,
-        Padding = 10,
-        Width = 300,
-        Height = 80,
-        Position = "TopRight", -- Pode ser: "TopRight", "TopLeft", "BottomRight", "BottomLeft"
-        Theme = "Dark",
-        EnableSounds = true,
-        Volume = 0.5
-    }
-}
+MSproject.NotificationConfig.Settings.StackedOffset = 90 -- Espaço entre notificações empilhadas
 
-local TweenService = game:GetService("TweenService")
 local activeNotifications = {}
 
-local function getStartPosition()
+local function getNotificationPosition(index)
     local settings = MSproject.NotificationConfig.Settings
-    local pos = settings.Position
-    local xOffset = settings.Width + settings.Padding
-    local yOffset = settings.Padding + (#activeNotifications * (settings.Height + 5))
+    local offset = settings.Padding + (index - 1) * settings.StackedOffset
+    local width = settings.Width
+    local height = settings.Height
 
     local positions = {
-        TopRight = UDim2.new(1, xOffset, 0, yOffset),
-        TopLeft = UDim2.new(0, -xOffset, 0, yOffset),
-        BottomRight = UDim2.new(1, xOffset, 1, -yOffset - settings.Height),
-        BottomLeft = UDim2.new(0, -xOffset, 1, -yOffset - settings.Height)
+        TopRight = UDim2.new(1, -(width + settings.Padding), 0, offset),
+        TopLeft = UDim2.new(0, settings.Padding, 0, offset),
+        BottomRight = UDim2.new(1, -(width + settings.Padding), 1, -(height + offset)),
+        BottomLeft = UDim2.new(0, settings.Padding, 1, -(height + offset))
     }
 
-    return positions[pos] or positions.TopRight
-end
-
-local function getFinalPosition()
-    local settings = MSproject.NotificationConfig.Settings
-    local pos = settings.Position
-    local yOffset = settings.Padding + (#activeNotifications * (settings.Height + 5))
-
-    local positions = {
-        TopRight = UDim2.new(1, -settings.Width - settings.Padding, 0, yOffset),
-        TopLeft = UDim2.new(0, settings.Padding, 0, yOffset),
-        BottomRight = UDim2.new(1, -settings.Width - settings.Padding, 1, -yOffset - settings.Height),
-        BottomLeft = UDim2.new(0, settings.Padding, 1, -yOffset - settings.Height)
-    }
-
-    return positions[pos] or positions.TopRight
+    return positions[settings.Position] or positions.TopRight
 end
 
 local function createNotification(title, message, options)
     options = options or {}
-    options.type = options.type or "info"
+    local notification = {}
 
     local gui = Instance.new("ScreenGui")
+    gui.Name = "MSprojectNotification"
     gui.ResetOnSpawn = false
 
+    local index = #activeNotifications + 1
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, MSproject.NotificationConfig.Settings.Width, 0, MSproject.NotificationConfig.Settings.Height)
-    mainFrame.Position = getStartPosition() -- Posição inicial corrigida
-    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    mainFrame.Position = getNotificationPosition(index)
+    mainFrame.BackgroundTransparency = 0.1
+    mainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    mainFrame.ClipsDescendants = true
     mainFrame.Parent = gui
 
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = MSproject.NotificationConfig.Settings.CornerRadius
+    corner.Parent = mainFrame
+
+    local gradient = Instance.new("UIGradient")
+    gradient.Rotation = 45
+    gradient.Color = MSproject.NotificationConfig.Types[options.type].gradient
+    gradient.Parent = mainFrame
+
+    local content = Instance.new("Frame")
+    content.Size = UDim2.new(1, -20, 1, -20)
+    content.Position = UDim2.new(0, 10, 0, 10)
+    content.BackgroundTransparency = 1
+    content.Parent = mainFrame
+
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -10, 0, 25)
-    titleLabel.Position = UDim2.new(0, 5, 0, 5)
+    titleLabel.Size = UDim2.new(1, -30, 0, 25)
+    titleLabel.Position = UDim2.new(0, 30, 0, 0)
+    titleLabel.Font = Enum.Font.GothamBold
     titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Parent = mainFrame
+    titleLabel.TextColor3 = MSproject.NotificationConfig.Theme[MSproject.NotificationConfig.Settings.Theme].Text
+    titleLabel.TextSize = 16
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Parent = content
+
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, 20, 0, 20)
+    icon.Position = UDim2.new(0, 0, 0, 2)
+    icon.Image = MSproject.NotificationConfig.Types[options.type].icon
+    icon.ImageColor3 = MSproject.NotificationConfig.Theme[MSproject.NotificationConfig.Settings.Theme].Text
+    icon.BackgroundTransparency = 1
+    icon.Parent = content
 
     local messageLabel = Instance.new("TextLabel")
-    messageLabel.Size = UDim2.new(1, -10, 1, -35)
-    messageLabel.Position = UDim2.new(0, 5, 0, 30)
+    messageLabel.Size = UDim2.new(1, 0, 1, -35)
+    messageLabel.Position = UDim2.new(0, 0, 0, 30)
+    messageLabel.Font = Enum.Font.Gotham
     messageLabel.Text = message
-    messageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    messageLabel.TextColor3 = MSproject.NotificationConfig.Theme[MSproject.NotificationConfig.Settings.Theme].Text
+    messageLabel.TextSize = 14
     messageLabel.TextWrapped = true
-    messageLabel.Parent = mainFrame
+    messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    messageLabel.BackgroundTransparency = 1
+    messageLabel.Parent = content
 
-    -- Animação corrigida para surgir do lado correto
-    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Position = getFinalPosition()
-    })
-    tween:Play()
+    if options.image then
+        local imageLabel = Instance.new("ImageLabel")
+        imageLabel.Size = UDim2.new(0, 50, 0, 50)
+        imageLabel.Position = UDim2.new(0, -60, 0.5, -25)
+        imageLabel.Image = options.image
+        imageLabel.BackgroundTransparency = 1
+        imageLabel.Parent = content
+    end
 
-    table.insert(activeNotifications, mainFrame)
+    if MSproject.NotificationConfig.Settings.EnableSounds and options.playSound ~= false then
+        local sound = Instance.new("Sound")
+        sound.SoundId = MSproject.NotificationConfig.Types[options.type].sound
+        sound.Volume = MSproject.NotificationConfig.Settings.Volume
+        sound.Parent = gui
+        sound:Play()
+    end
 
-    -- Remover notificação após o tempo definido
-    task.delay(MSproject.NotificationConfig.Settings.DisplayTime, function()
-        table.remove(activeNotifications, table.find(activeNotifications, mainFrame))
-        mainFrame:Destroy()
-        gui:Destroy()
-    end)
+    local function animateIn()
+        mainFrame.Position = getNotificationPosition(index) + UDim2.new(0, 300, 0, 0)
+        local tween = game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.5), { Position = getNotificationPosition(index) })
+        tween:Play()
+    end
 
-    return mainFrame
+    local function animateOut()
+        local tween = game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.5), { Position = mainFrame.Position + UDim2.new(0, 300, 0, 0) })
+        tween:Play()
+        return tween
+    end
+
+    notification.gui = gui
+    notification.frame = mainFrame
+    notification.animateIn = animateIn
+    notification.animateOut = animateOut
+
+    return notification
+end
+
+function NotificationSystem:Show(title, message, options)
+    while #activeNotifications >= MSproject.NotificationConfig.Settings.MaxNotifications do
+        local oldest = table.remove(activeNotifications, 1)
+        oldest.animateOut().Completed:Wait()
+        oldest.gui:Destroy()
+    end
+
+    local notification = createNotification(title, message, options)
+    local player = game.Players.LocalPlayer
+    if player then
+        notification.gui.Parent = player.PlayerGui
+    end
+
+    table.insert(activeNotifications, notification)
+    notification.animateIn()
+
+    if options.duration ~= 0 then
+        task.delay(options.duration or MSproject.NotificationConfig.Settings.DisplayTime, function()
+            local index = table.find(activeNotifications, notification)
+            if index then
+                table.remove(activeNotifications, index)
+                notification.animateOut().Completed:Wait()
+                notification.gui:Destroy()
+            end
+        end)
+    end
 end
 
 getgenv().MSNotify = function(title, message, options)
-    return createNotification(title, message, options)
+    local system = NotificationSystem:Init()
+    return system:Show(title, message, options)
 end
-
-return createNotification
