@@ -147,7 +147,18 @@ local function PlayMusic(locationIndex)
         targetMusic.Looped = false
         targetMusic:Play()
 
-        
+        local args = {
+    [1] = {
+        ["VolumeMusicLobby"] = 250,
+        ["VolumeMusic"] = 50,
+        ["ReduceMotion"] = false,
+        ["Sensitivity"] = 50,
+        ["ToggleCrouch"] = true,
+        ["HideLayers"] = false
+    }
+}
+
+        game:GetService("ReplicatedStorage").RemotesFolder.ChangeSettings:FireServer(unpack(args))
         msg("▶️ Tocando: " .. selectedMusic.Name .. (locationIndex == 1 and " (Interior)" or " (Exterior)"))
 
         targetMusic.Ended:Once(function()
