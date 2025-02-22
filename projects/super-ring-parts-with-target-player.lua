@@ -9,7 +9,7 @@ getgenv().Msproject_Config = {
     Target = nil,
     TargetName = "",
     Enabled = false,
-    Power = 2600,
+    Power = 5000,
     MaxPower = 5000,
     Range = 500,
     PullDelay = 0.1
@@ -223,6 +223,8 @@ local function updatePartOwnership(part)
         Network.ControlledParts[part] = true
         part.CustomPhysicalProperties = PhysicalProperties.new(0.001, 0.001, 0.001, 0.001, 0.001)
         part.Velocity = Network.Velocity
+        part.CanCollide = false
+        part.Massless = true
     end
 end
 
@@ -230,6 +232,8 @@ local function releasePartOwnership(part)
     Network.PartOwnership[part] = nil
     Network.ControlledParts[part] = nil
     part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5, 1, 1)
+        part.CanCollide = false
+        part.Massless = true
 end
 
 -- Enhanced Stats Display Update
@@ -258,6 +262,8 @@ local function updatePartPosition(part, targetPosition)
         part.Velocity = velocity
     else
         part.Velocity = Vector3.new(0, 0, 0)
+        part.CanCollide = false
+        part.Massless = true
     end
 end
 
