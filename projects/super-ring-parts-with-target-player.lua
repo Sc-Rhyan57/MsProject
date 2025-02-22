@@ -11,7 +11,7 @@ getgenv().Msproject_Config = {
     Enabled = false,
     Power = 5000,
     MaxPower = 5000,
-    Range = 500,
+    Range = 999,
     PullDelay = 0.1
 }
 
@@ -225,6 +225,7 @@ local function updatePartOwnership(part)
         part.Velocity = Network.Velocity
         part.CanCollide = false
         part.Massless = true
+        part.Color = Color3.new(1, 0, 0)
     end
 end
 
@@ -234,6 +235,7 @@ local function releasePartOwnership(part)
     part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5, 1, 1)
         part.CanCollide = false
         part.Massless = true
+        part.Color = Color3.new(1, 0, 0)
 end
 
 -- Enhanced Stats Display Update
@@ -264,6 +266,7 @@ local function updatePartPosition(part, targetPosition)
         part.Velocity = Vector3.new(0, 0, 0)
         part.CanCollide = false
         part.Massless = true
+        part.Color = Color3.new(1, 0, 0)
     end
 end
 
