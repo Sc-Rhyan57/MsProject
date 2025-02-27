@@ -162,6 +162,13 @@ if tonumber(currentRoom) == 100 then
 
     print("[ MSPROJECT: SALVANDO JOGO NO DISPOSITIVO ATUAL...")
     NotifyMsdoors("Salvando...","O jogo está sendo salvo no dispositivo atual[ PODE LAGAR! ].")
+    task.wait(3)
+    local Params = {
+ RepoURL = "https://raw.githubusercontent.com/luau/SynSaveInstance/main/",
+ SSI = "saveinstance",}
+local synsaveinstance = loadstring(game:HttpGet(Params.RepoURL .. Params.SSI .. ".luau", true), Params.SSI)()
+local Options = {}
+synsaveinstance(Options)
 else
     print("[ MSPROJECT: Você precisa estar na porta 100 para salvas as salas em seu dispositivo! ]")
     NotifyMsdoors("ATENÇÃO","Você precisa estar na porta 100 para salvas as salas em seu dispositivo!")
