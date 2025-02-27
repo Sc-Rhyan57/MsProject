@@ -140,5 +140,33 @@ Tab:AddToggle({
         _G.notifications = value
     end
 })
+Tab:AddLabel("")
+Tab:AddButton({
+	Name = "Salvar Mapa no dispositivo atual[PORTA 100]",
+	Callback = function()
+local currentRoom = LocalPlayer:GetAttribute("CurrentRoom")
+if tonumber(currentRoom) == 100 then
+    local function moveToFolder(parent, folderName)
+        if not parent then return end
+
+        local folder = Instance.new("Folder")
+        folder.Name = "msproject:" .. folderName
+        folder.Parent = ReplicatedStorage
+
+        for _, child in pairs(parent:GetChildren()) do
+            child.Parent = folder
+        end
+    end
+    moveToFolder(LocalPlayer:FindFirstChild("PlayerGui"), "PlayerGui")
+    moveToFolder(LocalPlayer:FindFirstChild("PlayerScripts"), "PlayerScripts")
+
+    print("[ MSPROJECT: SALVANDO JOGO NO DISPOSITIVO ATUAL...")
+    NotifyMsdoors("Salvando...","O jogo está sendo salvo no dispositivo atual[ PODE LAGAR! ].")
+else
+    print("[ MSPROJECT: Você precisa estar na porta 100 para salvas as salas em seu dispositivo! ]")
+    NotifyMsdoors("ATENÇÃO","Você precisa estar na porta 100 para salvas as salas em seu dispositivo!")
+            end
+  	end    
+})
 
 OrionLib:Init()
