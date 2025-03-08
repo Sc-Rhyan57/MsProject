@@ -1,10 +1,25 @@
--- Configuração global
+local function msg(message)
+    local mainGame = require(LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
+    mainGame.caption(message, true)
+end
+
+msg("Red Light Green Light iniciado!")
+task.wait(0.6)
+msg("Carregando mod...")
 _G["msproject-ambushInf"] = {
-    ambushs = 3, -- quantidade de vezes que o Ambush deve aparecer
-    modAtivo = true, -- para evitar múltiplas execuções
-    cooldown = 1, -- tempo entre execuções (em segundos)
-    debug = true -- para mostrar mensagens de debug
+    ambushs = 3,
+    modAtivo = true,
+    cooldown = 1, 
+    debug = true
 }
+wait(3)
+warn("[Msproject] » Configurado para invocar " .. _G["msproject-ambushInf"].ambushs .. " Ambushs quando detectado")
+msg(" Mod Carregado!")
+wait(3)
+msg("Made by  Rhyan57")
+
+local MsdoorsNotify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/Notification-doorsAPI/refs/heads/main/Msdoors/MsdoorsApi.lua"))()
+MsdoorsNotify("Entre no meu Discord", "https://dsc.gg/msdoors-gg", "", "rbxassetid://8248378219", Color3.new(114,137,218), 19)
 
 local function invocarAmbush()
     local argumentos = {
