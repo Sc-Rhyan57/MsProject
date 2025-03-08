@@ -1,4 +1,4 @@
-## MODIFIERS RECENTES:
+<h2 align="center"> • Modifiers • </h2>
 
 [![Tema CORRIDA MALUCA no DOORS! 👁️](https://img.youtube.com/vi/tGmZlo4ulQI/maxresdefault.jpg)](https://youtu.be/tGmZlo4ulQI)
 ```lua
