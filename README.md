@@ -33,3 +33,8 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```lua
   loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/SaveRooms(Doors).lua"))()
   ```
+- **5 Ambushs**
+> Inspirado nesse [Video](https://youtu.be/UdyCa5RvuB8) do [Reginaldoo](https://youtube.com/@REIginaldoo)
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/5Ambushs-mod.lua"))()
+```
