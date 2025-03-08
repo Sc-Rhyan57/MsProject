@@ -103,9 +103,9 @@ for _, items in pairs(_G.Items) do
 end
 
 _G.Entities = {
-    common = {"Eyes", "Halt", "Timothy", "Screech"},
-    uncommon = {"Rush", "Ambush", "Glitch", "Shadow"},
-    rare = {"Figure", "A-60", "A-90", "Blitz"},
+    common = {"Eyes", "Timothy"},
+    uncommon = {"Rush", "Ambush", "Glitch"},
+    rare = {"Figure", "A-60", "Blitz"},
     legendary = {"A-120", "Jeff The Killer", "Lookman"}
 }
 
