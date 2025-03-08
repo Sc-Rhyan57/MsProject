@@ -81,7 +81,7 @@ _G.Config = {
     debugMode = false,
     autoReviveEnabled = true,
     itemDropInterval = {min = 60, max = 120},
-    specialRooms = {"SeekIntro", "Seek", "Halt", "A-60", "A-90"},
+    specialRooms = {"SeekIntro", "Seek", "Halt"},
     debugLogs = {},
     commandsEnabled = true,
     modEnabled = true,
@@ -181,7 +181,8 @@ local function reviverTodos()
     local deleteArgs = {[1] = "DELETE ALL", [2] = {}}
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(deleteArgs))
     ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(args))
-    wait(1)
+    task.wait(1)
+    saveDebugLog("Todos jogadores morreram!")
     Notificar("Reviver", "Todos os jogadores foram revividos!", 5)
     SendMessage("✨ Todos os jogadores foram revividos e as entidades foram removidas!")
     _G.Config.luzAtual = "🟢"
@@ -230,6 +231,7 @@ PlayGitSound("https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projec
     else
         
         PlayGitSound("https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/sounds/doll-red-light.mp3", "LuzVermelha", 5)
+        saveDebugLog("Luz muda de cor: 🟥")
         SendMessage("🔴 Luz Vermelha - PARE IMEDIATAMENTE!")
         Notificar("Luz Vermelha", "PARE DE SE MOVER!", 5)
         spawn(function()
@@ -291,6 +293,7 @@ local function monitorarSala()
                     _G.Config.notificacaoSalaEspecial = true
                     Notificar("Sala Especial", "Sistema pausado temporariamente", 5, Color3.new(1, 0, 0))
                     SendMessage("⚠️ Sistema pausado - Sala especial detectada!")
+                    saveDebugLog"Sala especial detectada!")
                 end
             else
                 if _G.Config.pausarPorSala then
@@ -298,14 +301,16 @@ local function monitorarSala()
                     _G.Config.loopsAtivos = true
                     _G.Config.notificacaoSalaEspecial = false
                     Notificar("Sistema Retomado", "Continuando operação normal", 5)
-                    SendMessage("✅ Sistema retomado - Você saiu da sala especial!")
+                    SendMessage("✅ Sistema retomado - host saiu da sala especial!")
+                    saveDebugLog("Saindo da sala especial!")
                 end
             end
         end
         if currentRoom >= 2 and not _G.Config.systemActive then
             _G.Config.systemActive = true
-            SendMessage("✅ Mod ativado - Passando da porta 2!")
-            SendMessage("📍 Quando estiver vermelho pare quando estiver verde ande.[ Fique de olho ao chat! ]")
+            saveDebugLog("Mod iniciado")
+            SendMessage("✅ Mod ativado")
+            SendMessage("[DICA] Quando estiver vermelho pare quando estiver verde ande.[ Fique de olho ao chat! ]")
             Notificar("Sistema Ativo", "Quando estiver vermelho PARE quando estiver VERDE ande!", 5)
         end
         if currentRoom == 100 and not _G.Config.gameWon then
@@ -337,6 +342,7 @@ local function monitorarSala()
                 end
                 darItensAleatorios("legendary")
                 SendMessage("🎁 Recompensas de vitória distribuídas!")
+                saveDebugLog("PORTA 100 ALCANÇADA)
             end
         end
     end
@@ -419,6 +425,7 @@ local Commands = {
             [2] = {
                 ["Players"] = {[player.Name] = player.Name},
                 ["Max Health"] = 100,
+                ["Health"] = 100,
                 ["Health"] = 100,
                 ["Speed Boost"] = 25
             }
@@ -668,9 +675,10 @@ game.Players.PlayerAdded:Connect(function(player)
     end
 end)
 
-SendMessage("📍 Doors Six - By rhyan57 (Enhanced)")
+SendMessage("[ DOORS SIX | 0.0.3 ]")
 SendMessage("📍 Use !comandos para ver todos os comandos disponíveis")
 task.wait(1)
+saveDebugLog("Mod ativado")
 SendMessage("⚠️ Mod carregado! o host deve passar da porta 2 para ativar o mod.")
 Notificar("Mod Carregado", "Passe da porta 2 para ativa-lo.", 10, Color3.new(1, 1, 0))
         
