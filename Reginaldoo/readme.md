@@ -1,4 +1,5 @@
 <h2 align="center"> • Modifiers • </h2>
+<hr style="border: 2px solid red; width: 50%;">
 
 [![Tema CORRIDA MALUCA no DOORS! 👁️](https://img.youtube.com/vi/tGmZlo4ulQI/maxresdefault.jpg)](https://youtu.be/tGmZlo4ulQI)
 ```lua
@@ -20,6 +21,7 @@ local msproject = {
 
 game:GetService("ReplicatedStorage").RemotesFolder.CreateElevator:FireServer(unpack(msproject))
 ```
+<hr style="border: 2px solid red; width: 50%;">
 
 <h3 align="center">Funcionam nos seus executores favoritos!</h3>
 <p align="center">
