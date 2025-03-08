@@ -1,4 +1,4 @@
-AQUI TEM ALGUNS COMBOS DE MODIFIERS QUE O [REGINALDOO](https://youtube.com/@REIginaldoo) usa em seus videos.
+## MODIFIERS RECENTES:
 
 [![Tema CORRIDA MALUCA no DOORS! 👁️](https://img.youtube.com/vi/tGmZlo4ulQI/maxresdefault.jpg)](https://youtu.be/tGmZlo4ulQI)
 ```lua
@@ -20,3 +20,19 @@ local msproject = {
 
 game:GetService("ReplicatedStorage").RemotesFolder.CreateElevator:FireServer(unpack(msproject))
 ```
+
+<h3 align="center">Funcionam nos seus executores favoritos!</h3>
+<p align="center">
+  <a href="https://deltaexploits.gg/">
+    <img src="https://deltaexploits.gg/favicon.ico" width="50">
+  </a>
+  <a href="https://krnl.cat/">
+    <img src="https://krnl.cat/favicon.ico" width="50">
+  </a>
+  <a href="https://fluxus-team.net/download/">
+    <img src="https://fluxus-team.net/wp-content/uploads/2024/03/Fluxus-icon.webp" width="50">
+  </a>
+  <a href="https://codex.lol/">
+    <img src="https://codex.lol/favicon.ico" width="50">
+  </a>
+</p>
