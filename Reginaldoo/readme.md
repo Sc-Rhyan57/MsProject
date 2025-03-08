@@ -2,7 +2,7 @@ AQUI TEM ALGUNS COMBOS DE MODIFIERS QUE O [REGINALDOO](https://youtube.com/@REIg
 
 [![Tema CORRIDA MALUCA no DOORS! 👁️](https://img.youtube.com/vi/tGmZlo4ulQI/maxresdefault.jpg)](https://youtu.be/tGmZlo4ulQI)
 ```lua
-local msproject-args = {
+local msproject = {
     [1] = {
         ["Mods"] = {
             [1] = "PlayerFastest",
@@ -18,5 +18,5 @@ local msproject-args = {
     }
 }
 
-game:GetService("ReplicatedStorage").RemotesFolder.CreateElevator:FireServer(unpack(msproject-args))
+game:GetService("ReplicatedStorage").RemotesFolder.CreateElevator:FireServer(unpack(msproject))
 ```
