@@ -3,6 +3,8 @@
 >
 > [**DOORS**](https://github.com/Sc-Rhyan57/MsProject/blob/main/README.md#doors--scripts)
 
+## OUTROS:
+> [**Reginaldoo mods**](Reginaldoo/readme.md)
 # **UNIVERSAL : SCRIPTS**
 
 - **TP FLING**
