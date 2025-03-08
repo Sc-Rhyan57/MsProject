@@ -1,3 +1,9 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
 local function msg(message)
     local mainGame = require(LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game)
     mainGame.caption(message, true)
