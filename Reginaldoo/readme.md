@@ -1,3 +1,4 @@
+
 <h2 align="center"> • Modifiers • </h2>
 <hr style="border: 2px solid red; width: 50%;">
 
@@ -29,12 +30,15 @@ game:GetService("ReplicatedStorage").RemotesFolder.CreateElevator:FireServer(unp
     <img src="https://deltaexploits.gg/favicon.ico" width="50">
   </a>
   <a href="https://krnl.cat/">
-    <img src="https://krnl.cat/assets/logo.svg" width="50">
+    <img src="https://krnl.cat/favicon.ico" width="50">
   </a>
   <a href="https://fluxus-team.net/download/">
     <img src="https://fluxus-team.net/wp-content/uploads/2024/03/Fluxus-icon.webp" width="50">
   </a>
   <a href="https://codex.lol/">
     <img src="https://codex.lol/favicon.ico" width="50">
+  </a>
+  <a href="https://arceusx.com/">
+    <img src="https://arceusx.com/favicon.ico" width="50">
   </a>
 </p>
