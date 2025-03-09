@@ -29,7 +29,7 @@ game:GetService("ReplicatedStorage").RemotesFolder.CreateElevator:FireServer(unp
     <img src="https://deltaexploits.gg/favicon.ico" width="50">
   </a>
   <a href="https://krnl.cat/">
-    <img src="https://krnl.cat/favicon.ico" width="50">
+    <img src="https://krnl.cat/assets/logo.svg" width="50">
   </a>
   <a href="https://fluxus-team.net/download/">
     <img src="https://fluxus-team.net/wp-content/uploads/2024/03/Fluxus-icon.webp" width="50">
