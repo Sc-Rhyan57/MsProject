@@ -39,6 +39,6 @@ game:GetService("ReplicatedStorage").RemotesFolder.CreateElevator:FireServer(unp
     <img src="https://codex.lol/favicon.ico" width="50">
   </a>
   <a href="https://arceusx.com/">
-    <img src="https://arceusx.com/favicon.ico" width="50">
+    <img src="https://arceusx.com/wp-content/uploads/2022/08/arceusx-logo.png" width="50">
   </a>
 </p>
