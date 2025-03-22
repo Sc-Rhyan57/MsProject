@@ -752,13 +752,21 @@ function SpoFly:UpdateNowPlaying()
 end
 
 function SpoFly:UpdateSongsList()
+    -- Verificar se UIElements e SongsHolder existem
+    if not self.UIElements.SongsHolder then
+        error("Erro: self.UIElements.SongsHolder não foi inicializado!")
+        return
+    end
+    
+    -- Inicializar SongButtons se não existir
+    self.UIElements.SongButtons = self.UIElements.SongButtons or {}
+
     -- Limpar botões existentes
     for _, button in pairs(self.UIElements.SongButtons) do
         button:Remove()
     end
-    
     self.UIElements.SongButtons = {}
-    
+
     -- Adicionar novos botões para cada música
     for i, song in ipairs(self.Songs) do
         local isCurrentSong = self.CurrentSong and self.CurrentSong.name == song.name
@@ -770,28 +778,23 @@ function SpoFly:UpdateSongsList()
             Func = function()
                 self:Stop()
                 
-                -- Encontre o índice na ordem de reprodução
-                local playOrderIndex = 1
-                for j, songIndex in ipairs(self.PlayOrder) do
-                    if songIndex == i then
-                        playOrderIndex = j
-                        break
-                    end
+                -- Encontrar índice correto na ordem de reprodução
+                local playOrderIndex = table.find(self.PlayOrder, i) or 1
+
+                if not self.Songs[playOrderIndex] then
+                    error("Erro: Índice de reprodução inválido!")
                 end
-                
+
                 self:PrepareSong(playOrderIndex)
                 self:Play()
-            end,
-            DoubleClick = false
+            end
         })
         
+        -- Ajustar cor do botão com base na música atual e curtida
         if isCurrentSong then
             button.TextColor3 = self.Theme.Primary
-        end
-        
-        if isLiked then
-            -- Não podemos modificar só parte do texto, então apenas usamos uma cor diferente
-            button.TextColor3 = isCurrentSong and self.Theme.Primary or self.Theme.TextSecondary
+        elseif isLiked then
+            button.TextColor3 = self.Theme.TextSecondary
         end
         
         table.insert(self.UIElements.SongButtons, button)
