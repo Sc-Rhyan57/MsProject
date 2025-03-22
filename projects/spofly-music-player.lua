@@ -532,6 +532,7 @@ function SpoFly:CreateInterface()
     -- Barra de progresso
     PlayerSection:AddDivider()
     self.UIElements.ProgressSlider = PlayerSection:AddSlider("Progresso", {
+        Text = "Progresso",
         Min = 0,
         Max = 100,
         Default = 0,
@@ -586,7 +587,8 @@ function SpoFly:CreateInterface()
     ControlsSection:AddDivider()
     ControlsSection:AddLabel("Volume", true)
     
-    self.UIElements.VolumeSlider = ControlsSection:AddSlider("", {
+    self.UIElements.VolumeSlider = ControlsSection:AddSlider("Volumo", {
+        Text = "Volume",
         Min = 0,
         Max = 100,
         Default = 50,
