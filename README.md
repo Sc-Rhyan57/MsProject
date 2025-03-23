@@ -3,6 +3,8 @@
 >
 > [**DOORS**](https://github.com/Sc-Rhyan57/MsProject/blob/main/README.md#doors--scripts)
 
+> [**MATEMÁTICA**](https://github.com/Sc-Rhyan57/MsProject/blob/main/README.md#math--scripts)
+> 
 ## OUTROS:
 > [**Modificadores do Reginaldoo**](Reginaldoo/readme.md)
 > 
@@ -41,3 +43,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/5Ambushs-mod.lua"))()
 ```
+
+# **MATH : SCRIPTS**
+- **AUTO CÁLCULO BY RHYAN57**
+
