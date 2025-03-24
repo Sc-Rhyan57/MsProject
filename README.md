@@ -50,6 +50,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 - **AUTO CÁLCULO BY RHYAN57**
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/math.lua"))()
+```
 
 <hr style="border: 2px solid red; width: 50%;">
 
