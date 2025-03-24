@@ -50,3 +50,24 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 - **AUTO CÁLCULO BY RHYAN57**
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/math.lua"))()
+
+<hr style="border: 2px solid red; width: 50%;">
+
+<h3 align="center">Funcionam nos seus executores favoritos!</h3>
+<p align="center">
+  <a href="https://deltaexploits.gg/">
+    <img src="https://deltaexploits.gg/favicon.ico" width="50">
+  </a>
+  <a href="https://krnl.cat/">
+    <img src="https://krnl.cat/favicon.ico" width="50">
+  </a>
+  <a href="https://fluxus-team.net/download/">
+    <img src="https://fluxus-team.net/wp-content/uploads/2024/03/Fluxus-icon.webp" width="50">
+  </a>
+  <a href="https://codex.lol/">
+    <img src="https://codex.lol/favicon.ico" width="50">
+  </a>
+  <a href="https://arceusx.com/">
+    <img src="https://arceusx.com/wp-content/uploads/2022/08/arceusx-logo.png" width="50">
+  </a>
+</p>
