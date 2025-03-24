@@ -45,6 +45,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```
 
 # **MATH : SCRIPTS**
+[![Tema CORRIDA MALUCA no DOORS! 👁️](https://tr.rbxcdn.com/180DAY-060501087344cd90641f0e31ea40bc15/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/127707120843339/Math-Murder)
 - **AUTO CÁLCULO BY RHYAN57**
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/math.lua"))()
