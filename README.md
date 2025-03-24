@@ -2,7 +2,6 @@
 > [**UNIVERSAL**](https://github.com/Sc-Rhyan57/MsProject/blob/main/README.md#universal--scripts)
 >
 > [**DOORS**](https://github.com/Sc-Rhyan57/MsProject/blob/main/README.md#doors--scripts)
-
 > [**MATEMÁTICA**](https://github.com/Sc-Rhyan57/MsProject/blob/main/README.md#math--scripts)
 > 
 ## OUTROS:
@@ -46,4 +45,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 
 # **MATH : SCRIPTS**
 - **AUTO CÁLCULO BY RHYAN57**
-
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/math.lua"))()
