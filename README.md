@@ -26,6 +26,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```
 
 # **DOORS : SCRIPTS**
+[![ODOORS SCRIPTS](https://tr.rbxcdn.com/180DAY-af2d9b55dbc9b730d098c2fbc60902f5/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/6516141723/DOORS)
 - **Green Light Red Light doors mod**
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/greenLight-RedLight-doors-by-rhyan.lua"))()
@@ -45,7 +46,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```
 
 # **MATH : SCRIPTS**
-[![Tema CORRIDA MALUCA no DOORS! 👁️](https://tr.rbxcdn.com/180DAY-060501087344cd90641f0e31ea40bc15/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/127707120843339/Math-Murder)
+[![MATH SCRIPTS](https://tr.rbxcdn.com/180DAY-060501087344cd90641f0e31ea40bc15/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/127707120843339/Math-Murder)
 - **AUTO CÁLCULO BY RHYAN57**
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/math.lua"))()
