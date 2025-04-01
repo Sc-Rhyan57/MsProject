@@ -293,7 +293,7 @@ local function monitorarSala()
                     _G.Config.notificacaoSalaEspecial = true
                     Notificar("Sala Especial", "Sistema pausado temporariamente", 5, Color3.new(1, 0, 0))
                     SendMessage("⚠️ Sistema pausado - Sala especial detectada!")
-                    saveDebugLog"Sala especial detectada!")
+                    saveDebugLog("Sala especial detectada!")
                 end
             else
                 if _G.Config.pausarPorSala then
