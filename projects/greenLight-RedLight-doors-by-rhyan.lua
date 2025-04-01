@@ -342,7 +342,7 @@ local function monitorarSala()
                 end
                 darItensAleatorios("legendary")
                 SendMessage("🎁 Recompensas de vitória distribuídas!")
-                saveDebugLog("PORTA 100 ALCANÇADA)
+                saveDebugLog("PORTA 100 ALCANÇADA")
             end
         end
     end
