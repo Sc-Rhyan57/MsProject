@@ -162,11 +162,11 @@ local function saveDebugLog(message)
         table.insert(_G.Config.debugLogs, logMessage)
         print(logMessage)
         pcall(function()
-            if not isfolder("msprojects") then
-                makefolder("msprojects")
+            if not isfolder("msproject") then
+                makefolder("msproject")
             end
-            if not isfolder("msprojects/Doors") then
-                makefolder("msprojects/Doors")
+            if not isfolder("msproject/DoorsSix") then
+                makefolder("msproject/DoorsSix")
             end
             appendfile(_G.Config.debugFilePath, logMessage .. "\n")
         end)
@@ -246,6 +246,7 @@ PlayGitSound("https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projec
                         local entidadeArgs = {[1] = entidade, [2] = {["Players"] = {[player.Name] = player.Name}}}
                         ReplicatedStorage.RemotesFolder.AdminPanelRunCommand:FireServer(unpack(entidadeArgs))
                         SendMessage("💀 " .. player.Name .. " se moveu na luz vermelha e invocou " .. entidade .. "!")
+                        saveDebugLog("💀 " .. player.Name .. " se moveu na luz vermelha e invocou " .. entidade .. "!")
                     end
                 end
                 verificarMortos()
