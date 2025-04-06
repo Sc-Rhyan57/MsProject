@@ -24,6 +24,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/super-ring-parts-with-target-player.lua"))()
 ```
+- **SUPER RING PARTS WITH TARGET PLAYER[ Antigo ]**
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/super-ring-players-old.lua"))()
+```
 
 # **DOORS : SCRIPTS**
 [![ODOORS SCRIPTS](https://tr.rbxcdn.com/180DAY-2121ad4f70fdfc0be3248ef980c17bf0/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/6516141723/DOORS)
