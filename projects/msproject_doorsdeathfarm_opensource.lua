@@ -2,6 +2,16 @@ local player = game.Players.LocalPlayer
 if player and player.PlayerGui:FindFirstChild("LoadingUI") and player.PlayerGui.LoadingUI.Enabled then
     repeat task.wait() until not player.PlayerGui:FindFirstChild("LoadingUI") and true or not player.PlayerGui.LoadingUI.Enabled
 end
+local MsdoorsNotify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/Notification-doorsAPI/refs/heads/main/Msdoors/MsdoorsApi.lua"))()
+
+MsdoorsNotify(
+    "Started!", 
+    "Waiting...(DON'T TOUCH ANYTHING!)", 
+    "", 
+    "rbxassetid://6023426923", 
+    Color3.new(0, 1, 0), 
+    5
+)
 
 task.wait(0.5)
 
