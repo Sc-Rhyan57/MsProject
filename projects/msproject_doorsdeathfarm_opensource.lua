@@ -797,7 +797,7 @@ local function RegisterExecuteOnTeleport()
     if queuedToTeleport then return end
     queuedToTeleport = true
     
-    local scriptToExecute = [[ print("Oi! Teleporte concluído!") ]]
+    local scriptToExecute = [[ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/msproject_doorsdeathfarm_opensource.lua"))() ]]
     
     queue_on_teleport(scriptToExecute)
     print("Script registrado para executar após o teleporte!")
