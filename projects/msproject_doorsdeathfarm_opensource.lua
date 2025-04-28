@@ -25,6 +25,18 @@ if skipButton then
     fireproximityprompt(skipButton)
 end
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RemotesFolder = ReplicatedStorage:WaitForChild("RemotesFolder")
+local MotorReplication = RemotesFolder:WaitForChild("MotorReplication")
+
+while true do
+    MotorReplication:FireServer(-900)
+    task.wait(0.1)
+    
+    MotorReplication:FireServer(0)
+    task.wait(0.1)
+end
+
 task.wait(12) --[[ Rhyan57: Se você remover este Task.wait é 100% de chance do sistema quebrar ]]--
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
