@@ -10,7 +10,7 @@ MsdoorsNotify(
     "", 
     "rbxassetid://6023426923", 
     Color3.new(0, 1, 0), 
-    5
+    12
 )
 
 task.wait(0.5)
@@ -25,7 +25,7 @@ if skipButton then
     fireproximityprompt(skipButton)
 end
 
-task.wait(10) --[[ Rhyan57: Se você remover este Task.wait é 100% de chance do sistema quebrar ]]--
+task.wait(12) --[[ Rhyan57: Se você remover este Task.wait é 100% de chance do sistema quebrar ]]--
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
 local RunService = game:GetService("RunService")
@@ -274,6 +274,46 @@ local function MoveToPathDirectly(waypoints)
     
     return false
 end
+
+--[[
+local function MoveToPathDirectly(waypoints)
+    if not waypoints or #waypoints < 2 then
+        return false
+    end
+    
+    local targetPosition = waypoints[#waypoints].Position
+    Humanoid:MoveTo(targetPosition)
+    Humanoid.WalkSpeed = MOVE_SPEED
+    
+    local startTime = tick()
+    local previousDistance = (HumanoidRootPart.Position - targetPosition).Magnitude
+    local stuckCounter = 0
+    
+    while tick() - startTime < PATH_TIMEOUT do
+        local currentDistance = (HumanoidRootPart.Position - targetPosition).Magnitude
+        
+        if currentDistance < 3 then
+            return true
+        end
+        
+        if math.abs(previousDistance - currentDistance) < 0.1 then
+            stuckCounter = stuckCounter + 1
+            if stuckCounter >= PATH_STUCK_THRESHOLD then
+                Humanoid.Jump = true
+                task.wait(0.1)
+                stuckCounter = 0
+            end
+        else
+            stuckCounter = 0
+        end
+        
+        previousDistance = currentDistance
+        task.wait(0.05)
+    end
+    
+    return false
+end
+]]--
 
 local function FindPrimaryPart(model)
     if not model then return nil end
