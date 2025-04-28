@@ -521,29 +521,11 @@ local heartbeatConnection = nil
 
 local function HandleEyes(eyes)
     if not eyes then return end
+game:GetService("ReplicatedStorage").RemotesFolder.MotorReplication:FireServer(-900)
+
+
+game:GetService("ReplicatedStorage").RemotesFolder.MotorReplication:FireServer(0)
     eyesDetected = true
-    
-    local core = eyes:FindFirstChild("Core") or eyes
-    local targetPosition = core and core:IsA("BasePart") and core.Position or eyes.Position
-    
-    RunService:BindToRenderStep("EyesAimbot", Enum.RenderPriority.Camera.Value, function()
-        if not eyes or not eyes.Parent then
-            RunService:UnbindFromRenderStep("EyesAimbot")
-            eyesDetected = false
-            return
-        end
-        
-        local currentCamera = workspace.CurrentCamera
-        local corePosition = core and core.Position or eyes.Position
-        currentCamera.CFrame = CFrame.new(currentCamera.CFrame.Position, corePosition)
-    end)
-    
-    while eyes and eyes.Parent do
-        task.wait(0.1)
-    end
-    
-    RunService:UnbindFromRenderStep("EyesAimbot")
-    eyesDetected = false
 end
 
 local function StartEyesMonitoring()
