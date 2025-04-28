@@ -40,7 +40,7 @@ local NODE_TRANSPARENCY = 0.3
 local BEAM_TRANSPARENCY = 0.2
 local PATH_COLOR = Color3.fromRGB(0, 255, 0)
 local PATH_STUCK_THRESHOLD = 3
-local DIRECT_MOVE_DISTANCE = 15
+local DIRECT_MOVE_DISTANCE = 5
 local INTERACTION_DISTANCE = 6
 local DOOR_INTERACTION_DISTANCE = 10
 local NODE_SIZE = 0.7
@@ -359,7 +359,7 @@ local function FindKeyHitbox()
         if success and result then
             -- Increase the hitbox size
             pcall(function()
-                result.Size = result.Size * 2  -- Doubled the hitbox size
+                result.Size = result.Size * 9 -- Doubled the hitbox size
             end)
             return result
         end
@@ -374,7 +374,7 @@ local function FindKeyHitbox()
                 keyHitbox = descendant
                 -- Increase the hitbox size
                 pcall(function()
-                    keyHitbox.Size = keyHitbox.Size * 2  -- Doubled the hitbox size
+                    keyHitbox.Size = keyHitbox.Size * 9  -- Doubled the hitbox size
                 end)
             end
         end)
@@ -397,7 +397,7 @@ local function FindKeyHitbox()
                 keyHitbox = hitbox
                 -- Increase the hitbox size
                 pcall(function()
-                    keyHitbox.Size = keyHitbox.Size * 2  -- Doubled the hitbox size
+                    keyHitbox.Size = keyHitbox.Size * 9 -- Doubled the hitbox size
                 end)
             end
         end
@@ -418,7 +418,7 @@ local function FindKeyHitbox()
         end
         
         if keyHitbox then break end
-        task.wait(0.20)
+        task.wait(0.1)
     end
     
     if assetConnection then assetConnection:Disconnect() end
@@ -434,7 +434,7 @@ local function FindKeyHitbox()
                         if desc:IsA("BasePart") then
                             -- Increase the hitbox size
                             pcall(function()
-                                desc.Size = desc.Size * 2  -- Doubled the hitbox size
+                                desc.Size = desc.Size * 9  -- Doubled the hitbox size
                             end)
                             return desc
                         end
@@ -498,11 +498,11 @@ local function InteractWithTouchInterest(object)
            workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox and
            workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox:FindFirstChild("TouchInterest") then
             local keyTouchInterest = workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox.TouchInterest
-            for i = 1, 10 do  -- Interact 10x faster
-                firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox, 0)
-                task.wait(0.001)  -- Much faster wait time 
-                firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox, 1)
-                task.wait(0.001)  -- Much faster wait time
+            for i = 1, 3 do
+                firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox.TouchInterest, 0)
+                task.wait(0.001)
+                firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox.TouchInterest, 1)
+                task.wait(0.001)
             end
         end
     end)
@@ -510,7 +510,7 @@ local function InteractWithTouchInterest(object)
     local firetouchinterest = firetouchinterest or function(part1, part2, toggle)
         if toggle == 0 then
             part1.CFrame = part2.CFrame
-            task.wait(0.03)  -- Much faster (10x)
+            task.wait(0.03)
             part1.CFrame = part1.CFrame * CFrame.new(0, 10, 0)
         end
     end
@@ -518,11 +518,11 @@ local function InteractWithTouchInterest(object)
     for attemptNum = 1, 5 do  -- Increased number of attempts
         pcall(function()
             firetouchinterest(HumanoidRootPart, object, 0)
-            task.wait(0.001)  -- Much faster (10x)
+            task.wait(0.001)
             firetouchinterest(HumanoidRootPart, object, 1)
         end)
         
-        task.wait(0.01)  -- Much faster wait between attempts
+        task.wait(0.01) 
         
         if HasKey() then
             return true
@@ -532,13 +532,11 @@ local function InteractWithTouchInterest(object)
     local originalPosition = HumanoidRootPart.CFrame
     
     pcall(function()
-        -- Position in front of the hitbox instead of inside it
         local hitboxCFrame = object.CFrame
         local frontPosition = hitboxCFrame.Position - hitboxCFrame.LookVector * 2
         HumanoidRootPart.CFrame = CFrame.new(frontPosition, object.Position)
-        task.wait(0.01)  -- Much faster wait
+        task.wait(0.01) 
         
-        -- Try to interact from this position
         for i = 1, 5 do
             firetouchinterest(HumanoidRootPart, object, 0)
             task.wait(0.001)
@@ -561,11 +559,10 @@ local heartbeatConnection = nil
 
 local function HandleEyes(eyes)
     if not eyes then return end
-game:GetService("ReplicatedStorage").RemotesFolder.MotorReplication:FireServer(-900)
-
-
-game:GetService("ReplicatedStorage").RemotesFolder.MotorReplication:FireServer(0)
     eyesDetected = true
+
+
+    
 end
 
 local function StartEyesMonitoring()
@@ -751,11 +748,6 @@ local function AutomateDoors()
                     firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox, 0)
                     task.wait(0.001)
                     firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox, 1)
-                    task.wait(0.001)
-                    firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox, 0)
-                    task.wait(0.001)
-                    firetouchinterest(HumanoidRootPart, workspace.CurrentRooms["0"].Assets.KeyObtain.Hitbox, 1)
-                    task.wait(0.001)
                 end
             end
         end)
