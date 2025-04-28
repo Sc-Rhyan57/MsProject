@@ -121,9 +121,9 @@ local function DeleteObjects()
         workspace.CurrentRooms["0"].Assets.Rug,
         workspace.CurrentRooms["0"].Assets.Desk_Bell,
         workspace.CurrentRooms["0"].RiftSpawn,
-        workspace.CurrentRooms["0"].Parts.PlayerCollision
-        game:GetService("ReplicatedStorage").ClientModules.GuidingRespawn
-        game:GetService("ReplicatedStorage").ClientModules.EntityModules.Void
+        workspace.CurrentRooms["0"].Parts.PlayerCollision,
+        game:GetService("ReplicatedStorage").ClientModules.GuidingRespawn,
+        game:GetService("ReplicatedStorage").ClientModules.EntityModules.Void,
         game:GetService("ReplicatedStorage").RemotesFolder.CamShake
     }
     
