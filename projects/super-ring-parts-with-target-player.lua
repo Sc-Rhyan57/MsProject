@@ -9,8 +9,8 @@ getgenv().Msproject_Config = {
     Target = nil,
     TargetName = "",
     Enabled = false,
-    Power = 5000,
-    MaxPower = 5000,
+    Power = 50000,
+    MaxPower = 50000,
     Range = 999,
     PullDelay = 0.1
 }
