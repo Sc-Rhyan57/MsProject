@@ -223,7 +223,6 @@ local function updatePartOwnership(part)
         Network.ControlledParts[part] = true
         part.CustomPhysicalProperties = PhysicalProperties.new(0.001, 0.001, 0.001, 0.001, 0.001)
         part.Velocity = Network.Velocity
-        part.CanCollide = false
         part.Massless = true
         part.Color = Color3.new(1, 0, 0)
     end
@@ -233,7 +232,6 @@ local function releasePartOwnership(part)
     Network.PartOwnership[part] = nil
     Network.ControlledParts[part] = nil
     part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5, 1, 1)
-        part.CanCollide = false
         part.Massless = true
         part.Color = Color3.new(1, 0, 0)
 end
@@ -264,7 +262,6 @@ local function updatePartPosition(part, targetPosition)
         part.Velocity = velocity
     else
         part.Velocity = Vector3.new(0, 0, 0)
-        part.CanCollide = false
         part.Massless = true
         part.Color = Color3.new(1, 0, 0)
     end
