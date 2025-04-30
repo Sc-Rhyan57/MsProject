@@ -26,7 +26,7 @@ MsdoorsNotify(
     10
     )
 task.wait(5)
-game:GetService("Players").LocalPlayer:Kick("Only run in lobby, not in game!\n https://dsc.gg/betterstar Only run in lobby, not in game! \n Found a Bug? https://dsc.gg/betterstar")
+game:GetService("Players").LocalPlayer:Kick("Only run in lobby, not in game! \n Found a Bug? https://dsc.gg/betterstar")
 
 end
 
