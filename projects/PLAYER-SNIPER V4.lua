@@ -9,9 +9,9 @@ getgenv().Msproject_Config = {
     Target = nil,
     TargetName = "",
     Enabled = false,
-    Power = 75000,
+    Power = 95000,
     MaxPower = 100000,
-    Range = 999,
+    Range = 1000,
     PullDelay = 0.05
 }
 
@@ -20,7 +20,7 @@ if not getgenv().Network then
         BaseParts = {},
         ControlledParts = {},
         PartOwnership = {},
-        Velocity = Vector3.new(30, 30, 30)
+        Velocity = Vector3.new(90, 90, 90)
     }
 end
 
@@ -294,7 +294,7 @@ local StatsDisplay = Instance.new("TextLabel")
 StatsDisplay.Size = UDim2.new(1, -20, 0, 75)
 StatsDisplay.Position = UDim2.new(0, 10, 0, 30)
 StatsDisplay.BackgroundTransparency = 1
-StatsDisplay.Text = "🔧 Parts Controlled: 0\n📏 Range: " .. Msproject_Config.Range .. "\n⚡ Status: Ready\n🎯 Target Distance: N/A"
+StatsDisplay.Text = "🔧 Parts Controlled: 0\n📏 Range: " .. Msproject_Config.Range .. "\n⚡ Status: Ready\n🎯 Target Distance: N/A\nrhyan57"
 StatsDisplay.TextColor3 = Color3.fromRGB(180, 180, 200)
 StatsDisplay.TextSize = 13
 StatsDisplay.Font = Enum.Font.Gotham
@@ -349,7 +349,7 @@ local function updateStatsDisplay()
     end
     
     StatsDisplay.Text = string.format(
-        "🔧 Parts Controlled: %d\n📏 Range: %d\n⚡ Status: %s\n🎯 Target Distance: %s",
+        "🔧 Parts Controlled: %d\n📏 Range: %d\n⚡ Status: %s\n🎯 Target Distance: %s\nrhyan57",
         controlledCount,
         Msproject_Config.Range,
         Msproject_Config.Enabled and "Active" or "Ready",
