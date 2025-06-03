@@ -20,6 +20,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/Ms_TpflingV2.lua"))()
 ```
 
+-- **PLAYER SNIPER V3**
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/PLAYER-SNIPER%20V4.lua"))()
+```
 - **SUPER RING PARTS WITH TARGET PLAYER**
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/super-ring-parts-with-target-player.lua"))()
