@@ -11,7 +11,7 @@ getgenv().Msproject_Config = {
     Enabled = false,
     Power = 95000,
     MaxPower = 100000,
-    Range = 1000,
+    Range = 96000,
     PullDelay = 0.05
 }
 
@@ -572,4 +572,4 @@ local function SendChatMessage(message)
     end
 end
 
-SendChatMessage("👋 Rhyan57 is the best")
+SendChatMessage("Opa glr! ")
