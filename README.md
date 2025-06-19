@@ -35,6 +35,11 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 
 # **DOORS : SCRIPTS**
 [![ODOORS SCRIPTS](https://tr.rbxcdn.com/180DAY-2121ad4f70fdfc0be3248ef980c17bf0/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/6516141723/DOORS)
+- **Sprint with speed bypass )**
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/DOORS-SPRINT.lua"))()
+``` 
+
 - **Green Light Red Light doors mod**
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/greenLight-RedLight-doors-by-rhyan.lua"))()
