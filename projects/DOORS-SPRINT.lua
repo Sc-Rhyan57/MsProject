@@ -4,44 +4,21 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 _G.msrhyan_config_sprint = _G.msrhyan_config_sprint or {
-    -- ⏱️ DURAÇÃO DA STAMINA
-    timetospeedexpire = 25, -- Tempo em segundos que a stamina dura durante o sprint (0 = infinita)
-    
-    -- ⏳ TEMPO DE COOLDOWN
-    cooldowntime = 5, -- Tempo em segundos que você deve aguardar após a stamina acabar antes de poder usar novamente
-    
-    -- 🏃 VELOCIDADE DO SPRINT
-    sprintspeed = 50, -- Velocidade de movimento durante o sprint (padrão do jogo é geralmente 16-20)
-    
-    -- ⚡ TRANSIÇÕES DE VELOCIDADE
-    speedapplytime = 0.3, -- Tempo em segundos para acelerar até a velocidade máxima do sprint
-    speedremovetime = 0.5, -- Tempo em segundos para desacelerar de volta à velocidade normal
-    
-    -- 🔋 RECUPERAÇÃO DA STAMINA
-    staminarecovertime = 10, -- Tempo em segundos para a stamina se recuperar completamente de 0% para 100%
-    
-    -- ✨ EFEITOS VISUAIS
-    effectfadetime = 0.2, -- Tempo em segundos para os efeitos visuais aparecerem/desaparecerem
-    
-    -- 💬 MENSAGENS DE STAMINA
-    showstaminamessages = true, -- true = mostra mensagens quando stamina acaba, false = sem mensagens
-    customstaminamessage = "SUA STAMINA ACABOU, AGUARDE %ds!", -- Mensagem personalizada (%ds será substituído pelo tempo)
-    
-    -- 🎨 ATIVAÇÃO DOS EFEITOS
-    enableeffects = true, -- true = ativa efeitos visuais na tela, false = sem efeitos
-    
-    -- 🌈 COR DOS EFEITOS VISUAIS
-    effectcolor = {100, 200, 255}, -- Cor do efeito visual durante o sprint [R, G, B] (0-255 cada)
-    
-    -- 📊 COR DA BARRA DE STAMINA
-    staminabarcolor = {0, 162, 255}, -- Cor da barra de stamina [R, G, B] (0-255 cada)
-    
-    -- 📷 CAMPO DE VISÃO (FOV)
-    sprintfov = 120, -- Campo de visão durante o sprint (maior = mais amplo, sensação de velocidade)
-    normalfov = 70, -- Campo de visão normal quando não está sprintando
-    
-    -- 🔄 USO DURANTE RECUPERAÇÃO
-    usewhileloading = false, -- true = pode usar sprint com 10%+ de stamina mesmo recuperando, false = só após cooldown completo
+    timetospeedexpire = 25,
+    cooldowntime = 5,
+    sprintspeed = 50,
+    speedapplytime = 0.3,
+    speedremovetime = 0.5,
+    staminarecovertime = 10,
+    effectfadetime = 0.2,
+    showstaminamessages = true,
+    customstaminamessage = "SUA STAMINA ACABOU, AGUARDE %ds!",
+    enableeffects = true,
+    effectcolor = {100, 200, 255},
+    staminabarcolor = {0, 162, 255},
+    sprintfov = 120,
+    normalfov = 70,
+    usewhileloading = false,
 }
 
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -82,7 +59,7 @@ local function msg(message, color)
     end)
 end
 
-msg(" Made by Rhyan57")
+msg(" Made by Rhyan57")
 
 local function SetupCollision()
     Collision = Character:FindFirstChild("Collision")
@@ -131,20 +108,18 @@ local function CreateStaminaBar(isMobile)
     end
     
     if isMobile then
-        -- Para mobile, criar dentro do MainFrame.MobileButtons
         local mainUI = LocalPlayer.PlayerGui:WaitForChild("MainUI")
         local mobileButtons = mainUI.MainFrame.MobileButtons
         
         staminaBarFrame = Instance.new("Frame")
         staminaBarFrame.Name = "StaminaBarFrame"
         staminaBarFrame.Size = UDim2.new(0, 200, 0, 15)
-        staminaBarFrame.Position = UDim2.new(0.5, -100, 0, -25) -- Acima dos botões
+        staminaBarFrame.Position = UDim2.new(0.5, -100, 0, -25)
         staminaBarFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         staminaBarFrame.BorderSizePixel = 0
         staminaBarFrame.Parent = mobileButtons
         
     else
-        -- Para PC, manter como estava (ScreenGui separado)
         staminaBarGUI = Instance.new("ScreenGui")
         staminaBarGUI.Name = "SprintStaminaGUI"
         staminaBarGUI.Parent = LocalPlayer.PlayerGui
@@ -202,7 +177,6 @@ local function CreateStaminaBar(isMobile)
     textStroke.Thickness = 1
     textStroke.Parent = staminaLabel
     
-    -- Adicionar título "STAMINA" para mobile
     if isMobile then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Name = "StaminaTitle"
@@ -227,11 +201,10 @@ local function UpdateStaminaBar()
         staminaBarFill.Size = UDim2.new(staminaLeft, 0, 1, 0)
         staminaLabel.Text = math.floor(staminaLeft * 100) .. "%"
         
-        -- Mudar cor da barra baseado no status
         if isRecovering then
-            staminaBarFill.BackgroundColor3 = Color3.fromRGB(255, 165, 0) -- Laranja quando recuperando
+            staminaBarFill.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
         elseif staminaLeft <= 0.2 then
-            staminaBarFill.BackgroundColor3 = Color3.fromRGB(255, 100, 100) -- Vermelho quando baixa
+            staminaBarFill.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
         else
             staminaBarFill.BackgroundColor3 = Color3.fromRGB(_G.msrhyan_config_sprint.staminabarcolor[1], _G.msrhyan_config_sprint.staminabarcolor[2], _G.msrhyan_config_sprint.staminabarcolor[3])
         end
@@ -243,7 +216,13 @@ local function ApplySprintFOV()
         fovUpdateConnection:Disconnect()
     end
     
-    fovUpdateConnection = RunService.Heartbeat:Connect(function()
+    local fovTween = TweenService:Create(Camera,
+        TweenInfo.new(_G.msrhyan_config_sprint.speedapplytime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        {FieldOfView = _G.msrhyan_config_sprint.sprintfov}
+    )
+    fovTween:Play()
+    
+    fovUpdateConnection = RunService.RenderStepped:Connect(function()
         if isSprinting then
             Camera.FieldOfView = _G.msrhyan_config_sprint.sprintfov
         end
@@ -265,10 +244,8 @@ end
 
 local function CanSprint()
     if _G.msrhyan_config_sprint.usewhileloading then
-        -- Pode usar se não estiver no cooldown E tiver pelo menos 10% de stamina
         return not isOnCooldown and staminaLeft > 0.1
     else
-        -- Modo original: só pode usar se não estiver no cooldown
         return not isOnCooldown
     end
 end
@@ -338,11 +315,6 @@ local function StopSprint()
     if not isSprinting then return end
     isSprinting = false
     
-    if staminaUpdateConnection then
-        staminaUpdateConnection:Disconnect()
-        staminaUpdateConnection = nil
-    end
-    
     local speedTween = TweenService:Create(Humanoid,
         TweenInfo.new(_G.msrhyan_config_sprint.speedremovetime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
         {WalkSpeed = originalSpeed}
@@ -364,9 +336,14 @@ local function StopSprint()
 end
 
 local function ManageStamina()
+    if staminaUpdateConnection then
+        staminaUpdateConnection:Disconnect()
+    end
+    
     if _G.msrhyan_config_sprint.timetospeedexpire <= 0 then return end
     
     local staminaDrain = 1 / _G.msrhyan_config_sprint.timetospeedexpire
+    local staminaRecover = 1 / _G.msrhyan_config_sprint.staminarecovertime
     
     staminaUpdateConnection = RunService.Heartbeat:Connect(function(deltaTime)
         if isSprinting and staminaLeft > 0 then
@@ -387,27 +364,18 @@ local function ManageStamina()
                 task.spawn(function()
                     task.wait(_G.msrhyan_config_sprint.cooldowntime)
                     isOnCooldown = false
-                    
-                    local recoverTime = _G.msrhyan_config_sprint.staminarecovertime
-                    local recoverRate = 1 / recoverTime
-                    
-                    local recoverConnection
-                    recoverConnection = RunService.Heartbeat:Connect(function(dt)
-                        staminaLeft = math.min(1, staminaLeft + (recoverRate * dt))
-                        UpdateStaminaBar()
-                        
-                        if staminaLeft >= 1 then
-                            staminaLeft = 1
-                            isRecovering = false
-                            UpdateStaminaBar()
-                            recoverConnection:Disconnect()
-                        end
-                    end)
                 end)
             end
         elseif not isSprinting and not isOnCooldown and staminaLeft < 1 then
-            local recoverRate = 1 / _G.msrhyan_config_sprint.staminarecovertime
-            staminaLeft = math.min(1, staminaLeft + (recoverRate * deltaTime))
+            staminaLeft = math.min(1, staminaLeft + (staminaRecover * deltaTime))
+            UpdateStaminaBar()
+            
+            if staminaLeft >= 1 then
+                isRecovering = false
+                UpdateStaminaBar()
+            end
+        elseif isOnCooldown and staminaLeft < 1 then
+            staminaLeft = math.min(1, staminaLeft + (staminaRecover * deltaTime))
             UpdateStaminaBar()
             
             if staminaLeft >= 1 then
@@ -502,7 +470,6 @@ local function SetupMobile()
         clickTween:Play()
         
         StartSprint()
-        ManageStamina()
     end)
     
     sprintButton.MouseButton1Up:Connect(function()
@@ -560,7 +527,6 @@ local function SetupPC()
         
         if input.KeyCode == sprintKey then
             StartSprint()
-            ManageStamina()
         end
     end)
     
@@ -607,6 +573,7 @@ local function OnCharacterAdded(newCharacter)
     
     CreateStaminaBar(IsMobile())
     UpdateStaminaBar()
+    ManageStamina()
 end
 
 SetupCollision()
