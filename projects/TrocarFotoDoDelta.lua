@@ -13,8 +13,8 @@ local function BAIXARIMAGEM(githubLink)
         warn("[HM] Falha ao baixar a imagem: " .. githubLink)
         return false
     end
-    writefile(fileName, imageData)
-    print("[ pronto ] IMAGEM SALVA! " .. fileName)
+    writefile(deltaimg, imageData)
+    print("[ pronto ] IMAGEM SALVA! " .. deltaimg)
     return true
 end
 
