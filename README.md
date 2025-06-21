@@ -33,6 +33,13 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/super-ring-players-old.lua"))()
 ```
 
+- **Trocar Foto do Delta**
+```lua
+_G.rhyanDeltaImg = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Hotel%20do%20Reginaldoo%E2%84%A2.png"
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/TrocarFotoDoDelta.lua"))()
+```
+
+
 # **DOORS : SCRIPTS**
 [![ODOORS SCRIPTS](https://tr.rbxcdn.com/180DAY-2121ad4f70fdfc0be3248ef980c17bf0/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/6516141723/DOORS)
 - **Sprint ( with speed bypass )**
