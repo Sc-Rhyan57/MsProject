@@ -45,13 +45,13 @@ local function msg(message)
     mainGame.caption(message, true)
 end
 
+local function rhyan()
 msg("Red Light Green Light iniciado!")
-task.wait(0.6)
-msg("Carregando Assets...")
-wait(3)
-msg("Assets baixados!")
-wait(3)
+task.wait(5)
 msg("Made by Rhyan57")
+end
+
+rhyan()
 
 local MsdoorsNotify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/Notification-doorsAPI/refs/heads/main/Msdoors/MsdoorsApi.lua"))()
 
