@@ -62,7 +62,7 @@ end
 msg(" Made by Rhyan57")
 
 local function SetupCollision()
-    Collision = Character:FindFirstChild("Collision")
+    Collision = Character:FindFirstChild("CollisionPart")
     if not Collision then
         for _, part in pairs(Character:GetChildren()) do
             if part:IsA("BasePart") and part.Name:lower():find("collision") then
