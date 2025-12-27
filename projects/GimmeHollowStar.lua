@@ -1,4 +1,4 @@
-if not game.PlaceId = 6516141723 then
+if not game.PlaceId == 6516141723 then
 return
 else
 local pl = game:GetService("Players").LocalPlayer
