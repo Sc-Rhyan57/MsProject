@@ -149,7 +149,8 @@ Tab:AddLabel("")
 Tab:AddButton({
 	Name = "Salvar Mapa no dispositivo atual[PORTA 100]",
 	Callback = function()
-local currentRoom = LocalPlayer:GetAttribute("CurrentRoom")
+local player = Players.LocalPlayer
+local currentRoom = player:GetAttribute("CurrentRoom")
 if tonumber(currentRoom) == 100 then
     local function moveToFolder(parent, folderName)
         if not parent then return end
