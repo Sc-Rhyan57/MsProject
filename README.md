@@ -71,6 +71,12 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/5Ambushs-mod.lua"))()
 ```
 
+- **Get Hollow Star(CLIENT-SIDED)**
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/GimmeHollowStar.lua"))()
+```
+![IMAGEM EXEMPLO](https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Screenshot_20251226-220213.png)
+
 # **MATH : SCRIPTS**
 [![MATH SCRIPTS](https://tr.rbxcdn.com/180DAY-060501087344cd90641f0e31ea40bc15/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/127707120843339/Math-Murder)
 - **AUTO CÁLCULO BY RHYAN57**
