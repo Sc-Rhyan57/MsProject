@@ -1371,6 +1371,7 @@ local function singerSpin()   playSingerAnim(EMOTE_IDS.spin)   end
 
 singerDance()
 
+local GuiService = game:GetService("GuiService")
 local sg = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
 sg.Name = "ArigatoShowGui"; sg.IgnoreGuiInset = true
 sg.ResetOnSpawn = false; sg.DisplayOrder = 999
@@ -1398,9 +1399,12 @@ TweenService:Create(cinemaTop, TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.E
 TweenService:Create(cinemaBot, TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(-0.002,0,1,-(BAR_H+2))}):Play()
 
 local lyricOuter = makeFrame(sg, {
-    Size = UDim2.new(0.65,0,0,72), Position = UDim2.new(0.175,0,1,-162),
+    Size = UDim2.new(0.72, 0, 0, 76),
+    Position = UDim2.new(0.5, 0, 1, -(BAR_H + 96)),
+    AnchorPoint = Vector2.new(0.5, 0),
     BackgroundColor3 = Color3.fromRGB(20,0,55), BackgroundTransparency = 0.3, ZIndex = 9,
 })
+
 Instance.new("UICorner", lyricOuter).CornerRadius = UDim.new(0, 12)
 local lyricStroke = Instance.new("UIStroke", lyricOuter)
 lyricStroke.Color = Color3.fromRGB(210,80,255); lyricStroke.Thickness = 2.8; lyricStroke.Transparency = 0.15
@@ -1780,13 +1784,13 @@ local function updateLyricBoards(t)
             table.remove(activeOrbitBoards, i)
         else
             d.angle = d.angle + d.speed * (1/60)
-            local bob = math.sin(t * 1.8 + d.phase) * 0.9
-            local x = math.cos(d.angle) * d.radius
-            local z = math.sin(d.angle) * d.radius
-            local pos = center + Vector3.new(x, d.height + bob, z)
-            local lookAt = center + Vector3.new(0, d.height + bob, 0)
-            d.board.CFrame = CFrame.lookAt(pos, lookAt)
-                * CFrame.Angles(0, math.pi, math.sin(t * 2.2 + d.phase) * 0.08)
+            local bob  = math.sin(t * 2.1 + d.phase) * 1.2
+            local x    = math.cos(d.angle) * d.radius
+            local z    = math.sin(d.angle) * d.radius
+            local pos  = center + Vector3.new(x, d.height + bob, z)
+            local look = Vector3.new(center.X, pos.Y, center.Z)
+            d.board.CFrame = CFrame.lookAt(pos, look)
+                * CFrame.Angles(0, math.pi, math.sin(t * 1.8 + d.phase) * 0.06)
         end
     end
 end
@@ -1796,64 +1800,64 @@ local function spawnWorldLyric(text)
     task.spawn(function()
         orbitBoardCount = orbitBoardCount + 1
         local idx = orbitBoardCount
+        local hue = (idx * 0.19) % 1
 
         local board = Instance.new("Part", lyricWorldFolder)
-        board.Size = Vector3.new(0.05, 3.2, 11); board.Anchored = true
-        board.CanCollide = false; board.CastShadow = false
-        board.Transparency = 1; board.Material = Enum.Material.Neon
-        local hue = (idx * 0.23) % 1
+        board.Size = Vector3.new(0.05, 3.8, 13)
+        board.Anchored = true; board.CanCollide = false
+        board.CastShadow = false; board.Transparency = 1
+        board.Material = Enum.Material.Neon
         board.Color = Color3.fromHSV(hue, 1, 1)
 
-        local radius = 8 + (idx % 3) * 2.5
-        local height = 5 + (idx % 4) * 1.8
-        local speed  = 0.55 + (idx % 5) * 0.12
-        local angle  = (idx - 1) * (math.pi * 2 / 5)
-        local phase  = math.random() * math.pi * 2
+        local radius = 18 + (idx % 4) * 3
+        local height = 2 + (idx % 3) * 1.5
+        local speed  = 0.45 + (idx % 5) * 0.09
+        local angle  = (idx - 1) * (math.pi * 2 / 6)
+        local phase  = idx * 1.3
 
-        local startPos = playerHRP.Position + Vector3.new(
-            math.cos(angle) * radius, height, math.sin(angle) * radius
+        board.CFrame = CFrame.new(
+            playerHRP.Position + Vector3.new(math.cos(angle)*radius, height, math.sin(angle)*radius)
         )
-        board.CFrame = CFrame.new(startPos)
 
         local sg2 = Instance.new("SurfaceGui", board)
-        sg2.Face = Enum.NormalId.Front; sg2.AlwaysOnTop = false
-        sg2.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud; sg2.PixelsPerStud = 55
+        sg2.Face = Enum.NormalId.Front; sg2.AlwaysOnTop = true
+        sg2.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+        sg2.PixelsPerStud = 50
 
-        local backing = Instance.new("Frame", sg2)
-        backing.Size = UDim2.new(1, 0, 1, 0)
-        backing.BackgroundColor3 = Color3.new(0, 0, 0)
-        backing.BackgroundTransparency = 0.45
-        Instance.new("UICorner", backing).CornerRadius = UDim.new(0.18, 0)
-        local stroke = Instance.new("UIStroke", backing)
-        stroke.Color = Color3.fromHSV(hue, 1, 1); stroke.Thickness = 3; stroke.Transparency = 0.1
+        local back = Instance.new("Frame", sg2)
+        back.Size = UDim2.new(1,0,1,0)
+        back.BackgroundColor3 = Color3.new(0,0,0)
+        back.BackgroundTransparency = 0.4
+        Instance.new("UICorner", back).CornerRadius = UDim.new(0.15, 0)
+        local sk = Instance.new("UIStroke", back)
+        sk.Color = Color3.fromHSV(hue, 1, 1); sk.Thickness = 3.5; sk.Transparency = 0
 
-        local lbl = Instance.new("TextLabel", backing)
-        lbl.Size = UDim2.new(1, -16, 1, -8); lbl.Position = UDim2.new(0, 8, 0, 4)
+        local lbl = Instance.new("TextLabel", back)
+        lbl.Size = UDim2.new(1,-16,1,-8); lbl.Position = UDim2.new(0,8,0,4)
         lbl.BackgroundTransparency = 1
-        lbl.TextColor3 = Color3.new(1, 1, 1)
-        lbl.TextStrokeTransparency = 0.1
-        lbl.TextStrokeColor3 = Color3.fromHSV(hue, 0.6, 1)
-        lbl.Font = Enum.Font.GothamBold; lbl.TextScaled = true; lbl.Text = text
+        lbl.TextColor3 = Color3.new(1,1,1)
+        lbl.TextStrokeTransparency = 0
+        lbl.TextStrokeColor3 = Color3.fromHSV(hue, 0.5, 1)
+        lbl.Font = Enum.Font.GothamBold
+        lbl.TextScaled = true; lbl.Text = text
 
         table.insert(activeOrbitBoards, {
-            board = board, angle = angle, radius = radius,
-            height = height, speed = speed, phase = phase
+            board=board, angle=angle, radius=radius,
+            height=height, speed=speed, phase=phase
         })
 
-        TweenService:Create(board, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Transparency = 0.18, Size = Vector3.new(0.05, 3.6, 12.5)
+        TweenService:Create(board, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Transparency = 0.15, Size = Vector3.new(0.05, 4.2, 14.5)
         }):Play()
 
-        task.delay(4.2, function()
-            TweenService:Create(board, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {
+        task.delay(4.5, function()
+            TweenService:Create(board, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
                 Transparency = 1, Size = Vector3.new(0.05, 1.5, 6)
             }):Play()
-            task.wait(0.75)
-            pcall(function() board:Destroy() end)
+            task.wait(0.85); pcall(function() board:Destroy() end)
         end)
     end)
 end
-
 
 local function showLyric(entry)
     lyricLabel.Text = entry.jp; subLabel.Text = entry.en
@@ -2093,7 +2097,9 @@ conn = RunService.RenderStepped:Connect(function(dt)
     updateNebula(shared.G.elapsed)
     updateShowLights(shared.G.elapsed)
     updateGyroRings(shared.G.elapsed)
-
+    checkIdleAnim(shared.G.elapsed)
+    updateLyricBoards(shared.G.elapsed)
+        
     local nowTick = tick()
     local dynamicBeatInterval = 60 / shared.G.BPM
     if nowTick - shared.G.lastBeatTick >= dynamicBeatInterval then
@@ -2124,8 +2130,6 @@ conn = RunService.RenderStepped:Connect(function(dt)
     updateStarShape(shared.G.elapsed)
     updateHexShape(shared.G.elapsed)
     updatePortal(shared.G.elapsed)
-    checkIdleAnim(shared.G.elapsed)
-    updateLyricBoards(shared.G.elapsed)
 
     if stagePlatform and singerHRP then
         local hue = (shared.G.elapsed * 0.07) % 1
