@@ -607,11 +607,12 @@ local function updateOrbit(t)
         local z = math.sin(angle) * ORBIT_RADIUS
         local y = math.sin(t*2 + i) * 5
         p.Position = center + Vector3.new(x, y, z)
-        local hue  = ((t*0.1 + (i-1)/NUM_ORBIT) % 1)
-        p.Color    = Color3.fromHSV(hue, 1, 1)
-        local pl   = p:FindFirstChildOfClass("PointLight")
+        local hue = ((t*0.1 + (i-1)/NUM_ORBIT) % 1)
+        p.Color = Color3.fromHSV(hue, 1, 1)
+        local pl = p:FindFirstChildOfClass("PointLight")
         if pl then pl.Color = p.Color end
     end
+
     local outerR = 42
     for i, p in ipairs(shared.G.outerOrbitParts) do
         local angle = -t * 0.65 + (i-1)*(math.pi*2/NUM_OUTER)
@@ -624,16 +625,21 @@ local function updateOrbit(t)
         local pl = p:FindFirstChildOfClass("PointLight")
         if pl then pl.Color = p.Color end
     end
-    local ringR = 26
+
+    local ringR = 28
     for i, ring in ipairs(shared.G.ringOrbitParts) do
-        local angle = t * 0.4 + (i-1)*(math.pi*2/NUM_RING_ORBIT)
-        local x = math.cos(angle) * ringR
-        local z = math.sin(angle) * ringR
-        local y = math.sin(t * 0.8 + i) * 8 + 4
-        ring.CFrame = CFrame.new(singerHRP.Position + Vector3.new(x, y, z))
-            * CFrame.Angles(angle, t * 0.6 + i, math.sin(t*0.3 + i) * 0.5)
-        ring.Color = Color3.fromHSV(((t*0.07 + (i-1)/NUM_RING_ORBIT) % 1), 1, 1)
-        ring.Transparency = 0.25 + math.abs(math.sin(t * 0.8 + i)) * 0.35
+        local inclination = (i - 1) * (math.pi / NUM_RING_ORBIT)
+        local speed = 0.28 + (i - 1) * 0.06
+        local angle = t * speed + (i - 1) * (math.pi * 2 / NUM_RING_ORBIT)
+
+        local tiltCF = CFrame.Angles(inclination, 0, 0)
+        local localPos = Vector3.new(math.cos(angle) * ringR, 0, math.sin(angle) * ringR)
+        local worldOffset = tiltCF:VectorToWorldSpace(localPos)
+        local pos = singerHRP.Position + worldOffset + Vector3.new(0, 8, 0)
+
+        ring.CFrame = CFrame.new(pos) * tiltCF * CFrame.Angles(0, angle, math.pi / 2)
+        ring.Color = Color3.fromHSV(((t * 0.07 + (i - 1) / NUM_RING_ORBIT) % 1), 1, 1)
+        ring.Transparency = 0.2 + math.abs(math.sin(t * 0.9 + i)) * 0.3
     end
 end
 
