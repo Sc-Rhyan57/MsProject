@@ -1733,11 +1733,6 @@ local function addCameraShake(intensity, decay)
 end
 
 local function flash(r, g, b, dur)
-    flashFrame.BackgroundColor3 = Color3.fromRGB(r,g,b)
-    flashFrame.BackgroundTransparency = 0.04
-    TweenService:Create(flashFrame, TweenInfo.new(dur or 0.15, Enum.EasingStyle.Quint), {
-        BackgroundTransparency = 1
-    }):Play()
 end
 
 local glitching = false
