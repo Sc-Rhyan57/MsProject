@@ -1045,12 +1045,22 @@ buildPortal()
 
 local function updatePortal(t)
     if not singerHRP or #shared.G.portalRings == 0 then return end
+    local center = singerHRP.Position + Vector3.new(0, 6, 0)
     for i, ring2 in ipairs(shared.G.portalRings) do
-        ring2.CFrame = CFrame.new(singerHRP.Position + Vector3.new(0, 4+i*2.5, 0))
-            * CFrame.Angles(t * (0.3 + i*0.08), t * 0.15, 0)
-        local hue = ((t*0.05 + (i-1)/NUM_PORTAL) % 1)
+        local orbitAngle  = t * (0.18 + i * 0.04) + (i - 1) * (math.pi * 2 / NUM_PORTAL)
+        local orbitRadius = 38 + i * 5
+        local orbitHeight = math.sin(t * 0.35 + i * 0.8) * 8
+        local pos = center + Vector3.new(
+            math.cos(orbitAngle) * orbitRadius,
+            orbitHeight,
+            math.sin(orbitAngle) * orbitRadius
+        )
+        ring2.CFrame = CFrame.new(pos)
+            * CFrame.fromAxisAngle(Vector3.new(math.sin(i), math.cos(i*0.7), math.sin(i*0.4)).Unit, t * (0.3 + i * 0.08))
+            * CFrame.Angles(0, 0, math.pi / 2)
+        local hue = ((t * 0.05 + (i - 1) / NUM_PORTAL) % 1)
         ring2.Color = Color3.fromHSV(hue, 1, 1)
-        ring2.Transparency = 0.45 + math.abs(math.sin(t*0.6+i))*0.3
+        ring2.Transparency = 0.45 + math.abs(math.sin(t * 0.6 + i)) * 0.3
     end
 end
 
