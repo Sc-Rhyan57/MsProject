@@ -1,4 +1,4 @@
-if shared.showloaded then
+seif shared.showloaded then
     warn("[ ARIGATO ] ALREADY LOADED.")
    return
 end
@@ -1046,21 +1046,40 @@ buildPortal()
 local function updatePortal(t)
     if not singerHRP or #shared.G.portalRings == 0 then return end
     local center = singerHRP.Position + Vector3.new(0, 6, 0)
+
+    local orbitAxes = {
+        Vector3.new(0, 1, 0),
+        Vector3.new(1, 0, 0),
+        Vector3.new(0, 0, 1),
+        Vector3.new(1, 1, 0).Unit,
+        Vector3.new(0, 1, 1).Unit,
+        Vector3.new(1, 0, 1).Unit,
+        Vector3.new(1, 1, 1).Unit,
+        Vector3.new(-1, 1, 0).Unit, 
+    }
+
     for i, ring2 in ipairs(shared.G.portalRings) do
-        local orbitAngle  = t * (0.18 + i * 0.04) + (i - 1) * (math.pi * 2 / NUM_PORTAL)
+        local axis        = orbitAxes[i] or orbitAxes[1]
+        local speed       = 0.22 + i * 0.05
         local orbitRadius = 38 + i * 5
-        local orbitHeight = math.sin(t * 0.35 + i * 0.8) * 8
-        local pos = center + Vector3.new(
-            math.cos(orbitAngle) * orbitRadius,
-            orbitHeight,
-            math.sin(orbitAngle) * orbitRadius
-        )
+        local angle       = t * speed + (i - 1) * (math.pi * 2 / NUM_PORTAL)
+
+        local up = math.abs(axis:Dot(Vector3.new(0,1,0))) < 0.99
+            and Vector3.new(0,1,0) or Vector3.new(1,0,0)
+        local tangent  = axis:Cross(up).Unit
+        local binormal = axis:Cross(tangent).Unit
+
+        local pos = center
+            + tangent  * math.cos(angle) * orbitRadius
+            + binormal * math.sin(angle) * orbitRadius
+
         ring2.CFrame = CFrame.new(pos)
-            * CFrame.fromAxisAngle(Vector3.new(math.sin(i), math.cos(i*0.7), math.sin(i*0.4)).Unit, t * (0.3 + i * 0.08))
+            * CFrame.fromAxisAngle(axis, t * (0.4 + i * 0.07))
             * CFrame.Angles(0, 0, math.pi / 2)
+
         local hue = ((t * 0.05 + (i - 1) / NUM_PORTAL) % 1)
         ring2.Color = Color3.fromHSV(hue, 1, 1)
-        ring2.Transparency = 0.45 + math.abs(math.sin(t * 0.6 + i)) * 0.3
+        ring2.Transparency = 0.35 + math.abs(math.sin(t * 0.6 + i)) * 0.3
     end
 end
 
@@ -1277,7 +1296,7 @@ end
 local function spawnLaserRing(height, colors)
     if not singerHRP then return end
     task.spawn(function()
-        local count = 14
+        local count = 19
         local radius = 7
         local parts = {}
         for i = 1, count do
@@ -1821,9 +1840,10 @@ local function spawnWorldLyric(text)
         local hue = (idx * 0.19) % 1
 
         local board = Instance.new("Part", lyricWorldFolder)
-        board.Size = Vector3.new(0.05, 3.8, 13)
+        board.Size = Vector3.new(0.5, 4, 14)
         board.Anchored = true; board.CanCollide = false
-        board.CastShadow = false; board.Transparency = 1
+        board.CastShadow = false
+        board.Transparency = 0.5
         board.Material = Enum.Material.Neon
         board.Color = Color3.fromHSV(hue, 1, 1)
 
@@ -1837,42 +1857,50 @@ local function spawnWorldLyric(text)
             playerHRP.Position + Vector3.new(math.cos(angle)*radius, height, math.sin(angle)*radius)
         )
 
-        local sg2 = Instance.new("SurfaceGui", board)
-        sg2.Face = Enum.NormalId.Front; sg2.AlwaysOnTop = true
-        sg2.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-        sg2.PixelsPerStud = 50
+        local bb = Instance.new("BillboardGui", board)
+        bb.Size = UDim2.new(0, 600, 0, 140)
+        bb.StudsOffset = Vector3.new(0, 0, 1.5)
+        bb.AlwaysOnTop = false
+        bb.ClipsDescendants = false
 
-        local back = Instance.new("Frame", sg2)
-        back.Size = UDim2.new(1,0,1,0)
-        back.BackgroundColor3 = Color3.new(0,0,0)
-        back.BackgroundTransparency = 0.4
-        Instance.new("UICorner", back).CornerRadius = UDim.new(0.15, 0)
+        local back = Instance.new("Frame", bb)
+        back.Size = UDim2.new(1, 0, 1, 0)
+        back.BackgroundColor3 = Color3.fromRGB(10, 0, 30)
+        back.BackgroundTransparency = 0.3
+        Instance.new("UICorner", back).CornerRadius = UDim.new(0.12, 0)
+
         local sk = Instance.new("UIStroke", back)
-        sk.Color = Color3.fromHSV(hue, 1, 1); sk.Thickness = 3.5; sk.Transparency = 0
+        sk.Color = Color3.fromHSV(hue, 1, 1)
+        sk.Thickness = 3
+        sk.Transparency = 0
 
         local lbl = Instance.new("TextLabel", back)
-        lbl.Size = UDim2.new(1,-16,1,-8); lbl.Position = UDim2.new(0,8,0,4)
+        lbl.Size = UDim2.new(1, -20, 1, -12)
+        lbl.Position = UDim2.new(0, 10, 0, 6)
         lbl.BackgroundTransparency = 1
-        lbl.TextColor3 = Color3.new(1,1,1)
+        lbl.TextColor3 = Color3.new(1, 1, 1)
         lbl.TextStrokeTransparency = 0
-        lbl.TextStrokeColor3 = Color3.fromHSV(hue, 0.5, 1)
+        lbl.TextStrokeColor3 = Color3.fromHSV(hue, 0.6, 1)
         lbl.Font = Enum.Font.GothamBold
-        lbl.TextScaled = true; lbl.Text = text
+        lbl.TextScaled = true
+        lbl.Text = text
 
         table.insert(activeOrbitBoards, {
-            board=board, angle=angle, radius=radius,
-            height=height, speed=speed, phase=phase
+            board = board, angle = angle, radius = radius,
+            height = height, speed = speed, phase = phase
         })
 
+        board.Transparency = 0.5
         TweenService:Create(board, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Transparency = 0.15, Size = Vector3.new(0.05, 4.2, 14.5)
+            Size = Vector3.new(0.5, 4.2, 14.5)
         }):Play()
 
         task.delay(4.5, function()
             TweenService:Create(board, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
-                Transparency = 1, Size = Vector3.new(0.05, 1.5, 6)
+                Transparency = 1, Size = Vector3.new(0.5, 1.5, 6)
             }):Play()
-            task.wait(0.85); pcall(function() board:Destroy() end)
+            task.wait(0.85)
+            pcall(function() board:Destroy() end)
         end)
     end)
 end
