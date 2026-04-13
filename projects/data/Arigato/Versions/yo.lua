@@ -58,8 +58,8 @@ local Debris       = game:GetService("Debris")
 local Camera       = workspace.CurrentCamera
 local LocalPlayer  = Players.LocalPlayer
 
-local AUDIO_URL  = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Arigato/Tokyo%20(online-audio-converter.com).ogg"
-local LYRICS_URL = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Arigato/lyrics.txt"
+local AUDIO_URL  = "https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/Not%20My%20Problema/Not%20My%20Problem.ogg"
+local LYRICS_URL = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Not%20My%20Problema/Lyrics.txt"
 
 local function GetGitAudioID(githubLink, soundName)
     local fileName = "customObject_Sound_" .. tostring(soundName) .. ".ogg"
