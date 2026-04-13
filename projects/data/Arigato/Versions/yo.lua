@@ -2140,6 +2140,86 @@ end
 shared.G.pentaAngle = 0
 shared.G.elapsed = 0
 local conn
+local lastBarBeat = 0
+
+RunService.RenderStepped:Connect(function(dt)
+    if shared.G.finished then return end
+    local t = shared.G.elapsed or 0
+    local beatInterval = 60 / shared.G.BPM
+
+    if tick() - lastBarBeat >= beatInterval then
+        lastBarBeat = tick()
+
+        if shared.G.beatCount % 2 == 0 then
+            local roll = math.random(1, 3)
+
+            if roll == 1 then
+                TweenService:Create(cinemaTop, TweenInfo.new(0.07, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
+                }):Play()
+                TweenService:Create(cinemaBot, TweenInfo.new(0.07, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(-0.002, 0, 1, 0)
+                }):Play()
+                task.delay(0.13, function()
+                    TweenService:Create(cinemaTop, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(-0.002, 0, 0, -2)
+                    }):Play()
+                    TweenService:Create(cinemaBot, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
+                    }):Play()
+                end)
+
+            elseif roll == 2 then
+                TweenService:Create(cinemaTop, TweenInfo.new(0.1, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
+                }):Play()
+                TweenService:Create(cinemaBot, TweenInfo.new(0.1, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(-0.002, 0, 1, 0)
+                }):Play()
+                task.delay(beatInterval * 1.8, function()
+                    TweenService:Create(cinemaTop, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(-0.002, 0, 0, -2)
+                    }):Play()
+                    TweenService:Create(cinemaBot, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
+                    }):Play()
+                end)
+
+            else
+                TweenService:Create(cinemaTop, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
+                }):Play()
+                TweenService:Create(cinemaBot, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(-0.002, 0, 1, 0)
+                }):Play()
+                task.delay(0.06, function()
+                    TweenService:Create(cinemaTop, TweenInfo.new(0.06, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(-0.002, 0, 0, -2)
+                    }):Play()
+                    TweenService:Create(cinemaBot, TweenInfo.new(0.06, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
+                    }):Play()
+                end)
+                task.delay(0.18, function()
+                    TweenService:Create(cinemaTop, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                        Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
+                    }):Play()
+                    TweenService:Create(cinemaBot, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                        Position = UDim2.new(-0.002, 0, 1, 0)
+                    }):Play()
+                    task.delay(0.06, function()
+                        TweenService:Create(cinemaTop, TweenInfo.new(0.08, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                            Position = UDim2.new(-0.002, 0, 0, -2)
+                        }):Play()
+                        TweenService:Create(cinemaBot, TweenInfo.new(0.08, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                            Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
+                        }):Play()
+                    end)
+                end)
+            end
+        end
+    end
+end)
 
 conn = RunService.RenderStepped:Connect(function(dt)
     if shared.G.finished then return end
