@@ -1851,42 +1851,6 @@ local function floatSinger(height, duration)
     end)
 end
 
-local function checkIdleAnim(elapsed)
-    if elapsed - shared.G.lastLyricTime > 4 and not shared.G.idleAnimPlaying then
-        shared.G.idleAnimPlaying = true
-        local rng = math.random(1, 10)
-        if rng <= 3 then
-            floatSinger(16, 8)
-            setBarColor(BAR_COLORS.levitate)
-            shockwave(Color3.fromRGB(100,200,255))
-            burstParticles(singerParticles, 18)
-        elseif rng == 4 then
-            singerDance(); setBarColor(BAR_COLORS.dance)
-            spawnExplosiveCubes(8, singerHRP and singerHRP.Position)
-        elseif rng == 5 then
-            singerPoint(); setBarColor(BAR_COLORS.point)
-            zoomToFace("player", 40, 0.4, 2.5)
-        elseif rng == 6 then
-            singerLaugh(); setBarColor(BAR_COLORS.laugh)
-            glitch(6, 1.2)
-        elseif rng == 7 then
-            singerWave(); setBarColor(BAR_COLORS.wave)
-            shockwave(Color3.fromRGB(255,200,80))
-        elseif rng == 8 then
-            singerRobot(); setBarColor(BAR_COLORS.robot)
-            spawnLaserRing(3); task.delay(0.18, function() spawnLaserRing(8) end)
-        elseif rng == 9 then
-            singerShrug(); setBarColor(BAR_COLORS.shrug)
-            spawnConfetti(18, singerHRP and singerHRP.Position)
-        else
-            singerSpin(); setBarColor(BAR_COLORS.spin)
-            scaleSinger(4.5, 0.2); task.delay(0.5, function() scaleSinger(3, 0.3) end)
-            shockwave(Color3.fromHSV(math.random(), 1, 1)); spawnStarburstRing()
-        end
-        task.delay(9, function() shared.G.idleAnimPlaying = false end)
-    end
-end
-
 local function slamDown()
     if not singerHRP then return end
     scaleSinger(5.5, 0.15)
@@ -2157,29 +2121,35 @@ local function checkIdleAnim(elapsed)
     if elapsed - shared.G.lastLyricTime > 4 and not shared.G.idleAnimPlaying then
         shared.G.idleAnimPlaying = true
         local rng = math.random(1, 10)
-        if rng == 1 then
-            floatSinger(16, 1.5); singerCheer(); shockwave(Color3.fromRGB(100,200,255)); burstParticles(singerParticles, 18)
-        elseif rng == 2 then
-            singerDance(); spawnExplosiveCubes(8, singerHRP and singerHRP.Position)
-        elseif rng == 3 then
-            singerPoint(); zoomToFace("player", 40, 0.4, 2.5)
+        if rng <= 3 then
+            floatSinger(16, 8)
+            setBarColor(BAR_COLORS.levitate)
+            shockwave(Color3.fromRGB(100,200,255))
+            burstParticles(singerParticles, 18)
         elseif rng == 4 then
-            singerLaugh(); glitch(6, 1.2)
+            singerDance(); setBarColor(BAR_COLORS.dance)
+            spawnExplosiveCubes(8, singerHRP and singerHRP.Position)
         elseif rng == 5 then
-            singerWave(); shockwave(Color3.fromRGB(255,200,80))
+            singerPoint(); setBarColor(BAR_COLORS.point)
+            zoomToFace("player", 40, 0.4, 2.5)
         elseif rng == 6 then
-            singerRobot(); spawnLaserRing(3); task.delay(0.18, function() spawnLaserRing(8) end)
+            singerLaugh(); setBarColor(BAR_COLORS.laugh)
+            glitch(6, 1.2)
         elseif rng == 7 then
-            singerSalute(); burstParticles(singerParticles, 22)
+            singerWave(); setBarColor(BAR_COLORS.wave)
+            shockwave(Color3.fromRGB(255,200,80))
         elseif rng == 8 then
-            singerShrug(); spawnConfetti(18, singerHRP and singerHRP.Position)
+            singerRobot(); setBarColor(BAR_COLORS.robot)
+            spawnLaserRing(3); task.delay(0.18, function() spawnLaserRing(8) end)
         elseif rng == 9 then
-            singerSpin(); scaleSinger(4.5, 0.2); task.delay(0.5, function() scaleSinger(3, 0.3) end)
-            shockwave(Color3.fromHSV(math.random(), 1, 1)); spawnStarburstRing()
+            singerShrug(); setBarColor(BAR_COLORS.shrug)
+            spawnConfetti(18, singerHRP and singerHRP.Position)
         else
-            spawnDNAHelix(3.5); spawnGeometricRing(14, 8, 10, 0.8, 3)
+            singerSpin(); setBarColor(BAR_COLORS.spin)
+            scaleSinger(4.5, 0.2); task.delay(0.5, function() scaleSinger(3, 0.3) end)
+            shockwave(Color3.fromHSV(math.random(), 1, 1)); spawnStarburstRing()
         end
-        task.delay(4, function() shared.G.idleAnimPlaying = false end)
+        task.delay(9, function() shared.G.idleAnimPlaying = false end)
     end
 end
 
