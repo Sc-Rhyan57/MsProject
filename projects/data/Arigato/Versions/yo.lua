@@ -1375,18 +1375,21 @@ local EMOTE_IDS = {
     cheer    = "rbxassetid://507770677",
     laugh    = "rbxassetid://507770818",
     sit      = "rbxassetid://507770872",
-    salute   = "rbxassetid://3360689775",
     robot    = "rbxassetid://3360695866",
     flip     = "rbxassetid://507770239",
     shrug    = "rbxassetid://3360692915",
-    spin     = "rbxassetid://5893839727",
+    spin     = "rbxassetid://507770239",
+    salute   = "rbxassetid://3360689775",
 }
 
 shared.G.currentAnimTrack = nil
+local singerFlyConn = nil
+local singerFlyActive = false
 
 local function playSingerAnim(animId)
     if not singerHum then return end
     if shared.G.currentAnimTrack then pcall(function() shared.G.currentAnimTrack:Stop(0.3) end); shared.G.currentAnimTrack = nil end
+    if singerFlyConn then singerFlyConn:Disconnect(); singerFlyConn = nil; singerFlyActive = false end
     local anim = Instance.new("Animation")
     anim.AnimationId = animId
     local ok, track = pcall(function() return singerHum:LoadAnimation(anim) end)
@@ -1395,16 +1398,123 @@ local function playSingerAnim(animId)
     end
 end
 
-local function singerDance()  playSingerAnim(EMOTE_IDS.dance)  end
-local function singerCheer()  playSingerAnim(EMOTE_IDS.cheer)  end
-local function singerPoint()  playSingerAnim(EMOTE_IDS.point)  end
-local function singerLaugh()  playSingerAnim(EMOTE_IDS.laugh)  end
-local function singerWave()   playSingerAnim(EMOTE_IDS.wave)   end
-local function singerSalute() playSingerAnim(EMOTE_IDS.salute) end
-local function singerRobot()  playSingerAnim(EMOTE_IDS.robot)  end
-local function singerFlip()   playSingerAnim(EMOTE_IDS.flip)   end
-local function singerShrug()  playSingerAnim(EMOTE_IDS.shrug)  end
-local function singerSpin()   playSingerAnim(EMOTE_IDS.spin)   end
+local function singerDance()    playSingerAnim(EMOTE_IDS.dance)    end
+local function singerCheer()    playSingerAnim(EMOTE_IDS.cheer)    end
+local function singerPoint()    playSingerAnim(EMOTE_IDS.point)    end
+local function singerLaugh()    playSingerAnim(EMOTE_IDS.laugh)    end
+local function singerWave()     playSingerAnim(EMOTE_IDS.wave)     end
+local function singerSalute()   playSingerAnim(EMOTE_IDS.salute)   end
+local function singerRobot()    playSingerAnim(EMOTE_IDS.robot)    end
+local function singerFlip()     playSingerAnim(EMOTE_IDS.flip)     end
+local function singerShrug()    playSingerAnim(EMOTE_IDS.shrug)    end
+local function singerSpin()     playSingerAnim(EMOTE_IDS.spin)     end
+
+local function singerLevitate(duration)
+    if singerFlyActive then return end
+    singerFlyActive = true
+
+    if shared.G.currentAnimTrack then
+        pcall(function() shared.G.currentAnimTrack:Stop(0.35) end)
+        shared.G.currentAnimTrack = nil
+    end
+
+    local torso   = singer:FindFirstChild("Torso")
+    local hrp     = singer:FindFirstChild("HumanoidRootPart")
+    if not torso or not hrp then singerFlyActive = false; return end
+
+    local rj = hrp:FindFirstChild("RootJoint")
+    local nk = torso:FindFirstChild("Neck")
+    local rs = torso:FindFirstChild("Right Shoulder")
+    local ls = torso:FindFirstChild("Left Shoulder")
+    local rh = torso:FindFirstChild("Right Hip")
+    local lh = torso:FindFirstChild("Left Hip")
+
+    if not (rj and nk and rs and ls and rh and lh) then
+        singerFlyActive = false; return
+    end
+
+    local orig = {
+        rj = rj.C0, nk = nk.C0,
+        rs = rs.C0, ls = ls.C0,
+        rh = rh.C0, lh = lh.C0,
+    }
+
+    local flyT  = 0
+    local blend = 0
+    local BLEND = 0.5
+
+    local TARGET_RJ = CFrame.new(0, 0, 0)
+        * CFrame.Angles(math.rad(-90), math.rad(0), math.rad(180))
+
+    local TARGET_NK = CFrame.new(0, 1, 0)
+        * CFrame.Angles(math.rad(-90), math.rad(0), math.rad(180))
+        * CFrame.Angles(math.rad(25), 0, 0)
+
+    local TARGET_RS = CFrame.new(1, 0.5, 0)
+        * CFrame.Angles(math.rad(0), math.rad(90), math.rad(0))
+        * CFrame.Angles(math.rad(-85), 0, math.rad(-15))
+
+    local TARGET_LS = CFrame.new(-1, 0.5, 0)
+        * CFrame.Angles(math.rad(0), math.rad(-90), math.rad(0))
+        * CFrame.Angles(math.rad(-85), 0, math.rad(15))
+
+    local TARGET_RH = CFrame.new(1, -1, 0)
+        * CFrame.Angles(math.rad(0), math.rad(90), math.rad(0))
+        * CFrame.Angles(math.rad(15), 0, math.rad(-5))
+
+    local TARGET_LH = CFrame.new(-1, -1, 0)
+        * CFrame.Angles(math.rad(0), math.rad(-90), math.rad(0))
+        * CFrame.Angles(math.rad(15), 0, math.rad(5))
+
+    if singerFlyConn then singerFlyConn:Disconnect() end
+    singerFlyConn = RunService.RenderStepped:Connect(function(dt)
+        if not singerHRP or not singerHRP.Parent or shared.G.finished then
+            singerFlyConn:Disconnect(); singerFlyConn = nil; singerFlyActive = false; return
+        end
+
+        flyT  = flyT + dt
+        blend = math.min(1, blend + dt / BLEND)
+        local e = blend * blend * (3 - 2 * blend)
+
+        local s1 = math.sin(flyT * 0.9)
+        local s2 = math.sin(flyT * 1.6)
+        local s3 = math.sin(flyT * 2.4)
+
+        rj.C0 = rj.C0:Lerp(
+            TARGET_RJ * CFrame.Angles(math.rad(s1 * 1.5) * e, math.rad(s2 * 0.8) * e, 0),
+            0.12)
+
+        nk.C0 = nk.C0:Lerp(
+            TARGET_NK * CFrame.Angles(math.rad(s1 * 2) * e, 0, 0),
+            0.14)
+
+        rs.C0 = rs.C0:Lerp(
+            TARGET_RS * CFrame.Angles(math.rad(s2 * 3) * e, 0, math.rad(s3 * 1.5) * e),
+            0.13)
+
+        ls.C0 = ls.C0:Lerp(
+            TARGET_LS * CFrame.Angles(math.rad(s2 * 3) * e, 0, math.rad(-s3 * 1.5) * e),
+            0.13)
+
+        rh.C0 = rh.C0:Lerp(
+            TARGET_RH * CFrame.Angles(math.rad(s1 * 2.5) * e, 0, 0),
+            0.11)
+
+        lh.C0 = lh.C0:Lerp(
+            TARGET_LH * CFrame.Angles(math.rad(-s1 * 2.5) * e, 0, 0),
+            0.11)
+
+        if flyT >= (duration or 999) then
+            singerFlyConn:Disconnect(); singerFlyConn = nil; singerFlyActive = false
+            TweenService:Create(rj, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {C0 = orig.rj}):Play()
+            TweenService:Create(nk, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {C0 = orig.nk}):Play()
+            TweenService:Create(rs, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {C0 = orig.rs}):Play()
+            TweenService:Create(ls, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {C0 = orig.ls}):Play()
+            TweenService:Create(rh, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {C0 = orig.rh}):Play()
+            TweenService:Create(lh, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {C0 = orig.lh}):Play()
+        end
+    end)
+end
 
 singerDance()
 
