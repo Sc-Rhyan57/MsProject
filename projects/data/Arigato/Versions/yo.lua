@@ -1831,7 +1831,6 @@ local function updateLyricBoards(t)
         end
     end
 end
-
 local function spawnWorldLyric(text)
     if not playerHRP or text == "" then return end
     task.spawn(function()
@@ -1840,10 +1839,9 @@ local function spawnWorldLyric(text)
         local hue = (idx * 0.19) % 1
 
         local board = Instance.new("Part", lyricWorldFolder)
-        board.Size = Vector3.new(0.5, 4, 14)
+        board.Size = Vector3.new(0.05, 3.8, 13)
         board.Anchored = true; board.CanCollide = false
-        board.CastShadow = false
-        board.Transparency = 0.5
+        board.CastShadow = false; board.Transparency = 1
         board.Material = Enum.Material.Neon
         board.Color = Color3.fromHSV(hue, 1, 1)
 
@@ -1857,52 +1855,90 @@ local function spawnWorldLyric(text)
             playerHRP.Position + Vector3.new(math.cos(angle)*radius, height, math.sin(angle)*radius)
         )
 
-        local bb = Instance.new("BillboardGui", board)
-        bb.Size = UDim2.new(0, 600, 0, 140)
-        bb.StudsOffset = Vector3.new(0, 0, 1.5)
-        bb.AlwaysOnTop = false
-        bb.ClipsDescendants = false
+        local sg2 = Instance.new("SurfaceGui", board)
+        sg2.Face = Enum.NormalId.Front; sg2.AlwaysOnTop = true
+        sg2.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+        sg2.PixelsPerStud = 50
 
-        local back = Instance.new("Frame", bb)
-        back.Size = UDim2.new(1, 0, 1, 0)
-        back.BackgroundColor3 = Color3.fromRGB(10, 0, 30)
-        back.BackgroundTransparency = 0.3
-        Instance.new("UICorner", back).CornerRadius = UDim.new(0.12, 0)
-
+        local back = Instance.new("Frame", sg2)
+        back.Size = UDim2.new(1,0,1,0)
+        back.BackgroundColor3 = Color3.new(0,0,0)
+        back.BackgroundTransparency = 0.4
+        Instance.new("UICorner", back).CornerRadius = UDim.new(0.15, 0)
         local sk = Instance.new("UIStroke", back)
-        sk.Color = Color3.fromHSV(hue, 1, 1)
-        sk.Thickness = 3
-        sk.Transparency = 0
+        sk.Color = Color3.fromHSV(hue, 1, 1); sk.Thickness = 3.5; sk.Transparency = 0
 
         local lbl = Instance.new("TextLabel", back)
-        lbl.Size = UDim2.new(1, -20, 1, -12)
-        lbl.Position = UDim2.new(0, 10, 0, 6)
+        lbl.Size = UDim2.new(1,-16,1,-8); lbl.Position = UDim2.new(0,8,0,4)
         lbl.BackgroundTransparency = 1
-        lbl.TextColor3 = Color3.new(1, 1, 1)
+        lbl.TextColor3 = Color3.new(1,1,1)
         lbl.TextStrokeTransparency = 0
-        lbl.TextStrokeColor3 = Color3.fromHSV(hue, 0.6, 1)
+        lbl.TextStrokeColor3 = Color3.fromHSV(hue, 0.5, 1)
         lbl.Font = Enum.Font.GothamBold
-        lbl.TextScaled = true
-        lbl.Text = text
+        lbl.TextScaled = true; lbl.Text = text
 
         table.insert(activeOrbitBoards, {
-            board = board, angle = angle, radius = radius,
-            height = height, speed = speed, phase = phase
+            board=board, angle=angle, radius=radius,
+            height=height, speed=speed, phase=phase
         })
 
-        board.Transparency = 0.5
         TweenService:Create(board, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = Vector3.new(0.5, 4.2, 14.5)
+            Transparency = 0.15, Size = Vector3.new(0.05, 4.2, 14.5)
         }):Play()
 
         task.delay(4.5, function()
             TweenService:Create(board, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
-                Transparency = 1, Size = Vector3.new(0.5, 1.5, 6)
+                Transparency = 1, Size = Vector3.new(0.05, 1.5, 6)
             }):Play()
-            task.wait(0.85)
-            pcall(function() board:Destroy() end)
+            task.wait(0.85); pcall(function() board:Destroy() end)
         end)
     end)
+end
+
+local function showLyric(entry)
+    lyricLabel.Text = entry.jp; subLabel.Text = entry.en
+    if singerHead and singerHead.Parent and entry.jp ~= "" then
+        pcall(function() ChatService:Chat(singerHead, entry.jp) end)
+    end
+    local worldText = entry.jp ~= "" and entry.jp or entry.en
+    if worldText ~= "" then spawnWorldLyric(worldText) end
+    if math.random(1, 3) == 1 then spawnConfetti(12, singerHRP and singerHRP.Position) end
+
+    local hue = math.random()
+    lyricLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
+    lyricLabel.TextSize = 36; lyricLabel.Rotation = math.random(-4,4)
+
+    TweenService:Create(lyricLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        TextSize = 28, TextColor3 = Color3.new(1,1,1), Rotation = 0,
+    }):Play()
+
+    subLabel.TextColor3 = Color3.fromHSV((hue+0.5)%1, 0.7, 1)
+    subLabel.TextSize = 20
+    TweenService:Create(subLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quint), {
+        TextSize = 16, TextColor3 = Color3.fromRGB(215,175,255),
+    }):Play()
+
+    TweenService:Create(lyricOuter, TweenInfo.new(0.06), {
+        BackgroundTransparency = 0.04, Size = UDim2.new(0.68,0,0,80),
+    }):Play()
+    task.delay(0.4, function()
+        TweenService:Create(lyricOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
+            BackgroundTransparency = 0.4, Size = UDim2.new(0.65,0,0,72),
+        }):Play()
+    end)
+
+    TweenService:Create(lyricStroke, TweenInfo.new(0.05), {
+        Color = Color3.fromHSV(hue,1,1), Thickness = 4,
+    }):Play()
+    task.delay(0.45, function()
+        TweenService:Create(lyricStroke, TweenInfo.new(0.35), {
+            Color = Color3.fromRGB(210,80,255), Thickness = 2.8,
+        }):Play()
+    end)
+
+    TweenService:Create(blur, TweenInfo.new(0.05), {Size = 5}):Play()
+    task.delay(0.12, function() TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = 0}):Play() end)
+    doChromaticAberration(0.1, 0.25)
 end
 
 local function showLyric(entry)
@@ -2140,86 +2176,6 @@ end
 shared.G.pentaAngle = 0
 shared.G.elapsed = 0
 local conn
-local lastBarBeat = 0
-
-RunService.RenderStepped:Connect(function(dt)
-    if shared.G.finished then return end
-    local t = shared.G.elapsed or 0
-    local beatInterval = 60 / shared.G.BPM
-
-    if tick() - lastBarBeat >= beatInterval then
-        lastBarBeat = tick()
-
-        if shared.G.beatCount % 2 == 0 then
-            local roll = math.random(1, 3)
-
-            if roll == 1 then
-                TweenService:Create(cinemaTop, TweenInfo.new(0.07, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
-                }):Play()
-                TweenService:Create(cinemaBot, TweenInfo.new(0.07, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Position = UDim2.new(-0.002, 0, 1, 0)
-                }):Play()
-                task.delay(0.13, function()
-                    TweenService:Create(cinemaTop, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(-0.002, 0, 0, -2)
-                    }):Play()
-                    TweenService:Create(cinemaBot, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
-                    }):Play()
-                end)
-
-            elseif roll == 2 then
-                TweenService:Create(cinemaTop, TweenInfo.new(0.1, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
-                }):Play()
-                TweenService:Create(cinemaBot, TweenInfo.new(0.1, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Position = UDim2.new(-0.002, 0, 1, 0)
-                }):Play()
-                task.delay(beatInterval * 1.8, function()
-                    TweenService:Create(cinemaTop, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(-0.002, 0, 0, -2)
-                    }):Play()
-                    TweenService:Create(cinemaBot, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
-                    }):Play()
-                end)
-
-            else
-                TweenService:Create(cinemaTop, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
-                }):Play()
-                TweenService:Create(cinemaBot, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Position = UDim2.new(-0.002, 0, 1, 0)
-                }):Play()
-                task.delay(0.06, function()
-                    TweenService:Create(cinemaTop, TweenInfo.new(0.06, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(-0.002, 0, 0, -2)
-                    }):Play()
-                    TweenService:Create(cinemaBot, TweenInfo.new(0.06, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
-                    }):Play()
-                end)
-                task.delay(0.18, function()
-                    TweenService:Create(cinemaTop, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                        Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4))
-                    }):Play()
-                    TweenService:Create(cinemaBot, TweenInfo.new(0.05, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                        Position = UDim2.new(-0.002, 0, 1, 0)
-                    }):Play()
-                    task.delay(0.06, function()
-                        TweenService:Create(cinemaTop, TweenInfo.new(0.08, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(-0.002, 0, 0, -2)
-                        }):Play()
-                        TweenService:Create(cinemaBot, TweenInfo.new(0.08, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(-0.002, 0, 1, -(BAR_H + 2))
-                        }):Play()
-                    end)
-                end)
-            end
-        end
-    end
-end)
 
 conn = RunService.RenderStepped:Connect(function(dt)
     if shared.G.finished then return end
