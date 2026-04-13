@@ -1,9 +1,24 @@
+if shared.showloaded then
+    warn("[ ARIGATO ] ALREADY LOADED.")
+   return
+end
+
+shared.showloaded = true
+
+local player = game.Players.LocalPlayer
+if player and player.PlayerGui:FindFirstChild("LoadingUI") and player.PlayerGui.LoadingUI.Enabled then
+    repeat task.wait() until not player.PlayerGui:FindFirstChild("LoadingUI") or not player.PlayerGui.LoadingUI.Enabled
+else
+    repeat task.wait() until game:IsLoaded()
+end
+
 local Players      = game:GetService("Players")
 local RunService   = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local ChatService  = game:GetService("Chat")
 local Lighting     = game:GetService("Lighting")
 local StarterGui   = game:GetService("StarterGui")
+local Debris       = game:GetService("Debris")
 local Camera       = workspace.CurrentCamera
 local LocalPlayer  = Players.LocalPlayer
 
@@ -64,6 +79,14 @@ local playerHead = playerChar:FindFirstChild("Head")
 if playerHum then playerHum.WalkSpeed = 0; playerHum.JumpHeight = 0 end
 if playerHRP  then playerHRP.Anchored = true end
 
+local origPlayerTransp = {}
+for _, part in ipairs(playerChar:GetDescendants()) do
+    if part:IsA("BasePart") or part:IsA("MeshPart") then
+        origPlayerTransp[part] = part.Transparency
+        part.Transparency = 1
+    end
+end
+
 pcall(function()
     for _, t in ipairs({
         Enum.CoreGuiType.PlayerList, Enum.CoreGuiType.Health,
@@ -81,11 +104,11 @@ local origFogColor   = Lighting.FogColor
 local origFOV        = Camera.FieldOfView
 
 Lighting.ClockTime      = 0
-Lighting.Brightness     = 1.8
-Lighting.Ambient        = Color3.fromRGB(80, 40, 100)
-Lighting.OutdoorAmbient = Color3.fromRGB(60, 30, 80)
-Lighting.FogEnd         = 800
-Lighting.FogColor       = Color3.fromRGB(40, 0, 80)
+Lighting.Brightness     = 2.2
+Lighting.Ambient        = Color3.fromRGB(60, 20, 100)
+Lighting.OutdoorAmbient = Color3.fromRGB(40, 10, 80)
+Lighting.FogEnd         = 700
+Lighting.FogColor       = Color3.fromRGB(20, 0, 60)
 
 local sky = Instance.new("Sky", Lighting)
 sky.SkyboxBk = "rbxassetid://159454282"
@@ -94,39 +117,67 @@ sky.SkyboxFt = "rbxassetid://159454282"
 sky.SkyboxLf = "rbxassetid://159454282"
 sky.SkyboxRt = "rbxassetid://159454282"
 sky.SkyboxUp = "rbxassetid://159454282"
-sky.StarCount = 3000
+sky.StarCount = 5000
 sky.CelestialBodiesShown = false
 
 local colorCorrection = Instance.new("ColorCorrectionEffect", Lighting)
-colorCorrection.Brightness  = 0
-colorCorrection.Contrast    = 0.15
-colorCorrection.Saturation  = 0.4
-colorCorrection.TintColor   = Color3.fromRGB(200, 150, 255)
+colorCorrection.Brightness  = 0.04
+colorCorrection.Contrast    = 0.25
+colorCorrection.Saturation  = 0.6
+colorCorrection.TintColor   = Color3.fromRGB(200, 120, 255)
+
+local colorCorrectionR = Instance.new("ColorCorrectionEffect", Lighting)
+colorCorrectionR.TintColor = Color3.fromRGB(255, 160, 160)
+colorCorrectionR.Enabled   = false
+
+local colorCorrectionB = Instance.new("ColorCorrectionEffect", Lighting)
+colorCorrectionB.TintColor = Color3.fromRGB(160, 160, 255)
+colorCorrectionB.Enabled   = false
 
 local bloom = Instance.new("BloomEffect", Lighting)
-bloom.Intensity = 1.2
-bloom.Size      = 28
-bloom.Threshold = 0.9
+bloom.Intensity = 1.8
+bloom.Size      = 32
+bloom.Threshold = 0.85
 
 local sunRays = Instance.new("SunRaysEffect", Lighting)
-sunRays.Intensity = 0.25
-sunRays.Spread    = 0.5
+sunRays.Intensity = 0.35
+sunRays.Spread    = 0.7
 
 local blur = Instance.new("BlurEffect", Lighting)
 blur.Size    = 0
 blur.Enabled = true
 
 local depthOfField = Instance.new("DepthOfFieldEffect", Lighting)
-depthOfField.FarIntensity  = 0
+depthOfField.FarIntensity  = 0.1
 depthOfField.NearIntensity = 0
-depthOfField.FocusDistance = 10
-depthOfField.InFocusRadius = 25
+depthOfField.FocusDistance = 12
+depthOfField.InFocusRadius = 30
 depthOfField.Enabled = true
---[[
-local singer = Players:CreateHumanoidModelFromUserId(Players:GetUserIdFromNameAsync(LocalPlayer.Name))
-]]--
+
+local chromaticActive = false
+local function doChromaticAberration(duration, strength)
+    if chromaticActive then return end
+    chromaticActive = true
+    strength = strength or 0.4
+    colorCorrectionR.Enabled = true
+    colorCorrectionB.Enabled = true
+    colorCorrectionR.Brightness = strength
+    colorCorrectionB.Brightness = -strength * 0.5
+    colorCorrectionR.Saturation = 1.5
+    colorCorrectionB.Saturation = 1.5
+    task.delay(duration or 0.3, function()
+        TweenService:Create(colorCorrectionR, TweenInfo.new(0.25), {Brightness = 0, Saturation = 0}):Play()
+        TweenService:Create(colorCorrectionB, TweenInfo.new(0.25), {Brightness = 0, Saturation = 0}):Play()
+        task.delay(0.3, function()
+            colorCorrectionR.Enabled = false
+            colorCorrectionB.Enabled = false
+            chromaticActive = false
+        end)
+    end)
+end
+
 local singer = Players:CreateHumanoidModelFromUserId(Players:GetUserIdFromNameAsync("rhyan571"))
-singer.Name   = "Rhyan57"
+singer.Name   = "ArigatoSinger"
 singer.Parent = workspace
 
 local singerHum  = singer:FindFirstChildOfClass("Humanoid")
@@ -136,216 +187,249 @@ local singerHead = singer:FindFirstChild("Head")
 if singerHum then
     singerHum.WalkSpeed  = 0
     singerHum.JumpHeight = 0
-    singerHum.NameDisplayDistance    = 0
-    singerHum.HealthDisplayDistance  = 0
+    singerHum.NameDisplayDistance   = 0
+    singerHum.HealthDisplayDistance = 0
 end
 
 local singerBasePos
 if singerHRP and playerHRP then
-    local front = playerHRP.CFrame * CFrame.new(0, 0, -12)
+    local front = playerHRP.CFrame * CFrame.new(0, 0, -14)
     singerHRP.CFrame = CFrame.new(front.Position, playerHRP.Position)
     singerHRP.Anchored = true
     singerBasePos = singerHRP.CFrame
 end
 
-if singerHum then
-    local sc = {BodyHeightScale=3, BodyWidthScale=3, BodyDepthScale=3, HeadScale=3}
-    for n, v in pairs(sc) do
-        local obj = singerHum:FindFirstChild(n)
-        if obj then obj.Value = v end
+
+local singerNameTag
+if singerHead then
+    singerNameTag = Instance.new("BillboardGui", singerHead)
+    singerNameTag.Size = UDim2.new(0, 160, 0, 40)
+    singerNameTag.StudsOffset = Vector3.new(0, 4.5, 0)
+    singerNameTag.AlwaysOnTop = true
+    local nameLabel = Instance.new("TextLabel", singerNameTag)
+    nameLabel.Size = UDim2.new(1,0,1,0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextColor3 = Color3.fromRGB(255,160,255)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.fromRGB(100,0,200)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 22
+    nameLabel.Text = "rhyan57 ♪"
+end
+
+local playerClone = Players:CreateHumanoidModelFromUserId(LocalPlayer.UserId)
+playerClone.Name   = "ArigatoPlayerClone"
+playerClone.Parent = workspace
+local playerCloneHum = playerClone:FindFirstChildOfClass("Humanoid")
+local playerCloneHRP = playerClone:FindFirstChild("HumanoidRootPart")
+if playerCloneHum then
+    playerCloneHum.WalkSpeed = 0; playerCloneHum.JumpHeight = 0
+    playerCloneHum.NameDisplayDistance = 0; playerCloneHum.HealthDisplayDistance = 0
+end
+if playerCloneHRP and playerHRP then
+    playerCloneHRP.CFrame = playerHRP.CFrame
+    playerCloneHRP.Anchored = true
+end
+
+local playerCloneOrigScales = {}
+if playerCloneHum then
+    for _, n in ipairs({"BodyHeightScale","BodyWidthScale","BodyDepthScale","HeadScale"}) do
+        local obj = playerCloneHum:FindFirstChild(n)
+        if obj then playerCloneOrigScales[n] = obj.Value end
     end
 end
 
-local cloneChar = Players:CreateHumanoidModelFromUserId(Players:GetUserIdFromNameAsync(LocalPlayer.Name))
-cloneChar.Name   = "ArigatoOrbitClone"
-cloneChar.Parent = workspace
-local cloneHum = cloneChar:FindFirstChildOfClass("Humanoid")
-local cloneHRP = cloneChar:FindFirstChild("HumanoidRootPart")
-if cloneHum then
-    cloneHum.WalkSpeed = 0; cloneHum.JumpHeight = 0
-    cloneHum.NameDisplayDistance = 0; cloneHum.HealthDisplayDistance = 0
-end
-if cloneHRP then cloneHRP.Anchored = true end
-for _, part in ipairs(cloneChar:GetDescendants()) do
-    if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("SpecialMesh") then
-        if part:IsA("BasePart") or part:IsA("MeshPart") then
-            part.Transparency = 1
+local playerGiantDone = false
+
+local function growPlayerGiant()
+    if playerGiantDone then return end
+    playerGiantDone = true
+    task.spawn(function()
+        if not playerCloneHRP or not playerCloneHum then return end
+
+        doChromaticAberration(0.6, 0.8)
+
+        local growNames = {"BodyHeightScale","BodyWidthScale","BodyDepthScale","HeadScale"}
+
+        for i = 1, 15 do
+            for _, n in ipairs(growNames) do
+                local obj = playerCloneHum:FindFirstChild(n)
+                if obj then
+                    TweenService:Create(obj, TweenInfo.new(0.12, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Value = 1 + i * 0.45}):Play()
+                end
+            end
+            local ringColors = {
+                Color3.fromRGB(255,80,220),
+                Color3.fromRGB(80,200,255),
+                Color3.fromRGB(255,255,80),
+                Color3.fromRGB(80,255,160),
+            }
+            task.spawn(function()
+                local ring = Instance.new("Part", mainFolder)
+                ring.Size = Vector3.new(2, 0.4, 2)
+                ring.Shape = Enum.PartType.Cylinder
+                ring.Material = Enum.Material.Neon
+                ring.Color = ringColors[(i % #ringColors) + 1]
+                ring.Anchored = true; ring.CanCollide = false; ring.CastShadow = false
+                ring.Transparency = 0.15
+                ring.CFrame = CFrame.new(playerCloneHRP.Position) * CFrame.Angles(0, 0, math.pi/2)
+                TweenService:Create(ring, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    Size = Vector3.new(3 + i * 8, 0.4, 3 + i * 8), Transparency = 1
+                }):Play()
+                Debris:AddItem(ring, 0.8)
+            end)
+            local pointGlow = Instance.new("PointLight", playerCloneHRP)
+            pointGlow.Brightness = 8; pointGlow.Range = 30 + i * 4
+            pointGlow.Color = ringColors[(i % #ringColors) + 1]
+            Debris:AddItem(pointGlow, 0.15)
+            task.wait(0.07)
         end
-    end
+
+        for _, n in ipairs(growNames) do
+            local obj = playerCloneHum:FindFirstChild(n)
+            if obj then
+                TweenService:Create(obj, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Value = 7}):Play()
+            end
+        end
+
+        task.spawn(function()
+            local bigRing = Instance.new("Part", mainFolder)
+            bigRing.Size = Vector3.new(4, 0.6, 4)
+            bigRing.Shape = Enum.PartType.Cylinder
+            bigRing.Material = Enum.Material.Neon
+            bigRing.Color = Color3.fromRGB(255,200,255)
+            bigRing.Anchored = true; bigRing.CanCollide = false; bigRing.CastShadow = false
+            bigRing.Transparency = 0
+            bigRing.CFrame = CFrame.new(playerCloneHRP.Position) * CFrame.Angles(0, 0, math.pi/2)
+            TweenService:Create(bigRing, TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Size = Vector3.new(200, 0.6, 200), Transparency = 1
+            }):Play()
+            Debris:AddItem(bigRing, 1.4)
+        end)
+
+        doChromaticAberration(0.5, 1.0)
+
+        task.wait(4)
+
+        for _, n in ipairs(growNames) do
+            local obj = playerCloneHum:FindFirstChild(n)
+            if obj then
+                TweenService:Create(obj, TweenInfo.new(1.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Value = playerCloneOrigScales[n] or 1}):Play()
+            end
+        end
+        task.wait(1.5)
+        playerGiantDone = false
+    end)
 end
-local cloneTrailAtt0 = Instance.new("Attachment")
-local cloneTrailAtt1 = Instance.new("Attachment")
-if cloneHRP then
-    cloneTrailAtt0.Position = Vector3.new(0,1,0)
-    cloneTrailAtt1.Position = Vector3.new(0,-1,0)
-    cloneTrailAtt0.Parent = cloneHRP
-    cloneTrailAtt1.Parent = cloneHRP
-    local cloneTrail = Instance.new("Trail", cloneHRP)
-    cloneTrail.Attachment0   = cloneTrailAtt0
-    cloneTrail.Attachment1   = cloneTrailAtt1
-    cloneTrail.Lifetime      = 0.35
-    cloneTrail.MinLength     = 0
-    cloneTrail.LightEmission = 1
-    cloneTrail.Color         = ColorSequence.new(Color3.fromRGB(255,80,220), Color3.fromRGB(80,200,255))
-    cloneTrail.Transparency  = NumberSequence.new(0, 1)
-    local clonePE = Instance.new("ParticleEmitter", cloneHRP)
-    clonePE.Rate          = 25
-    clonePE.Lifetime      = NumberRange.new(0.3, 0.8)
-    clonePE.Speed         = NumberRange.new(2, 6)
-    clonePE.LightEmission = 1
-    clonePE.LightInfluence= 0
-    clonePE.Color         = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255,80,220)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80,200,255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,80)),
-    })
-    clonePE.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0.5),NumberSequenceKeypoint.new(1,0)})
-    clonePE.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)})
+
+local hiddenParts = {}
+local finished = false
+
+local function hideNearbyParts()
+    task.spawn(function()
+        pcall(function() workspace.Terrain.Transparency = 1 end)
+        while not finished do
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") or obj:IsA("MeshPart") or obj:IsA("UnionOperation") then
+                    local isShowPart = obj:IsDescendantOf(singer) or obj:IsDescendantOf(playerClone)
+                        or (mainFolder and obj:IsDescendantOf(mainFolder))
+                    if isShowPart then continue end
+                    local nearPlayer = playerHRP and (obj.Position - playerHRP.Position).Magnitude < 900
+                    local nearSinger = singerHRP and (obj.Position - singerHRP.Position).Magnitude < 900
+                    if (nearPlayer or nearSinger) and not hiddenParts[obj] then
+                        hiddenParts[obj] = obj.Transparency
+                        obj.Transparency = 1
+                        obj.CastShadow = false
+                    end
+                end
+            end
+            task.wait(1.5)
+        end
+    end)
 end
-
-local cloneOrbitAngle = 0
-local cloneOrbitRadius = 18
-local cloneOrbitSpeed  = 0.6
-
-local spotLight = Instance.new("SpotLight", singerHRP or workspace)
-spotLight.Brightness = 8
-spotLight.Range      = 80
-spotLight.Angle      = 50
-spotLight.Color      = Color3.fromRGB(255, 180, 255)
-spotLight.Face       = Enum.NormalId.Top
-
-local pointLight = Instance.new("PointLight", singerHead or workspace)
-pointLight.Brightness = 3
-pointLight.Range      = 30
-pointLight.Color      = Color3.fromRGB(200, 100, 255)
-
-local singerSpotDown = Instance.new("SpotLight", singerHRP or workspace)
-singerSpotDown.Brightness = 5
-singerSpotDown.Range      = 60
-singerSpotDown.Angle      = 45
-singerSpotDown.Color      = Color3.fromRGB(150, 80, 255)
-singerSpotDown.Face       = Enum.NormalId.Bottom
 
 local mainFolder = Instance.new("Folder", workspace)
 mainFolder.Name = "_arigato_fx"
 
+hideNearbyParts()
+
+local spotLight = Instance.new("SpotLight", singerHRP or workspace)
+spotLight.Brightness = 10; spotLight.Range = 90; spotLight.Angle = 55
+spotLight.Color = Color3.fromRGB(255, 160, 255); spotLight.Face = Enum.NormalId.Top
+
+local pointLight = Instance.new("PointLight", singerHead or workspace)
+pointLight.Brightness = 4; pointLight.Range = 35; pointLight.Color = Color3.fromRGB(200, 80, 255)
+
+local singerSpotDown = Instance.new("SpotLight", singerHRP or workspace)
+singerSpotDown.Brightness = 6; singerSpotDown.Range = 70; singerSpotDown.Angle = 50
+singerSpotDown.Color = Color3.fromRGB(120, 60, 255); singerSpotDown.Face = Enum.NormalId.Bottom
+
 local stagePlatform
 if singerHRP then
     stagePlatform = Instance.new("Part", mainFolder)
-    stagePlatform.Size = Vector3.new(18, 0.5, 18)
+    stagePlatform.Size = Vector3.new(22, 0.5, 22)
     stagePlatform.Anchored = true; stagePlatform.CanCollide = false; stagePlatform.CastShadow = false
     stagePlatform.Material = Enum.Material.Neon
-    stagePlatform.Color = Color3.fromRGB(80, 0, 160)
+    stagePlatform.Color = Color3.fromRGB(60, 0, 140)
     stagePlatform.Transparency = 0.3
-    stagePlatform.CFrame = CFrame.new(singerHRP.Position - Vector3.new(0, 5, 0))
+    stagePlatform.CFrame = CFrame.new(singerHRP.Position - Vector3.new(0, 5.5, 0))
+
     local stageGrid = Instance.new("SelectionBox", mainFolder)
     stageGrid.Adornee = stagePlatform
-    stageGrid.Color3 = Color3.fromRGB(200, 80, 255)
-    stageGrid.LineThickness = 0.04
+    stageGrid.Color3 = Color3.fromRGB(220, 60, 255)
+    stageGrid.LineThickness = 0.05
     stageGrid.SurfaceTransparency = 1
-end
 
-local nebulaFolder = Instance.new("Folder", mainFolder)
-nebulaFolder.Name = "nebula"
-local nebulaParts = {}
-local NUM_NEBULA = 12
-for i = 1, NUM_NEBULA do
-    local p = Instance.new("Part", nebulaFolder)
-    p.Size = Vector3.new(math.random(6,14), math.random(6,14), 0.2)
-    p.Anchored = true; p.CanCollide = false; p.CastShadow = false
-    p.Material = Enum.Material.Neon
-    p.Color = Color3.fromHSV((i-1)/NUM_NEBULA, 0.7, 1)
-    p.Transparency = 0.7
-    local rA = math.random() * math.pi * 2
-    local rD = math.random(30, 60)
-    local rH = math.random(15, 50)
-    table.insert(nebulaParts, {part=p, rA=rA, rD=rD, rH=rH, phase=math.random()*math.pi*2, speed=math.random()*0.2+0.05})
-end
+    local stageGlow = Instance.new("PointLight", stagePlatform)
+    stageGlow.Brightness = 2; stageGlow.Range = 40; stageGlow.Color = Color3.fromRGB(180, 0, 255)
 
-local function updateNebula(t)
-    if not singerHRP then return end
-    for _, nd in ipairs(nebulaParts) do
-        local p = nd.part
-        local angle = nd.rA + t * nd.speed
-        local pos = singerHRP.Position + Vector3.new(
-            math.cos(angle) * nd.rD,
-            nd.rH + math.sin(t * 0.3 + nd.phase) * 5,
-            math.sin(angle) * nd.rD
-        )
-        p.CFrame = CFrame.new(pos) * CFrame.Angles(math.sin(t*0.1+nd.phase)*0.3, angle, 0)
-        local hue = ((t * 0.04 + nd.phase) % 1)
-        p.Color = Color3.fromHSV(hue, 0.8, 1)
-        p.Transparency = 0.6 + math.sin(t * nd.speed * 2 + nd.phase) * 0.15
-    end
-end
-
-local confettiFolder = Instance.new("Folder", mainFolder)
-confettiFolder.Name = "confetti"
-local function spawnConfetti(count, origin)
-    origin = origin or (singerHRP and singerHRP.Position or Vector3.new(0,10,0))
-    for i = 1, count do
-        task.spawn(function()
-            local c = Instance.new("Part", confettiFolder)
-            c.Size = Vector3.new(0.3, 0.05, 0.6)
-            c.Material = Enum.Material.Neon
-            c.Anchored = false; c.CanCollide = false; c.CastShadow = false
-            c.Color = Color3.fromHSV(math.random(), 1, 1)
-            c.CFrame = CFrame.new(origin + Vector3.new(math.random(-5,5), math.random(0,5), math.random(-5,5)))
-                * CFrame.Angles(math.random()*math.pi*2, math.random()*math.pi*2, math.random()*math.pi*2)
-            local bv = Instance.new("BodyVelocity", c)
-            bv.Velocity = Vector3.new(math.random(-15,15), math.random(8,30), math.random(-15,15))
-            bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-            TweenService:Create(c, TweenInfo.new(2, Enum.EasingStyle.Sine), {Transparency = 1}):Play()
-            game:GetService("Debris"):AddItem(c, 2.2)
-        end)
-    end
+    local stageRing = Instance.new("Part", mainFolder)
+    stageRing.Size = Vector3.new(26, 0.3, 26)
+    stageRing.Shape = Enum.PartType.Cylinder
+    stageRing.Anchored = true; stageRing.CanCollide = false; stageRing.CastShadow = false
+    stageRing.Material = Enum.Material.Neon
+    stageRing.Color = Color3.fromRGB(255, 80, 220)
+    stageRing.Transparency = 0.5
+    stageRing.CFrame = CFrame.new(singerHRP.Position - Vector3.new(0, 5.3, 0)) * CFrame.Angles(0, 0, math.pi/2)
 end
 
 local showLightFolder = Instance.new("Folder", mainFolder)
 showLightFolder.Name = "showlights"
 local showLights = {}
-local NUM_SHOW_LIGHTS = 6
+local NUM_SHOW_LIGHTS = 8
 
 for i = 1, NUM_SHOW_LIGHTS do
     local base = Instance.new("Part", showLightFolder)
-    base.Size = Vector3.new(0.8, 0.8, 0.8)
-    base.Anchored = true; base.CanCollide = false; base.CastShadow = false
+    base.Size = Vector3.new(1, 1, 1); base.Anchored = true; base.CanCollide = false; base.CastShadow = false
     base.Material = Enum.Material.Neon
     base.Color = Color3.fromHSV((i-1)/NUM_SHOW_LIGHTS, 1, 1)
     base.Transparency = 0.2
 
     local top = Instance.new("Part", showLightFolder)
-    top.Size = Vector3.new(0.4, 1.2, 0.4)
-    top.Anchored = true; top.CanCollide = false; top.CastShadow = false
-    top.Material = Enum.Material.Neon
-    top.Color = base.Color
+    top.Size = Vector3.new(0.5, 1.5, 0.5); top.Anchored = true; top.CanCollide = false; top.CastShadow = false
+    top.Material = Enum.Material.Neon; top.Color = base.Color
 
     local a0 = Instance.new("Attachment", base)
-    a0.Position = Vector3.new(0,0,0)
     local a1 = Instance.new("Attachment", top)
-    a1.Position = Vector3.new(0,0,0)
 
     local beam = Instance.new("Beam", showLightFolder)
     beam.Attachment0 = a0; beam.Attachment1 = a1
-    beam.Width0 = 2.5; beam.Width1 = 0.05
-    beam.FaceCamera = true
-    beam.LightEmission = 1; beam.LightInfluence = 0
+    beam.Width0 = 3; beam.Width1 = 0.05
+    beam.FaceCamera = true; beam.LightEmission = 1; beam.LightInfluence = 0
     beam.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, base.Color),
         ColorSequenceKeypoint.new(0.5, Color3.fromHSV(((i-1)/NUM_SHOW_LIGHTS + 0.5) % 1, 1, 1)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255)),
     })
     beam.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.1),
+        NumberSequenceKeypoint.new(0, 0.05),
         NumberSequenceKeypoint.new(0.7, 0.3),
         NumberSequenceKeypoint.new(1, 1),
     })
-    beam.Segments = 6
-    beam.CurveSize0 = 0; beam.CurveSize1 = 0
+    beam.Segments = 8
 
     local sl = Instance.new("SpotLight", top)
-    sl.Brightness = 6; sl.Range = 80; sl.Angle = 15
-    sl.Color = base.Color
+    sl.Brightness = 7; sl.Range = 90; sl.Angle = 18; sl.Color = base.Color
 
     table.insert(showLights, {base=base, top=top, beam=beam, sl=sl, idx=i})
 end
@@ -356,20 +440,14 @@ local function updateShowLights(t)
     for _, sl in ipairs(showLights) do
         local i = sl.idx
         local baseAngle = (i-1)*(math.pi*2/NUM_SHOW_LIGHTS)
-        local baseR = 28
-        local bx = math.cos(baseAngle) * baseR
-        local bz = math.sin(baseAngle) * baseR
-        sl.base.Position = pos + Vector3.new(bx, -2, bz)
-
-        local swingSpeed = 0.8 + (i % 3) * 0.3
-        local swingAmp   = math.pi / 5
+        local baseR = 32
+        sl.base.Position = pos + Vector3.new(math.cos(baseAngle)*baseR, -2, math.sin(baseAngle)*baseR)
+        local swingSpeed = 0.7 + (i % 3) * 0.35
+        local swingAmp   = math.pi / 4.5
         local targetAngle = baseAngle + math.sin(t * swingSpeed + i * 1.1) * swingAmp
-        local targetDist  = 20 + math.sin(t * 0.5 + i) * 8
-        local targetHeight = 30 + math.cos(t * 0.4 + i * 0.7) * 14
-        local tx = math.cos(targetAngle) * targetDist
-        local tz = math.sin(targetAngle) * targetDist
-        sl.top.Position = pos + Vector3.new(tx, targetHeight, tz)
-
+        local targetDist  = 18 + math.sin(t * 0.55 + i) * 10
+        local targetHeight = 32 + math.cos(t * 0.45 + i * 0.8) * 16
+        sl.top.Position = pos + Vector3.new(math.cos(targetAngle)*targetDist, targetHeight, math.sin(targetAngle)*targetDist)
         local hue = ((t * 0.06 + (i-1)/NUM_SHOW_LIGHTS) % 1)
         local newColor = Color3.fromHSV(hue, 1, 1)
         sl.base.Color = newColor; sl.sl.Color = newColor
@@ -381,45 +459,32 @@ local function updateShowLights(t)
     end
 end
 
-local beamColors = {
-    {Color3.fromRGB(255,80,220), Color3.fromRGB(150,50,255)},
-    {Color3.fromRGB(80,200,255), Color3.fromRGB(0,100,255)},
-    {Color3.fromRGB(255,200,80), Color3.fromRGB(255,80,80)},
-    {Color3.fromRGB(80,255,160), Color3.fromRGB(0,200,100)},
-    {Color3.fromRGB(255,255,100), Color3.fromRGB(200,80,255)},
-}
-
 local pentaFolder = Instance.new("Folder", mainFolder)
 pentaFolder.Name  = "pentagon"
 local pentaParts  = {}
 local NUM_SIDES   = 6
-local PENTA_RADIUS = 16
+local PENTA_RADIUS = 18
 local PENTA_COLORS = {
-    Color3.fromRGB(255,80,220),
-    Color3.fromRGB(120,80,255),
-    Color3.fromRGB(80,200,255),
-    Color3.fromRGB(255,200,80),
-    Color3.fromRGB(80,255,160),
-    Color3.fromRGB(255,100,100),
+    Color3.fromRGB(255,60,200),
+    Color3.fromRGB(100,60,255),
+    Color3.fromRGB(60,200,255),
+    Color3.fromRGB(255,220,60),
+    Color3.fromRGB(60,255,140),
+    Color3.fromRGB(255,80,80),
 }
 
 for i = 1, NUM_SIDES do
     local p = Instance.new("Part", pentaFolder)
-    p.Size       = Vector3.new(0.6, 8, 1)
-    p.Anchored   = true
-    p.CanCollide = false
-    p.Material   = Enum.Material.Neon
-    p.Color      = PENTA_COLORS[i]
-    p.CastShadow = false
-    local a0 = Instance.new("Attachment", p); a0.Position = Vector3.new(0,  0.5, 0)
+    p.Size = Vector3.new(0.7, 9, 1.2); p.Anchored = true; p.CanCollide = false
+    p.Material = Enum.Material.Neon; p.Color = PENTA_COLORS[i]; p.CastShadow = false
+    local a0 = Instance.new("Attachment", p); a0.Position = Vector3.new(0, 0.5, 0)
     local a1 = Instance.new("Attachment", p); a1.Position = Vector3.new(0, -0.5, 0)
     local tr = Instance.new("Trail", p)
-    tr.Attachment0    = a0; tr.Attachment1 = a1
-    tr.Lifetime       = 0.18
-    tr.MinLength      = 0
-    tr.Color          = ColorSequence.new(PENTA_COLORS[i], Color3.fromRGB(255,255,255))
-    tr.Transparency   = NumberSequence.new(0.3, 1)
-    tr.LightEmission  = 1
+    tr.Attachment0 = a0; tr.Attachment1 = a1
+    tr.Lifetime = 0.18; tr.MinLength = 0
+    tr.Color = ColorSequence.new(PENTA_COLORS[i], Color3.fromRGB(255,255,255))
+    tr.Transparency = NumberSequence.new(0.2, 1)
+    tr.LightEmission = 1
     table.insert(pentaParts, p)
 end
 
@@ -436,7 +501,7 @@ local function updatePentagon(angle)
         local mid  = (p1+p2)/2
         local len  = (p2-p1).Magnitude
         local look = (p2-p1).Unit
-        p.Size   = Vector3.new(0.6, len, 1)
+        p.Size   = Vector3.new(0.7, len, 1.2)
         p.CFrame = CFrame.lookAt(mid, mid+look) * CFrame.Angles(math.pi/2, 0, 0)
         local hue = ((angle*0.05 + (i-1)/NUM_SIDES) % 1)
         p.Color   = Color3.fromHSV(hue, 1, 1)
@@ -446,81 +511,98 @@ end
 local orbitFolder = Instance.new("Folder", mainFolder)
 orbitFolder.Name  = "orbit"
 local orbitParts  = {}
-local NUM_ORBIT   = 18
-local ORBIT_RADIUS = 20
+local NUM_ORBIT   = 20
+local ORBIT_RADIUS = 22
 
 for i = 1, NUM_ORBIT do
     local p = Instance.new("Part", orbitFolder)
-    p.Size       = Vector3.new(1.5, 1.5, 1.5)
-    p.Shape      = Enum.PartType.Ball
-    p.Anchored   = true
-    p.CanCollide = false
-    p.Material   = Enum.Material.Neon
-    p.CastShadow = false
-    p.Color      = Color3.fromHSV((i-1)/NUM_ORBIT, 1, 1)
-    local pl = Instance.new("PointLight", p)
-    pl.Brightness = 2; pl.Range = 12; pl.Color = p.Color
+    p.Size = Vector3.new(1.6, 1.6, 1.6); p.Shape = Enum.PartType.Ball
+    p.Anchored = true; p.CanCollide = false; p.Material = Enum.Material.Neon; p.CastShadow = false
+    p.Color = Color3.fromHSV((i-1)/NUM_ORBIT, 1, 1)
+    local pl = Instance.new("PointLight", p); pl.Brightness = 2.5; pl.Range = 14; pl.Color = p.Color
+    local att0 = Instance.new("Attachment", p); att0.Position = Vector3.new(0, 0.5, 0)
+    local att1 = Instance.new("Attachment", p); att1.Position = Vector3.new(0, -0.5, 0)
+    local tr = Instance.new("Trail", p)
+    tr.Attachment0 = att0; tr.Attachment1 = att1
+    tr.Lifetime = 0.25; tr.MinLength = 0; tr.LightEmission = 1
+    tr.Color = ColorSequence.new(p.Color, Color3.fromRGB(255,255,255))
+    tr.Transparency = NumberSequence.new(0.2, 1)
     table.insert(orbitParts, p)
 end
 
 local outerOrbitParts = {}
-local NUM_OUTER = 8
+local NUM_OUTER = 10
 for i = 1, NUM_OUTER do
     local p = Instance.new("Part", orbitFolder)
-    p.Size = Vector3.new(2.5, 2.5, 2.5)
-    p.Shape = Enum.PartType.Ball
-    p.Anchored = true; p.CanCollide = false
-    p.Material = Enum.Material.Neon; p.CastShadow = false
+    p.Size = Vector3.new(3, 3, 3); p.Shape = Enum.PartType.Ball
+    p.Anchored = true; p.CanCollide = false; p.Material = Enum.Material.Neon; p.CastShadow = false
     p.Color = Color3.fromHSV((i-1)/NUM_OUTER, 1, 1)
-    local pl = Instance.new("PointLight", p)
-    pl.Brightness = 3; pl.Range = 18; pl.Color = p.Color
+    local pl = Instance.new("PointLight", p); pl.Brightness = 4; pl.Range = 22; pl.Color = p.Color
     table.insert(outerOrbitParts, p)
+end
+
+local ringOrbitParts = {}
+local NUM_RING_ORBIT = 6
+for i = 1, NUM_RING_ORBIT do
+    local ring = Instance.new("Part", orbitFolder)
+    ring.Size = Vector3.new(0.4, 6, 6)
+    ring.Anchored = true; ring.CanCollide = false; ring.Material = Enum.Material.Neon; ring.CastShadow = false
+    ring.Color = Color3.fromHSV((i-1)/NUM_RING_ORBIT, 1, 1)
+    ring.Transparency = 0.3
+    table.insert(ringOrbitParts, ring)
 end
 
 local function updateOrbit(t)
     if not singerHRP or not singerHRP.Parent then return end
     local center = singerHRP.Position + Vector3.new(0, 6, 0)
     for i, p in ipairs(orbitParts) do
-        local angle = t * 1.2 + (i-1)*(math.pi*2/NUM_ORBIT)
+        local angle = t * 1.3 + (i-1)*(math.pi*2/NUM_ORBIT)
         local x = math.cos(angle) * ORBIT_RADIUS
         local z = math.sin(angle) * ORBIT_RADIUS
-        local y = math.sin(t*2 + i) * 4
+        local y = math.sin(t*2 + i) * 5
         p.Position = center + Vector3.new(x, y, z)
         local hue  = ((t*0.1 + (i-1)/NUM_ORBIT) % 1)
         p.Color    = Color3.fromHSV(hue, 1, 1)
         local pl   = p:FindFirstChildOfClass("PointLight")
         if pl then pl.Color = p.Color end
     end
-    local outerR = 38
+    local outerR = 42
     for i, p in ipairs(outerOrbitParts) do
-        local angle = -t * 0.7 + (i-1)*(math.pi*2/NUM_OUTER)
+        local angle = -t * 0.65 + (i-1)*(math.pi*2/NUM_OUTER)
         local x = math.cos(angle) * outerR
         local z = math.sin(angle) * outerR
-        local y = math.sin(t*1.5 + i*1.3) * 8 + 10
+        local y = math.sin(t*1.4 + i*1.3) * 10 + 12
         p.Position = singerHRP.Position + Vector3.new(x, y, z)
         local hue = ((t*0.08 + (i-1)/NUM_OUTER + 0.5) % 1)
         p.Color = Color3.fromHSV(hue, 1, 1)
         local pl = p:FindFirstChildOfClass("PointLight")
         if pl then pl.Color = p.Color end
     end
+    local ringR = 15
+    for i, ring in ipairs(ringOrbitParts) do
+        local angle = t * 0.4 + (i-1)*(math.pi*2/NUM_RING_ORBIT)
+        local x = math.cos(angle) * ringR
+        local z = math.sin(angle) * ringR
+        local y = math.sin(t * 0.8 + i) * 8 + 4
+        ring.CFrame = CFrame.new(singerHRP.Position + Vector3.new(x, y, z))
+            * CFrame.Angles(angle, t * 0.6 + i, math.sin(t*0.3 + i) * 0.5)
+        ring.Color = Color3.fromHSV(((t*0.07 + (i-1)/NUM_RING_ORBIT) % 1), 1, 1)
+        ring.Transparency = 0.25 + math.abs(math.sin(t * 0.8 + i)) * 0.35
+    end
 end
 
 local starFolder = Instance.new("Folder", mainFolder)
 starFolder.Name = "stars"
 local starParts = {}
-local NUM_STARS = 30
+local NUM_STARS = 40
 
 for i = 1, NUM_STARS do
     local s = Instance.new("Part", starFolder)
-    s.Size = Vector3.new(0.4,0.4,0.4)
-    s.Shape = Enum.PartType.Ball
-    s.Anchored = true; s.CanCollide = false
-    s.Material = Enum.Material.Neon; s.CastShadow = false
+    s.Size = Vector3.new(0.5,0.5,0.5); s.Shape = Enum.PartType.Ball
+    s.Anchored = true; s.CanCollide = false; s.Material = Enum.Material.Neon; s.CastShadow = false
     s.Color = Color3.fromHSV(math.random(), 1, 1)
-    local randX = math.random(-60,60)
-    local randY = math.random(20,80)
-    local randZ = math.random(-60,60)
-    table.insert(starParts, {part=s, ox=randX, oy=randY, oz=randZ, phase=math.random()*math.pi*2, speed=math.random()*0.5+0.3})
+    local randX = math.random(-70,70); local randY = math.random(25,90); local randZ = math.random(-70,70)
+    table.insert(starParts, {part=s, ox=randX, oy=randY, oz=randZ, phase=math.random()*math.pi*2, speed=math.random()*0.6+0.3})
 end
 
 local function updateStars(t)
@@ -528,57 +610,248 @@ local function updateStars(t)
     for _, sd in ipairs(starParts) do
         local p = sd.part
         local twinkle = math.abs(math.sin(t*sd.speed + sd.phase))
-        p.Size = Vector3.new(twinkle*0.6+0.1, twinkle*0.6+0.1, twinkle*0.6+0.1)
+        local sz = twinkle*0.7+0.1
+        p.Size = Vector3.new(sz,sz,sz)
         p.Position = singerHRP.Position + Vector3.new(sd.ox, sd.oy, sd.oz)
         p.Color = Color3.fromHSV(((t*0.05 + sd.phase) % 1), 1, 1)
     end
 end
 
-local lyricWorldFolder = Instance.new("Folder", mainFolder)
-lyricWorldFolder.Name = "lyricworld"
-local activeLyricParts = {}
+local nebulaFolder = Instance.new("Folder", mainFolder)
+nebulaFolder.Name = "nebula"
+local nebulaParts = {}
+local NUM_NEBULA = 16
 
-local function spawnWorldLyric(text)
-    if not singerHRP or text == "" then return end
+for i = 1, NUM_NEBULA do
+    local p = Instance.new("Part", nebulaFolder)
+    p.Size = Vector3.new(math.random(7,16), math.random(7,16), 0.2)
+    p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+    p.Material = Enum.Material.Neon
+    p.Color = Color3.fromHSV((i-1)/NUM_NEBULA, 0.8, 1)
+    p.Transparency = 0.72
+    local rA = math.random() * math.pi * 2
+    local rD = math.random(35, 65)
+    local rH = math.random(18, 55)
+    table.insert(nebulaParts, {part=p, rA=rA, rD=rD, rH=rH, phase=math.random()*math.pi*2, speed=math.random()*0.18+0.04})
+end
+
+local function updateNebula(t)
+    if not singerHRP then return end
+    for _, nd in ipairs(nebulaParts) do
+        local p = nd.part
+        local angle = nd.rA + t * nd.speed
+        local pos = singerHRP.Position + Vector3.new(
+            math.cos(angle) * nd.rD,
+            nd.rH + math.sin(t * 0.3 + nd.phase) * 6,
+            math.sin(angle) * nd.rD
+        )
+        p.CFrame = CFrame.new(pos) * CFrame.Angles(math.sin(t*0.1+nd.phase)*0.3, angle, 0)
+        local hue = ((t * 0.04 + nd.phase) % 1)
+        p.Color = Color3.fromHSV(hue, 0.85, 1)
+        p.Transparency = 0.62 + math.sin(t * nd.speed * 2 + nd.phase) * 0.15
+    end
+end
+
+local confettiFolder = Instance.new("Folder", mainFolder)
+confettiFolder.Name = "confetti"
+
+local function spawnConfetti(count, origin)
+    origin = origin or (singerHRP and singerHRP.Position or Vector3.new(0,10,0))
+    for i = 1, count do
+        task.spawn(function()
+            local c = Instance.new("Part", confettiFolder)
+            c.Size = Vector3.new(0.35, 0.06, 0.7)
+            c.Material = Enum.Material.Neon
+            c.Anchored = false; c.CanCollide = false; c.CastShadow = false
+            c.Color = Color3.fromHSV(math.random(), 1, 1)
+            c.CFrame = CFrame.new(origin + Vector3.new(math.random(-6,6), math.random(0,6), math.random(-6,6)))
+                * CFrame.Angles(math.random()*math.pi*2, math.random()*math.pi*2, math.random()*math.pi*2)
+            local bv = Instance.new("BodyVelocity", c)
+            bv.Velocity = Vector3.new(math.random(-18,18), math.random(10,35), math.random(-18,18))
+            bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+            TweenService:Create(c, TweenInfo.new(2, Enum.EasingStyle.Sine), {Transparency = 1}):Play()
+            Debris:AddItem(c, 2.3)
+        end)
+    end
+end
+
+local spiralFolder = Instance.new("Folder", mainFolder)
+spiralFolder.Name = "spiral"
+
+local function spawnSpiralRings(count)
+    if not singerHRP then return end
     task.spawn(function()
-        local board = Instance.new("Part", lyricWorldFolder)
-        board.Size = Vector3.new(0.1, 3.5, 12)
-        board.Anchored = true; board.CanCollide = false; board.CastShadow = false
-        board.Transparency = 0.4
-        board.Material = Enum.Material.Neon
-        board.Color = Color3.fromHSV(math.random(), 1, 1)
-        local angle = math.random() * math.pi * 2
-        local dist  = math.random(18, 35)
-        local height = math.random(8, 20)
-        board.CFrame = CFrame.new(
-            singerHRP.Position + Vector3.new(math.cos(angle)*dist, height, math.sin(angle)*dist)
-        ) * CFrame.Angles(0, angle + math.pi/2, 0)
-        local sg2 = Instance.new("SurfaceGui", board)
-        sg2.Face = Enum.NormalId.Front
-        sg2.AlwaysOnTop = false
-        sg2.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-        sg2.PixelsPerStud = 50
-        local lbl = Instance.new("TextLabel", sg2)
-        lbl.Size = UDim2.new(1,0,1,0)
-        lbl.BackgroundTransparency = 1
-        lbl.TextColor3 = Color3.new(1,1,1)
-        lbl.TextStrokeTransparency = 0
-        lbl.TextStrokeColor3 = Color3.fromHSV(math.random(), 1, 1)
-        lbl.Font = Enum.Font.GothamBold
-        lbl.TextScaled = true
-        lbl.Text = text
-        TweenService:Create(board, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = Vector3.new(0.1, 4, 14)
-        }):Play()
-        table.insert(activeLyricParts, board)
-        task.delay(3.5, function()
-            TweenService:Create(board, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {
-                Transparency = 1
+        for i = 1, count do
+            task.spawn(function()
+                local r = Instance.new("Part", spiralFolder)
+                r.Size = Vector3.new(0.4, 0.4, 0.4)
+                r.Shape = Enum.PartType.Ball
+                r.Material = Enum.Material.Neon
+                r.Anchored = true; r.CanCollide = false; r.CastShadow = false
+                r.Color = Color3.fromHSV((i-1)/count, 1, 1)
+                local startPos = singerHRP.Position
+                local angle = (i-1) * (math.pi * 2 / count)
+                local t = 0
+                local conn2
+                conn2 = RunService.RenderStepped:Connect(function(dt)
+                    t = t + dt * 3
+                    if not singerHRP or not singerHRP.Parent or t > 2 then
+                        r:Destroy(); conn2:Disconnect(); return
+                    end
+                    local radius = (1 - t/2) * 14
+                    local height = t * 18
+                    r.Position = startPos + Vector3.new(
+                        math.cos(angle + t * 2) * radius,
+                        height,
+                        math.sin(angle + t * 2) * radius
+                    )
+                    r.Color = Color3.fromHSV(((t * 0.2 + (i-1)/count) % 1), 1, 1)
+                    local sz = math.max(0.1, 1.5 - t * 0.6)
+                    r.Size = Vector3.new(sz,sz,sz)
+                    r.Transparency = math.min(1, t * 0.5)
+                end)
+            end)
+            task.wait(0.04)
+        end
+    end)
+end
+
+local function spawnDNAHelix(duration)
+    if not singerHRP then return end
+    task.spawn(function()
+        local helixParts = {}
+        local numDots = 30
+        local t = 0
+        local helixFolder = Instance.new("Folder", spiralFolder)
+        for i = 1, numDots do
+            for j = 1, 2 do
+                local dot = Instance.new("Part", helixFolder)
+                dot.Size = Vector3.new(0.7,0.7,0.7); dot.Shape = Enum.PartType.Ball
+                dot.Material = Enum.Material.Neon; dot.Anchored = true
+                dot.CanCollide = false; dot.CastShadow = false
+                dot.Color = Color3.fromHSV((i-1)/numDots, 1, 1)
+                local conn2
+                conn2 = RunService.RenderStepped:Connect(function(dt)
+                    t = t + dt
+                    if not singerHRP or not singerHRP.Parent or t > duration then
+                        dot:Destroy(); conn2:Disconnect(); return
+                    end
+                    local baseAngle = (i-1) * (math.pi * 2 / numDots) + t * 1.5 + (j == 2 and math.pi or 0)
+                    local r2 = 8
+                    dot.Position = singerHRP.Position + Vector3.new(
+                        math.cos(baseAngle) * r2,
+                        (i-1) * 1.1 - 10,
+                        math.sin(baseAngle) * r2
+                    )
+                    dot.Color = Color3.fromHSV(((t*0.08 + (i-1)/numDots + (j-1)*0.5) % 1), 1, 1)
+                end)
+                table.insert(helixParts, dot)
+            end
+        end
+    end)
+end
+
+local function spawnGeometricRing(radius, height, numParts, speed, duration)
+    if not singerHRP then return end
+    task.spawn(function()
+        local parts = {}
+        local t = 0
+        for i = 1, numParts do
+            local p = Instance.new("Part", spiralFolder)
+            p.Size = Vector3.new(0.5, 5, 0.5)
+            p.Material = Enum.Material.Neon; p.Anchored = true
+            p.CanCollide = false; p.CastShadow = false
+            p.Color = Color3.fromHSV((i-1)/numParts, 1, 1)
+            table.insert(parts, p)
+        end
+        local conn2
+        conn2 = RunService.RenderStepped:Connect(function(dt)
+            t = t + dt
+            if not singerHRP or not singerHRP.Parent or t > duration then
+                for _, pp in ipairs(parts) do pcall(function() pp:Destroy() end) end
+                conn2:Disconnect(); return
+            end
+            for i, pp in ipairs(parts) do
+                local angle = (i-1)*(math.pi*2/numParts) + t * speed
+                pp.CFrame = CFrame.new(
+                    singerHRP.Position + Vector3.new(
+                        math.cos(angle) * radius,
+                        height + math.sin(t * 2 + i) * 3,
+                        math.sin(angle) * radius
+                    )
+                ) * CFrame.Angles(0, angle + math.pi/2, math.sin(t + i) * 0.3)
+                pp.Color = Color3.fromHSV(((t*0.06 + (i-1)/numParts) % 1), 1, 1)
+                pp.Transparency = math.max(0, math.min(1, (t - duration + 0.5) / 0.5))
+            end
+        end)
+    end)
+end
+
+local function spawnFloorHexGrid()
+    if not singerHRP then return end
+    local hexFolder = Instance.new("Folder", mainFolder)
+    hexFolder.Name = "hexgrid"
+    local hexCount = 24
+    local hexParts = {}
+    for i = 1, hexCount do
+        local h = Instance.new("Part", hexFolder)
+        h.Size = Vector3.new(3.5, 0.15, 3.5)
+        h.Anchored = true; h.CanCollide = false; h.CastShadow = false
+        h.Material = Enum.Material.Neon
+        h.Color = Color3.fromHSV((i-1)/hexCount, 1, 1)
+        h.Transparency = 0.6
+        local baseAngle = (i-1) * (math.pi * 2 / hexCount)
+        local baseR = math.random(3, 12)
+        local baseY = singerHRP.Position.Y - 5.2
+        h.CFrame = CFrame.new(
+            singerHRP.Position.X + math.cos(baseAngle)*baseR,
+            baseY,
+            singerHRP.Position.Z + math.sin(baseAngle)*baseR
+        )
+        table.insert(hexParts, {part=h, baseAngle=baseAngle, baseR=baseR, phase=math.random()*math.pi*2})
+    end
+
+    local t = 0
+    local hexConn
+    hexConn = RunService.RenderStepped:Connect(function(dt)
+        t = t + dt
+        if finished then hexConn:Disconnect(); hexFolder:Destroy(); return end
+        for _, hd in ipairs(hexParts) do
+            local hue = ((t*0.04 + hd.baseAngle/(math.pi*2)) % 1)
+            hd.part.Color = Color3.fromHSV(hue, 1, 1)
+            local pulse = 0.4 + math.abs(math.sin(t * 1.5 + hd.phase)) * 0.35
+            hd.part.Transparency = pulse
+        end
+    end)
+end
+
+spawnFloorHexGrid()
+
+local function spawnPillarRing(count, radius, height)
+    if not singerHRP then return end
+    task.spawn(function()
+        local parts = {}
+        for i = 1, count do
+            local angle = (i-1)*(math.pi*2/count)
+            local p = Instance.new("Part", mainFolder)
+            p.Size = Vector3.new(0.5, height or 12, 0.5)
+            p.Material = Enum.Material.Neon; p.Anchored = true
+            p.CanCollide = false; p.CastShadow = false
+            p.Color = Color3.fromHSV((i-1)/count, 1, 1)
+            local pos = singerHRP.Position + Vector3.new(
+                math.cos(angle)*(radius or 12), (height or 12)/2 - 5, math.sin(angle)*(radius or 12)
+            )
+            p.CFrame = CFrame.new(pos)
+            TweenService:Create(p, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = Vector3.new(0.5, (height or 12)*1.5, 0.5)
             }):Play()
-            task.wait(0.7)
-            pcall(function() board:Destroy() end)
-            for i, v in ipairs(activeLyricParts) do
-                if v == board then table.remove(activeLyricParts, i) break end
+            local pl = Instance.new("PointLight", p); pl.Brightness = 3; pl.Range = 12; pl.Color = p.Color
+            table.insert(parts, p)
+        end
+        task.delay(1.8, function()
+            for _, pp in ipairs(parts) do
+                TweenService:Create(pp, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+                Debris:AddItem(pp, 0.5)
             end
         end)
     end)
@@ -592,95 +865,108 @@ local function spawnExplosiveCubes(count, origin)
     for i = 1, count do
         task.spawn(function()
             local cube = Instance.new("Part", cubeFolder)
-            cube.Size       = Vector3.new(math.random(1,3), math.random(1,3), math.random(1,3))
-            cube.Material   = Enum.Material.Neon
-            cube.Anchored   = false
-            cube.CanCollide = false
-            cube.CastShadow = false
-            cube.Color      = Color3.fromHSV(math.random(), 1, 1)
-            cube.CFrame     = CFrame.new(origin)
-            local pl2 = Instance.new("PointLight", cube)
-            pl2.Brightness = 2; pl2.Range = 8; pl2.Color = cube.Color
+            cube.Size = Vector3.new(math.random(1,3), math.random(1,3), math.random(1,3))
+            cube.Material = Enum.Material.Neon; cube.Anchored = false
+            cube.CanCollide = false; cube.CastShadow = false
+            cube.Color = Color3.fromHSV(math.random(), 1, 1)
+            cube.CFrame = CFrame.new(origin)
+            local pl2 = Instance.new("PointLight", cube); pl2.Brightness = 2; pl2.Range = 9; pl2.Color = cube.Color
             local bv = Instance.new("BodyVelocity", cube)
-            bv.Velocity = Vector3.new(math.random(-25,25), math.random(10,45), math.random(-25,25))
+            bv.Velocity = Vector3.new(math.random(-28,28), math.random(12,50), math.random(-28,28))
             bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-            TweenService:Create(cube, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            TweenService:Create(cube, TweenInfo.new(1.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Size = Vector3.new(0.1,0.1,0.1), Transparency = 1
             }):Play()
-            game:GetService("Debris"):AddItem(cube, 1.6)
+            Debris:AddItem(cube, 1.7)
         end)
     end
 end
 
-local function shockwave(color)
+local function shockwave(color, scale)
     if not singerHRP or not singerHRP.Parent then return end
+    scale = scale or 1
     task.spawn(function()
-        local ring = Instance.new("Part", mainFolder)
-        ring.Size         = Vector3.new(2, 0.3, 2)
-        ring.Shape        = Enum.PartType.Cylinder
-        ring.Material     = Enum.Material.Neon
-        ring.Color        = color or Color3.fromRGB(255,100,255)
-        ring.Anchored     = true
-        ring.CanCollide   = false
-        ring.CastShadow   = false
-        ring.Transparency = 0.2
-        ring.CFrame       = CFrame.new(singerHRP.Position) * CFrame.Angles(0, 0, math.pi/2)
-        TweenService:Create(ring, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Size = Vector3.new(70, 0.3, 70), Transparency = 1
-        }):Play()
-        game:GetService("Debris"):AddItem(ring, 0.9)
+        for i = 1, 3 do
+            local ring = Instance.new("Part", mainFolder)
+            ring.Size = Vector3.new(2, 0.35, 2)
+            ring.Shape = Enum.PartType.Cylinder; ring.Material = Enum.Material.Neon
+            ring.Color = color or Color3.fromRGB(255,100,255)
+            ring.Anchored = true; ring.CanCollide = false; ring.CastShadow = false
+            ring.Transparency = 0.15
+            ring.CFrame = CFrame.new(singerHRP.Position + Vector3.new(0, (i-1)*2, 0)) * CFrame.Angles(0, 0, math.pi/2)
+            TweenService:Create(ring, TweenInfo.new(0.75 + i*0.1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Size = Vector3.new(80*scale, 0.35, 80*scale), Transparency = 1
+            }):Play()
+            Debris:AddItem(ring, 0.95 + i*0.1)
+            task.wait(0.04)
+        end
     end)
 end
 
-local function spawnLaserRing(height)
+local function spawnLaserRing(height, colors)
     if not singerHRP then return end
     task.spawn(function()
-        local count = 12
-        local radius = 6
+        local count = 14
+        local radius = 7
         local parts = {}
         for i = 1, count do
             local p = Instance.new("Part", mainFolder)
-            p.Size = Vector3.new(0.3, 8, 0.3)
-            p.Material = Enum.Material.Neon
-            p.Anchored = true; p.CanCollide = false; p.CastShadow = false
-            p.Color = Color3.fromHSV((i-1)/count, 1, 1)
+            p.Size = Vector3.new(0.35, 9, 0.35)
+            p.Material = Enum.Material.Neon; p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+            local hue = (colors and colors[(i % #colors)+1]) or Color3.fromHSV((i-1)/count, 1, 1)
+            p.Color = hue
             local ang = (i-1) * (math.pi*2/count)
             p.CFrame = CFrame.new(singerHRP.Position + Vector3.new(math.cos(ang)*radius, height or 3, math.sin(ang)*radius))
+            local pl = Instance.new("PointLight", p); pl.Brightness = 2; pl.Range = 8; pl.Color = p.Color
             table.insert(parts, p)
         end
-        task.delay(0.8, function()
+        task.delay(0.9, function()
             for _, p in ipairs(parts) do
-                TweenService:Create(p, TweenInfo.new(0.5), {Transparency = 1}):Play()
-                game:GetService("Debris"):AddItem(p, 0.6)
+                TweenService:Create(p, TweenInfo.new(0.4), {Transparency = 1}):Play()
+                Debris:AddItem(p, 0.5)
             end
         end)
+    end)
+end
+
+local function spawnStarburstRing()
+    if not singerHRP then return end
+    task.spawn(function()
+        local numSpikes = 16
+        for i = 1, numSpikes do
+            local p = Instance.new("Part", mainFolder)
+            p.Size = Vector3.new(0.3, 0.3, 14)
+            p.Material = Enum.Material.Neon; p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+            p.Color = Color3.fromHSV((i-1)/numSpikes, 1, 1)
+            local angle = (i-1) * (math.pi * 2 / numSpikes)
+            local dir = Vector3.new(math.cos(angle), 0, math.sin(angle))
+            p.CFrame = CFrame.lookAt(singerHRP.Position + Vector3.new(0, 4, 0), singerHRP.Position + Vector3.new(0, 4, 0) + dir)
+                * CFrame.new(0, 0, -7)
+            TweenService:Create(p, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+            Debris:AddItem(p, 0.7)
+        end
     end)
 end
 
 local function addParticles(part)
     if not part then return nil end
     local pe = Instance.new("ParticleEmitter", part)
-    pe.Rate          = 0
-    pe.Lifetime      = NumberRange.new(0.5, 1.8)
-    pe.Speed         = NumberRange.new(4, 14)
-    pe.SpreadAngle   = Vector2.new(60, 60)
-    pe.LightEmission = 1
-    pe.LightInfluence= 0
-    pe.Color         = ColorSequence.new({
-        ColorSequenceKeypoint.new(0,   Color3.fromRGB(255,80,220)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80,200,255)),
-        ColorSequenceKeypoint.new(1,   Color3.fromRGB(255,255,100)),
+    pe.Rate = 0; pe.Lifetime = NumberRange.new(0.5, 2)
+    pe.Speed = NumberRange.new(5, 18); pe.SpreadAngle = Vector2.new(70, 70)
+    pe.LightEmission = 1; pe.LightInfluence = 0
+    pe.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0,   Color3.fromRGB(255,60,200)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255,200,60)),
+        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(60,200,255)),
+        ColorSequenceKeypoint.new(1,   Color3.fromRGB(60,255,140)),
     })
-    pe.Size          = NumberSequence.new({
-        NumberSequenceKeypoint.new(0,   0.6),
-        NumberSequenceKeypoint.new(0.5, 1.2),
-        NumberSequenceKeypoint.new(1,   0),
+    pe.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.7), NumberSequenceKeypoint.new(0.5, 1.4), NumberSequenceKeypoint.new(1, 0)
     })
-    pe.Transparency  = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 1),
+    pe.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)
     })
-    pe.RotSpeed = NumberRange.new(-200, 200)
+    pe.RotSpeed = NumberRange.new(-220, 220)
     pe.Rotation = NumberRange.new(0, 360)
     return pe
 end
@@ -693,33 +979,29 @@ local function burstParticles(pe, count)
 end
 
 local EMOTE_IDS = {
-    dance  = "rbxassetid://507771019",
-    wave   = "rbxassetid://507770718",
-    point  = "rbxassetid://507770453",
-    cheer  = "rbxassetid://507770677",
-    laugh  = "rbxassetid://507770818",
-    sit    = "rbxassetid://507770872",
-    salute = "rbxassetid://3360689775",
-    tpose  = "rbxassetid://3360686468",
-    robot  = "rbxassetid://3360695866",
-    flip   = "rbxassetid://507770239",
+    dance    = "rbxassetid://507771019",
+    wave     = "rbxassetid://507770718",
+    point    = "rbxassetid://507770453",
+    cheer    = "rbxassetid://507770677",
+    laugh    = "rbxassetid://507770818",
+    sit      = "rbxassetid://507770872",
+    salute   = "rbxassetid://3360689775",
+    robot    = "rbxassetid://3360695866",
+    flip     = "rbxassetid://507770239",
+    shrug    = "rbxassetid://3360692915",
+    spin     = "rbxassetid://5893839727",
 }
 
 local currentAnimTrack = nil
 
 local function playSingerAnim(animId)
     if not singerHum then return end
-    if currentAnimTrack then
-        pcall(function() currentAnimTrack:Stop(0.3) end)
-        currentAnimTrack = nil
-    end
+    if currentAnimTrack then pcall(function() currentAnimTrack:Stop(0.3) end); currentAnimTrack = nil end
     local anim = Instance.new("Animation")
     anim.AnimationId = animId
     local ok, track = pcall(function() return singerHum:LoadAnimation(anim) end)
     if ok and track then
-        track.Looped = true
-        track:Play(0.3)
-        currentAnimTrack = track
+        track.Looped = true; track:Play(0.3); currentAnimTrack = track
     end
 end
 
@@ -731,18 +1013,14 @@ local function singerWave()   playSingerAnim(EMOTE_IDS.wave)   end
 local function singerSalute() playSingerAnim(EMOTE_IDS.salute) end
 local function singerRobot()  playSingerAnim(EMOTE_IDS.robot)  end
 local function singerFlip()   playSingerAnim(EMOTE_IDS.flip)   end
-local function singerRandom()
-    local list = {EMOTE_IDS.dance, EMOTE_IDS.cheer, EMOTE_IDS.wave, EMOTE_IDS.laugh, EMOTE_IDS.robot, EMOTE_IDS.salute}
-    playSingerAnim(list[math.random(1, #list)])
-end
+local function singerShrug()  playSingerAnim(EMOTE_IDS.shrug)  end
+local function singerSpin()   playSingerAnim(EMOTE_IDS.spin)   end
 
 singerDance()
 
 local sg = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-sg.Name           = "ArigatoShowGui"
-sg.IgnoreGuiInset = true
-sg.ResetOnSpawn   = false
-sg.DisplayOrder   = 999
+sg.Name = "ArigatoShowGui"; sg.IgnoreGuiInset = true
+sg.ResetOnSpawn = false; sg.DisplayOrder = 999
 sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local function makeFrame(parent, props)
@@ -752,96 +1030,73 @@ local function makeFrame(parent, props)
     return f
 end
 
-local BAR_H = 70
+local BAR_H = 75
 
 local cinemaTop = makeFrame(sg, {
-    Size     = UDim2.new(1, 4, 0, BAR_H + 4),
-    Position = UDim2.new(-0.002, 0, 0, -(BAR_H + 4)),
-    BackgroundColor3 = Color3.new(0,0,0),
-    ZIndex   = 10,
+    Size = UDim2.new(1,4,0,BAR_H+4), Position = UDim2.new(-0.002,0,0,-(BAR_H+4)),
+    BackgroundColor3 = Color3.new(0,0,0), ZIndex = 10,
 })
 local cinemaBot = makeFrame(sg, {
-    Size     = UDim2.new(1, 4, 0, BAR_H + 4),
-    Position = UDim2.new(-0.002, 0, 1, 0),
-    BackgroundColor3 = Color3.new(0,0,0),
-    ZIndex   = 10,
+    Size = UDim2.new(1,4,0,BAR_H+4), Position = UDim2.new(-0.002,0,1,0),
+    BackgroundColor3 = Color3.new(0,0,0), ZIndex = 10,
 })
 
 TweenService:Create(cinemaTop, TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(-0.002,0,0,-2)}):Play()
 TweenService:Create(cinemaBot, TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(-0.002,0,1,-(BAR_H+2))}):Play()
 
 local lyricOuter = makeFrame(sg, {
-    Size = UDim2.new(0.65, 0, 0, 68),
-    Position = UDim2.new(0.175, 0, 1, -155),
-    BackgroundColor3 = Color3.fromRGB(30, 0, 60),
-    BackgroundTransparency = 0.35,
-    ZIndex = 9,
+    Size = UDim2.new(0.65,0,0,72), Position = UDim2.new(0.175,0,1,-162),
+    BackgroundColor3 = Color3.fromRGB(20,0,55), BackgroundTransparency = 0.3, ZIndex = 9,
 })
-local lyricCorner = Instance.new("UICorner", lyricOuter)
-lyricCorner.CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", lyricOuter).CornerRadius = UDim.new(0, 12)
 local lyricStroke = Instance.new("UIStroke", lyricOuter)
-lyricStroke.Color     = Color3.fromRGB(200, 100, 255)
-lyricStroke.Thickness = 2.5
-lyricStroke.Transparency = 0.2
+lyricStroke.Color = Color3.fromRGB(210,80,255); lyricStroke.Thickness = 2.8; lyricStroke.Transparency = 0.15
 
 local lyricLabel = Instance.new("TextLabel", lyricOuter)
-lyricLabel.Size               = UDim2.new(1,-20,0,38)
-lyricLabel.Position           = UDim2.new(0,10,0,3)
-lyricLabel.BackgroundTransparency = 1
-lyricLabel.TextColor3         = Color3.new(1,1,1)
-lyricLabel.TextStrokeTransparency = 0.15
-lyricLabel.TextStrokeColor3   = Color3.fromRGB(160,0,255)
-lyricLabel.Font               = Enum.Font.GothamBold
-lyricLabel.TextSize           = 26
-lyricLabel.TextXAlignment     = Enum.TextXAlignment.Center
-lyricLabel.Text               = ""
-lyricLabel.ZIndex             = 11
-lyricLabel.ClipsDescendants   = false
+lyricLabel.Size = UDim2.new(1,-22,0,40); lyricLabel.Position = UDim2.new(0,11,0,4)
+lyricLabel.BackgroundTransparency = 1; lyricLabel.TextColor3 = Color3.new(1,1,1)
+lyricLabel.TextStrokeTransparency = 0.1; lyricLabel.TextStrokeColor3 = Color3.fromRGB(140,0,255)
+lyricLabel.Font = Enum.Font.GothamBold; lyricLabel.TextSize = 28
+lyricLabel.TextXAlignment = Enum.TextXAlignment.Center; lyricLabel.Text = ""; lyricLabel.ZIndex = 11
 
 local subLabel = Instance.new("TextLabel", lyricOuter)
-subLabel.Size               = UDim2.new(1,-20,0,24)
-subLabel.Position           = UDim2.new(0,10,0,42)
-subLabel.BackgroundTransparency = 1
-subLabel.TextColor3         = Color3.fromRGB(220, 185, 255)
-subLabel.TextStrokeTransparency = 0.4
-subLabel.Font               = Enum.Font.Gotham
-subLabel.TextSize            = 15
-subLabel.TextXAlignment      = Enum.TextXAlignment.Center
-subLabel.Text                = ""
-subLabel.ZIndex              = 11
+subLabel.Size = UDim2.new(1,-22,0,26); subLabel.Position = UDim2.new(0,11,0,44)
+subLabel.BackgroundTransparency = 1; subLabel.TextColor3 = Color3.fromRGB(215,175,255)
+subLabel.TextStrokeTransparency = 0.4; subLabel.Font = Enum.Font.Gotham
+subLabel.TextSize = 16; subLabel.TextXAlignment = Enum.TextXAlignment.Center
+subLabel.Text = ""; subLabel.ZIndex = 11
 
 local flashFrame = makeFrame(sg, {
-    Size = UDim2.new(1,0,1,0),
-    BackgroundColor3 = Color3.new(1,1,1),
-    BackgroundTransparency = 1,
-    ZIndex = 20,
+    Size = UDim2.new(1,0,1,0), BackgroundColor3 = Color3.new(1,1,1),
+    BackgroundTransparency = 1, ZIndex = 20,
 })
 
 local vignetteFrame = makeFrame(sg, {
-    Size = UDim2.new(1,0,1,0),
-    BackgroundTransparency = 1,
-    ZIndex = 8,
+    Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, ZIndex = 8,
 })
 local vgGrad = Instance.new("UIGradient", vignetteFrame)
 vgGrad.Color = ColorSequence.new(Color3.new(0,0,0), Color3.new(0,0,0))
 vgGrad.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0,   0.25),
-    NumberSequenceKeypoint.new(0.4, 1),
-    NumberSequenceKeypoint.new(1,   0.25),
+    NumberSequenceKeypoint.new(0, 0.22),
+    NumberSequenceKeypoint.new(0.42, 1),
+    NumberSequenceKeypoint.new(1, 0.22),
 })
 vgGrad.Rotation = 90
 
-
+local camAngle  = math.pi
+local camDist   = 22
+local camHeight = 9
+local camMode   = "orbit"
+local camFOV    = 70
+local camTarget = "singer"
+local camShakeX = 0
+local camShakeY = 0
+local camShakeDecay = 0
 
 Camera.CameraType  = Enum.CameraType.Scriptable
 Camera.FieldOfView = 70
 
-local camAngle  = math.pi
-local camDist   = 22
-local camHeight = 8
-local camMode   = "orbit"
-local camFOV    = 70
-local camTarget = "singer"
+local desiredCamCF = CFrame.new(0,0,0)
 
 local function tweenFOV(fov, t)
     camFOV = fov
@@ -851,75 +1106,77 @@ local function tweenFOV(fov, t)
 end
 
 local function getTargetPos()
-    if camTarget == "player" and playerHRP and playerHRP.Parent then
-        return playerHRP.Position
+    if camTarget == "player" and playerCloneHRP and playerCloneHRP.Parent then
+        return playerCloneHRP.Position
     end
-    if singerHRP and singerHRP.Parent then
-        return singerHRP.Position
-    end
+    if singerHRP and singerHRP.Parent then return singerHRP.Position end
     return Vector3.new(0,0,0)
 end
 
 local function getSingerBodyCenter()
-    if singerHRP and singerHRP.Parent then
-        return singerHRP.Position + Vector3.new(0, 5, 0)
-    end
-    return Vector3.new(0,5,0)
+    if singerHRP and singerHRP.Parent then return singerHRP.Position + Vector3.new(0, 2.5, 0) end
+    return Vector3.new(0,2.5,0)
+end
+
+local function getPlayerBodyCenter()
+    if playerCloneHRP and playerCloneHRP.Parent then return playerCloneHRP.Position + Vector3.new(0, 4, 0) end
+    return Vector3.new(0,4,0)
 end
 
 local function getTargetCamCF()
-    local target   = getTargetPos()
+    local target     = getTargetPos()
     local bodyCenter = getSingerBodyCenter()
-    local headOff  = Vector3.new(0, camHeight, 0)
+    local headOff    = Vector3.new(0, camHeight, 0)
 
     if camMode == "orbit" then
-        return CFrame.lookAt(
+        local camPos = target + headOff + Vector3.new(math.cos(camAngle)*camDist, camHeight*0.15, math.sin(camAngle)*camDist)
+        return CFrame.lookAt(camPos, bodyCenter)
+    elseif camMode == "close" then
+        local camPos = bodyCenter + Vector3.new(math.cos(camAngle)*camDist, 0, math.sin(camAngle)*camDist)
+        return CFrame.lookAt(camPos, bodyCenter)
+    elseif camMode == "face" then
+        local lookAt = singerHRP and (singerHRP.Position + Vector3.new(0, 2.5, 0)) or bodyCenter
+        local camPos = lookAt + Vector3.new(math.cos(camAngle)*camDist, 0, math.sin(camAngle)*camDist)
+        return CFrame.lookAt(camPos, lookAt)
+    elseif camMode == "playerface" then
+        local pc = getPlayerBodyCenter()
+        local camPos = pc + Vector3.new(math.cos(camAngle)*5, 1.5, math.sin(camAngle)*5)
+        return CFrame.lookAt(camPos, pc)
+    elseif camMode == "top" then
+        return CFrame.lookAt(target + Vector3.new(0, 44, 0.01), bodyCenter)
+    elseif camMode == "dramatic" then
+        local camPos = bodyCenter + Vector3.new(math.cos(camAngle)*camDist, -5, math.sin(camAngle)*camDist)
+        return CFrame.lookAt(camPos, bodyCenter + Vector3.new(0, 7, 0))
+    elseif camMode == "worm" then
+        local camPos = target + Vector3.new(math.cos(camAngle)*camDist, -7, math.sin(camAngle)*camDist)
+        return CFrame.lookAt(camPos, bodyCenter)
+    elseif camMode == "fnf" then
+        local sp = singerHRP and singerHRP.Position or Vector3.new(0,0,0)
+        local pp = playerCloneHRP and playerCloneHRP.Position or Vector3.new(0,0,12)
+        local mid = (sp + pp) / 2
+        return CFrame.lookAt(mid + Vector3.new(0, 12, 36), mid + Vector3.new(0, 6, 0))
+    elseif camMode == "lowangle" then
+        local camPos = target + Vector3.new(math.cos(camAngle)*camDist, -12, math.sin(camAngle)*camDist)
+        return CFrame.lookAt(camPos, target + Vector3.new(0, 3, 0))
+    elseif camMode == "dutch" then
+        local base = CFrame.lookAt(
             target + headOff + Vector3.new(math.cos(camAngle)*camDist, camHeight*0.1, math.sin(camAngle)*camDist),
             bodyCenter
         )
-    elseif camMode == "close" then
-        local bp = bodyCenter
-        return CFrame.lookAt(
-            bp + Vector3.new(math.cos(camAngle)*camDist, 2, math.sin(camAngle)*camDist),
-            bp
-        )
-    elseif camMode == "face" then
-        local bp = bodyCenter + Vector3.new(0, 2, 0)
-        return CFrame.lookAt(
-            bp + Vector3.new(math.cos(camAngle)*camDist, 0, math.sin(camAngle)*camDist),
-            bp
-        )
-    elseif camMode == "playerface" then
-        local hp = (playerHead and playerHead.Position or target) + Vector3.new(0, 1, 0)
-        return CFrame.lookAt(
-            hp + Vector3.new(math.cos(camAngle)*3.5, 0, math.sin(camAngle)*3.5),
-            hp
-        )
-    elseif camMode == "top" then
-        return CFrame.lookAt(target + Vector3.new(0, 38, 0.01), target)
-    elseif camMode == "dramatic" then
-        local bp = bodyCenter
-        return CFrame.lookAt(
-            bp + Vector3.new(math.cos(camAngle)*camDist, -2, math.sin(camAngle)*camDist),
-            bp + Vector3.new(0, 4, 0)
-        )
-    elseif camMode == "worm" then
-        return CFrame.lookAt(
-            target + Vector3.new(math.cos(camAngle)*camDist, -5, math.sin(camAngle)*camDist),
-            target + Vector3.new(0, 8, 0)
-        )
-    elseif camMode == "fnf_left" then
-        local sp = singerHRP and singerHRP.Position or Vector3.new(0,0,0)
-        local pp = playerHRP and playerHRP.Position or Vector3.new(0,0,12)
-        local mid = (sp + pp) / 2
-        return CFrame.lookAt(mid + Vector3.new(0, 8, 28), mid + Vector3.new(0, 4, 0))
+        return base * CFrame.Angles(0, 0, math.rad(18))
     end
     return Camera.CFrame
 end
 
+local function addCameraShake(intensity, decay)
+    camShakeX = math.random(-100,100)/100 * intensity
+    camShakeY = math.random(-100,100)/100 * intensity
+    camShakeDecay = decay or 0.85
+end
+
 local function flash(r, g, b, dur)
     flashFrame.BackgroundColor3 = Color3.fromRGB(r,g,b)
-    flashFrame.BackgroundTransparency = 0.05
+    flashFrame.BackgroundTransparency = 0.04
     TweenService:Create(flashFrame, TweenInfo.new(dur or 0.15, Enum.EasingStyle.Quint), {
         BackgroundTransparency = 1
     }):Play()
@@ -928,26 +1185,26 @@ end
 local glitching = false
 local function glitch(times, strength)
     if glitching then return end
-    glitching = true
-    strength  = strength or 1
+    glitching = true; strength = strength or 1
     local orig = Camera.CFrame
     task.spawn(function()
         for _ = 1, (times or 5) do
             Camera.CFrame = orig
-                * CFrame.new(math.random(-10,10)*0.05*strength, math.random(-5,5)*0.03*strength, 0)
-                * CFrame.Angles(0, 0, math.rad(math.random(-4,4)*strength))
-            task.wait(0.04)
+                * CFrame.new(math.random(-10,10)*0.055*strength, math.random(-5,5)*0.035*strength, 0)
+                * CFrame.Angles(0, 0, math.rad(math.random(-5,5)*strength))
+            task.wait(0.035)
         end
-        Camera.CFrame = orig
-        glitching = false
+        Camera.CFrame = orig; glitching = false
     end)
 end
 
 local function lightningFlash()
     flash(255,255,255, 0.06)
-    task.delay(0.09,  function() flash(200,80,255, 0.1) end)
-    task.delay(0.22,  function() flash(255,255,255, 0.05) end)
-    glitch(4, 1.5)
+    task.delay(0.08,  function() flash(200,70,255, 0.1) end)
+    task.delay(0.20,  function() flash(255,255,255, 0.05) end)
+    glitch(5, 1.8)
+    doChromaticAberration(0.2, 0.5)
+    addCameraShake(0.4, 0.8)
 end
 
 local function colorShift(r, g, b, t)
@@ -956,48 +1213,36 @@ local function colorShift(r, g, b, t)
     }):Play()
 end
 
-local skyColorIdx = 0
 local function skyColor(r, g, b)
-    skyColorIdx = skyColorIdx + 1
-    TweenService:Create(Lighting, TweenInfo.new(1.5, Enum.EasingStyle.Sine), {
+    TweenService:Create(Lighting, TweenInfo.new(1.4, Enum.EasingStyle.Sine), {
         Ambient        = Color3.fromRGB(r//3, g//3, b//3),
         OutdoorAmbient = Color3.fromRGB(r//2, g//2, b//2),
         FogColor       = Color3.fromRGB(r//2, g//2, b//2),
-        FogEnd         = 600 + math.random(0, 300),
-        Brightness     = 1.5 + math.random()*0.6,
-    }):Play()
-    TweenService:Create(colorCorrection, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {
-        TintColor = Color3.fromRGB(
-            math.clamp(r + 60, 0, 255),
-            math.clamp(g + 30, 0, 255),
-            math.clamp(b + 80, 0, 255)
-        )
+        FogEnd         = 600 + math.random(0,300),
+        Brightness     = 1.6 + math.random()*0.7,
     }):Play()
     TweenService:Create(bloom, TweenInfo.new(0.6, Enum.EasingStyle.Sine), {
-        Intensity = 1.0 + math.random()*1.2,
-        Size = 20 + math.random()*20,
+        Intensity = 1.0 + math.random()*1.5, Size = 22 + math.random()*22,
     }):Play()
 end
 
 local function punchCam(scale)
     scale = scale or 1
     local base = camFOV
-    tweenFOV(base - 8*scale, 0.08)
-    task.delay(0.12, function() tweenFOV(base + 12*scale, 0.18) end)
-    task.delay(0.35, function() tweenFOV(base, 0.25) end)
+    tweenFOV(base - 9*scale, 0.08)
+    task.delay(0.12, function() tweenFOV(base + 14*scale, 0.2) end)
+    task.delay(0.38, function() tweenFOV(base, 0.28) end)
+    addCameraShake(0.25 * scale, 0.82)
 end
 
 local function zoomToFace(who, fov, duration, holdTime)
-    local prevMode   = camMode
-    local prevFOV    = camFOV
-    local prevTarget = camTarget
+    local prevMode = camMode; local prevFOV = camFOV; local prevTarget = camTarget
     camTarget = who or "singer"
     camMode   = (who == "player") and "playerface" or "face"
     tweenFOV(fov or 35, duration or 0.5)
     if holdTime then
         task.delay(holdTime, function()
-            camMode   = prevMode
-            camTarget = prevTarget
+            camMode = prevMode; camTarget = prevTarget
             tweenFOV(prevFOV, duration or 0.5)
         end)
     end
@@ -1026,21 +1271,18 @@ local function floatSinger(height, duration)
         CFrame = targetCF
     }):Play()
     scaleSinger(4.5, 0.35)
-    burstParticles(singerParticles, 20)
+    burstParticles(singerParticles, 22)
     shockwave(Color3.fromHSV(math.random(), 1, 1))
-    task.delay(duration * 0.5, function()
-        scaleSinger(3.5, 0.25)
-    end)
+    task.delay(duration * 0.5, function() scaleSinger(3.5, 0.25) end)
     task.delay(duration, function()
-        isFloating = false
-        scaleSinger(3, 0.4)
+        isFloating = false; scaleSinger(3, 0.4)
         if singerHRP and singerHRP.Parent and singerBasePos then
-            TweenService:Create(singerHRP, TweenInfo.new(0.6, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
+            TweenService:Create(singerHRP, TweenInfo.new(0.65, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
                 CFrame = singerBasePos
             }):Play()
             task.delay(0.1, function()
                 shockwave(Color3.fromRGB(255,200,80))
-                burstParticles(singerParticles, 15)
+                burstParticles(singerParticles, 16)
             end)
         end
     end)
@@ -1048,89 +1290,147 @@ end
 
 local function slamDown()
     if not singerHRP then return end
-    scaleSinger(5, 0.15)
+    scaleSinger(5.5, 0.15)
     task.delay(0.15, function()
         if singerBasePos then
-            TweenService:Create(singerHRP, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+            TweenService:Create(singerHRP, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
                 CFrame = singerBasePos
             }):Play()
         end
         task.delay(0.25, function()
             scaleSinger(3, 0.3)
             flash(255,180,80, 0.3)
-            glitch(8, 2)
+            glitch(9, 2.2)
             shockwave(Color3.fromRGB(255,200,80))
-            spawnExplosiveCubes(8, singerHRP and singerHRP.Position)
-            burstParticles(singerParticles, 30)
-            punchCam(1.5)
-            spawnLaserRing(0)
-            task.delay(0.1, function() spawnLaserRing(4) end)
+            spawnExplosiveCubes(10, singerHRP and singerHRP.Position)
+            burstParticles(singerParticles, 35)
+            punchCam(1.8)
+            spawnLaserRing(0); task.delay(0.1, function() spawnLaserRing(5) end)
+            doChromaticAberration(0.3, 0.7)
         end)
     end)
 end
 
 local function doSuperBurst()
     local pos = singerHRP and singerHRP.Position or Vector3.new(0,10,0)
-    spawnExplosiveCubes(20, pos)
-    shockwave(Color3.fromRGB(255,80,220))
-    task.delay(0.15, function() shockwave(Color3.fromRGB(80,200,255)) end)
-    task.delay(0.30, function() shockwave(Color3.fromRGB(255,255,80)) end)
-    burstParticles(singerParticles, 60)
-    burstParticles(playerParticles, 30)
+    spawnExplosiveCubes(25, pos)
+    shockwave(Color3.fromRGB(255,60,200))
+    task.delay(0.15, function() shockwave(Color3.fromRGB(60,200,255)) end)
+    task.delay(0.30, function() shockwave(Color3.fromRGB(255,255,60)) end)
+    burstParticles(singerParticles, 70)
+    burstParticles(playerParticles, 35)
     lightningFlash()
-    punchCam(2)
-    spawnLaserRing(4)
-    task.delay(0.2, function() spawnLaserRing(8) end)
-    task.delay(0.4, function() spawnLaserRing(12) end)
-    spawnConfetti(30, pos)
-    scaleSinger(5, 0.2)
-    task.delay(0.5, function() scaleSinger(3, 0.4) end)
+    punchCam(2.2)
+    spawnLaserRing(4); task.delay(0.18, function() spawnLaserRing(9) end); task.delay(0.36, function() spawnLaserRing(14) end)
+    spawnConfetti(35, pos)
+    scaleSinger(5.5, 0.18); task.delay(0.5, function() scaleSinger(3, 0.4) end)
+    spawnStarburstRing()
+    doChromaticAberration(0.45, 0.9)
+    addCameraShake(0.6, 0.75)
+end
+
+local lyricEffectConn = nil
+local lyricBeatCount  = 0
+
+local function pulseLyricBeat(bpm)
+    if lyricEffectConn then lyricEffectConn:Disconnect() end
+    local interval = 60 / (bpm or 128)
+    local lastBeat = tick()
+    lyricEffectConn = RunService.RenderStepped:Connect(function()
+        if tick() - lastBeat >= interval then
+            lastBeat = tick(); lyricBeatCount = lyricBeatCount + 1
+            local hue = (lyricBeatCount * 0.07) % 1
+            lyricStroke.Color = Color3.fromHSV(hue, 1, 1)
+            TweenService:Create(lyricOuter, TweenInfo.new(0.07, Enum.EasingStyle.Quint), {
+                Size = UDim2.new(0.67, 0, 0, 78)
+            }):Play()
+            task.delay(0.13, function()
+                TweenService:Create(lyricOuter, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
+                    Size = UDim2.new(0.65, 0, 0, 72)
+                }):Play()
+            end)
+        end
+    end)
+end
+pulseLyricBeat(128)
+
+local lyricWorldFolder = Instance.new("Folder", mainFolder)
+lyricWorldFolder.Name = "lyricworld"
+
+local function spawnWorldLyric(text)
+    if not singerHRP or text == "" then return end
+    task.spawn(function()
+        local board = Instance.new("Part", lyricWorldFolder)
+        board.Size = Vector3.new(0.1, 4, 14); board.Anchored = true; board.CanCollide = false; board.CastShadow = false
+        board.Transparency = 0.35; board.Material = Enum.Material.Neon
+        board.Color = Color3.fromHSV(math.random(), 1, 1)
+        local angle = math.random() * math.pi * 2
+        local dist  = math.random(20, 40)
+        local height = math.random(10, 22)
+        board.CFrame = CFrame.new(singerHRP.Position + Vector3.new(math.cos(angle)*dist, height, math.sin(angle)*dist))
+            * CFrame.Angles(0, angle + math.pi/2, 0)
+        local sg2 = Instance.new("SurfaceGui", board)
+        sg2.Face = Enum.NormalId.Front; sg2.AlwaysOnTop = false
+        sg2.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud; sg2.PixelsPerStud = 50
+        local lbl = Instance.new("TextLabel", sg2)
+        lbl.Size = UDim2.new(1,0,1,0); lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = Color3.new(1,1,1); lbl.TextStrokeTransparency = 0
+        lbl.TextStrokeColor3 = Color3.fromHSV(math.random(), 1, 1)
+        lbl.Font = Enum.Font.GothamBold; lbl.TextScaled = true; lbl.Text = text
+        TweenService:Create(board, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = Vector3.new(0.1, 4.5, 15)
+        }):Play()
+        task.delay(3.5, function()
+            TweenService:Create(board, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+            task.wait(0.7); pcall(function() board:Destroy() end)
+        end)
+    end)
 end
 
 local function showLyric(entry)
-    lyricLabel.Text = entry.jp
-    subLabel.Text   = entry.en
-
+    lyricLabel.Text = entry.jp; subLabel.Text = entry.en
     if singerHead and singerHead.Parent and entry.jp ~= "" then
         pcall(function() ChatService:Chat(singerHead, entry.jp) end)
     end
-
     local worldText = entry.jp ~= "" and entry.jp or entry.en
-    if worldText ~= "" then
-        spawnWorldLyric(worldText)
-    end
-
-    if math.random(1, 3) == 1 then
-        spawnConfetti(10, singerHRP and singerHRP.Position)
-    end
-
-    lyricLabel.TextSize  = 32
-    lyricLabel.TextColor3 = Color3.fromHSV(math.random(), 1, 1)
-
-    TweenService:Create(lyricLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-        TextSize   = 26,
-        TextColor3 = Color3.new(1, 1, 1),
-    }):Play()
-
-    TweenService:Create(lyricOuter, TweenInfo.new(0.08), {
-        BackgroundTransparency = 0.1,
-    }):Play()
-
-    task.delay(0.5, function()
-        TweenService:Create(lyricOuter, TweenInfo.new(0.7, Enum.EasingStyle.Sine), {
-            BackgroundTransparency = 0.45,
-        }):Play()
-    end)
+    if worldText ~= "" then spawnWorldLyric(worldText) end
+    if math.random(1, 3) == 1 then spawnConfetti(12, singerHRP and singerHRP.Position) end
 
     local hue = math.random()
-    TweenService:Create(lyricStroke, TweenInfo.new(0.06), {
-        Color = Color3.fromHSV(hue, 1, 1)
+    lyricLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
+    lyricLabel.TextSize = 36; lyricLabel.Rotation = math.random(-4,4)
+
+    TweenService:Create(lyricLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        TextSize = 28, TextColor3 = Color3.new(1,1,1), Rotation = 0,
     }):Play()
-    task.delay(0.5, function()
-        TweenService:Create(lyricStroke, TweenInfo.new(0.4), {
-            Color = Color3.fromRGB(200, 100, 255)
+
+    subLabel.TextColor3 = Color3.fromHSV((hue+0.5)%1, 0.7, 1)
+    subLabel.TextSize = 20
+    TweenService:Create(subLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quint), {
+        TextSize = 16, TextColor3 = Color3.fromRGB(215,175,255),
+    }):Play()
+
+    TweenService:Create(lyricOuter, TweenInfo.new(0.06), {
+        BackgroundTransparency = 0.04, Size = UDim2.new(0.68,0,0,80),
+    }):Play()
+    task.delay(0.4, function()
+        TweenService:Create(lyricOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
+            BackgroundTransparency = 0.4, Size = UDim2.new(0.65,0,0,72),
         }):Play()
     end)
+
+    TweenService:Create(lyricStroke, TweenInfo.new(0.05), {
+        Color = Color3.fromHSV(hue,1,1), Thickness = 4,
+    }):Play()
+    task.delay(0.45, function()
+        TweenService:Create(lyricStroke, TweenInfo.new(0.35), {
+            Color = Color3.fromRGB(210,80,255), Thickness = 2.8,
+        }):Play()
+    end)
+
+    TweenService:Create(blur, TweenInfo.new(0.05), {Size = 5}):Play()
+    task.delay(0.12, function() TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = 0}):Play() end)
+    doChromaticAberration(0.1, 0.25)
 end
 
 local lastLyricTime  = 0
@@ -1139,258 +1439,156 @@ local idleAnimPlaying = false
 local function checkIdleAnim(elapsed)
     if elapsed - lastLyricTime > 4 and not idleAnimPlaying then
         idleAnimPlaying = true
-        local rng = math.random(1, 7)
+        local rng = math.random(1, 10)
         if rng == 1 then
-            floatSinger(15, 1.5)
-            singerCheer()
-            shockwave(Color3.fromRGB(100,200,255))
-            burstParticles(singerParticles, 15)
+            floatSinger(16, 1.5); singerCheer(); shockwave(Color3.fromRGB(100,200,255)); burstParticles(singerParticles, 18)
         elseif rng == 2 then
-            singerDance()
-            spawnExplosiveCubes(6, singerHRP and singerHRP.Position)
+            singerDance(); spawnExplosiveCubes(8, singerHRP and singerHRP.Position)
         elseif rng == 3 then
-            singerPoint()
-            zoomToFace("player", 40, 0.4, 2.5)
+            singerPoint(); zoomToFace("player", 40, 0.4, 2.5)
         elseif rng == 4 then
-            singerLaugh()
-            glitch(5, 1)
+            singerLaugh(); glitch(6, 1.2)
         elseif rng == 5 then
-            singerWave()
-            shockwave(Color3.fromRGB(255,200,80))
+            singerWave(); shockwave(Color3.fromRGB(255,200,80))
         elseif rng == 6 then
-            singerRobot()
-            spawnLaserRing(3)
-            task.delay(0.15, function() spawnLaserRing(7) end)
+            singerRobot(); spawnLaserRing(3); task.delay(0.18, function() spawnLaserRing(8) end)
+        elseif rng == 7 then
+            singerSalute(); burstParticles(singerParticles, 22)
+        elseif rng == 8 then
+            singerShrug(); spawnConfetti(18, singerHRP and singerHRP.Position)
+        elseif rng == 9 then
+            singerSpin(); scaleSinger(4.5, 0.2); task.delay(0.5, function() scaleSinger(3, 0.3) end)
+            shockwave(Color3.fromHSV(math.random(), 1, 1)); spawnStarburstRing()
         else
-            singerSalute()
-            burstParticles(singerParticles, 20)
+            spawnDNAHelix(3.5); spawnGeometricRing(14, 8, 10, 0.8, 3)
         end
-        task.delay(3.8, function() idleAnimPlaying = false end)
+        task.delay(4, function() idleAnimPlaying = false end)
     end
 end
 
 local choreo = {
     {0, function()
-        singerDance()
-        tweenFOV(65, 1.5)
-        colorShift(200,150,255)
-        camMode = "orbit"; camDist = 22
+        singerDance(); tweenFOV(65, 1.5); colorShift(200,140,255); camMode = "orbit"; camDist = 22
     end},
     {9.22, function()
-        zoomToFace("singer", 38, 0.6, 2.5)
-        colorShift(255,150,255)
-        skyColor(60,0,80)
-        singerDance()
-        punchCam()
-        spawnLaserRing(5)
+        zoomToFace("singer", 38, 0.6, 2.5); colorShift(255,140,255); skyColor(60,0,80)
+        singerDance(); punchCam(); spawnLaserRing(5); spawnPillarRing(8, 14, 10)
     end},
     {13.15, function()
-        floatSinger(20, 2)
-        camMode = "dramatic"; camDist = 18
-        tweenFOV(60, 0.5)
-        lightningFlash()
-        singerCheer()
-        shockwave(Color3.fromRGB(200,80,255))
-        burstParticles(singerParticles, 25)
-        spawnLaserRing(6)
+        floatSinger(20, 2); camMode = "dramatic"; camDist = 18; tweenFOV(60, 0.5)
+        lightningFlash(); singerCheer(); shockwave(Color3.fromRGB(200,80,255))
+        burstParticles(singerParticles, 28); spawnLaserRing(7)
+        doChromaticAberration(0.35, 0.6)
     end},
     {17.75, function()
-        glitch(6, 1.5)
-        flash(255,80,200, 0.2)
-        camMode = "orbit"; camDist = 28
-        tweenFOV(72, 0.4)
-        colorShift(100,200,255)
-        skyColor(0,20,80)
-        spawnExplosiveCubes(12, singerHRP and singerHRP.Position)
-        singerWave()
-        spawnLaserRing(4); task.delay(0.2, function() spawnLaserRing(8) end)
+        glitch(7, 1.6); flash(255,80,200, 0.22); camMode = "orbit"; camDist = 28; tweenFOV(72, 0.4)
+        colorShift(100,200,255); skyColor(0,20,80); spawnExplosiveCubes(14, singerHRP and singerHRP.Position)
+        singerWave(); spawnLaserRing(4); task.delay(0.2, function() spawnLaserRing(9) end)
+        spawnGeometricRing(12, 6, 12, 1.2, 2.5)
     end},
     {21.07, function()
-        zoomToFace("singer", 34, 0.5, 3)
-        colorShift(200,255,150)
-        skyColor(0,60,20)
-        singerPoint()
-        spawnLaserRing(2)
+        zoomToFace("singer", 34, 0.5, 3); colorShift(200,255,140); skyColor(0,60,20)
+        singerPoint(); spawnLaserRing(2); spawnSpiralRings(12)
     end},
     {24.16, function()
-        camMode = "orbit"
-        camAngle = camAngle + math.pi * 0.7
-        camDist  = 20
-        tweenFOV(65, 0.3)
-        flash(255,255,100, 0.15)
-        punchCam(1.2)
-        shockwave(Color3.fromRGB(255,255,80))
-        singerDance()
-        spawnLaserRing(5)
+        camMode = "orbit"; camAngle = camAngle + math.pi * 0.7; camDist = 20; tweenFOV(65, 0.3)
+        flash(255,255,100, 0.15); punchCam(1.3); shockwave(Color3.fromRGB(255,255,80))
+        singerDance(); spawnLaserRing(5); addCameraShake(0.3, 0.8)
     end},
     {28.45, function()
-        lightningFlash()
-        colorShift(255,255,200)
-        skyColor(80,60,0)
-        doSuperBurst()
-        camMode = "worm"; camDist = 22
-        tweenFOV(76, 0.4)
+        lightningFlash(); colorShift(255,255,200); skyColor(80,60,0); doSuperBurst()
+        camMode = "worm"; camDist = 22; tweenFOV(76, 0.4)
     end},
     {33.33, function()
-        zoomToFace("singer", 30, 0.5, 2.5)
-        colorShift(255,100,80)
-        skyColor(80,10,0)
-        singerCheer()
-        spawnLaserRing(6)
+        zoomToFace("singer", 30, 0.5, 2.5); colorShift(255,100,80); skyColor(80,10,0)
+        singerCheer(); spawnDNAHelix(3)
     end},
     {36.63, function()
-        slamDown()
-        camMode = "orbit"; camDist = 32
-        tweenFOV(70, 0.5)
-        colorShift(80,200,255)
-        skyColor(0,40,80)
+        slamDown(); camMode = "orbit"; camDist = 32; tweenFOV(70, 0.5)
+        colorShift(80,200,255); skyColor(0,40,80); spawnPillarRing(10, 16, 14)
     end},
     {40.0, function()
-        zoomToFace("player", 36, 0.5, 2.5)
-        flash(255,200,255, 0.2)
-        singerLaugh()
+        zoomToFace("player", 36, 0.5, 2.5); flash(255,200,255, 0.2); singerLaugh()
+        growPlayerGiant()
     end},
     {45.0, function()
-        camMode = "face"; camDist = 9
-        tweenFOV(58, 0.4)
-        colorShift(255,180,100)
-        spawnExplosiveCubes(10, singerHRP and singerHRP.Position)
-        shockwave(Color3.fromRGB(255,180,100))
-        singerDance()
+        camMode = "face"; camDist = 6; tweenFOV(55, 0.4); colorShift(255,180,100)
+        spawnExplosiveCubes(12, singerHRP and singerHRP.Position)
+        shockwave(Color3.fromRGB(255,180,100)); singerDance()
     end},
     {50.0, function()
-        camMode = "orbit"; camDist = 35
-        tweenFOV(80, 0.5)
-        colorShift(150,80,255)
-        skyColor(40,0,80)
-        doSuperBurst()
-        singerRobot()
+        camMode = "orbit"; camDist = 35; tweenFOV(80, 0.5)
+        colorShift(140,80,255); skyColor(40,0,80); doSuperBurst(); spawnGeometricRing(18, 10, 16, 0.6, 3)
     end},
     {55.18, function()
-        glitch(10, 2)
-        flash(180,50,255, 0.25)
-        camMode = "dramatic"; camDist = 20
-        tweenFOV(65, 0.4)
-        colorShift(200,80,255)
-        skyColor(40,0,80)
-        singerDance()
-        burstParticles(singerParticles, 40)
-        spawnLaserRing(4)
-        task.delay(0.1,function() spawnLaserRing(3) end); task.delay(0.25,function() spawnLaserRing(7) end)
+        glitch(11, 2.2); flash(180,50,255, 0.28); camMode = "dramatic"; camDist = 20; tweenFOV(65, 0.4)
+        colorShift(200,80,255); skyColor(40,0,80); singerDance(); burstParticles(singerParticles, 45)
+        doChromaticAberration(0.4, 0.8); spawnSpiralRings(16)
     end},
     {58.45, function()
-        floatSinger(40, 3)
-        camMode = "orbit"; camDist = 45
-        tweenFOV(88, 0.6)
-        colorShift(255,255,255)
-        skyColor(60,60,80)
-        spawnExplosiveCubes(20, singerHRP and singerHRP.Position)
-        shockwave(Color3.fromRGB(255,255,255))
-        spawnConfetti(40, singerHRP and singerHRP.Position)
-        singerFlip()
+        floatSinger(40, 3); camMode = "orbit"; camDist = 45; tweenFOV(88, 0.6)
+        colorShift(255,255,255); skyColor(60,60,80); spawnExplosiveCubes(22, singerHRP and singerHRP.Position)
+        shockwave(Color3.fromRGB(255,255,255)); spawnStarburstRing()
     end},
     {1*60+5.73, function()
-        zoomToFace("singer", 32, 0.5, 3)
-        colorShift(255,150,200)
-        skyColor(60,0,40)
-        singerCheer()
-        spawnLaserRing(8)
+        zoomToFace("singer", 32, 0.5, 3); colorShift(255,140,200); skyColor(60,0,40); singerCheer()
+        spawnPillarRing(12, 18, 16); camMode = "dutch"
     end},
     {1*60+14.07, function()
-        glitch(6, 1.5)
-        floatSinger(30, 2.5)
-        camMode = "top"
-        tweenFOV(92, 0.5)
-        colorShift(80,255,200)
-        skyColor(0,60,40)
-        spawnExplosiveCubes(15, singerHRP and singerHRP.Position)
-        spawnLaserRing(10)
+        glitch(7, 1.6); floatSinger(30, 2.5); camMode = "top"; tweenFOV(92, 0.5)
+        colorShift(80,255,200); skyColor(0,60,40); spawnExplosiveCubes(18, singerHRP and singerHRP.Position)
+        spawnDNAHelix(3.5)
     end},
     {1*60+18.16, function()
-        camMode = "orbit"; camDist = 24
-        tweenFOV(70, 0.4)
-        flash(200,255,80, 0.2)
-        colorShift(200,255,150)
-        skyColor(20,60,0)
-        punchCam(1.5)
-        singerPoint()
-        spawnLaserRing(3)
+        camMode = "orbit"; camDist = 24; tweenFOV(70, 0.4); flash(200,255,80, 0.22)
+        colorShift(200,255,140); skyColor(20,60,0); punchCam(1.5); singerPoint()
+        spawnGeometricRing(10, 4, 8, 1.5, 2)
     end},
     {1*60+25.25, function()
-        glitch(5, 1.2)
-        camMode = "dramatic"; camDist = 16
-        tweenFOV(62, 0.4)
-        colorShift(255,180,80)
-        skyColor(80,40,0)
-        shockwave(Color3.fromRGB(255,150,50))
-        burstParticles(singerParticles, 30)
-        singerLaugh()
+        glitch(6, 1.3); camMode = "dramatic"; camDist = 16; tweenFOV(62, 0.4)
+        colorShift(255,170,80); skyColor(80,40,0); shockwave(Color3.fromRGB(255,140,50))
+        burstParticles(singerParticles, 35); singerLaugh(); spawnSpiralRings(18)
     end},
     {1*60+32.90, function()
-        lightningFlash()
-        slamDown()
-        zoomToFace("singer", 28, 0.4, 2.5)
-        colorShift(255,80,80)
-        skyColor(80,0,0)
-        doSuperBurst()
-        singerSalute()
+        lightningFlash(); slamDown(); zoomToFace("singer", 28, 0.4, 2.5)
+        colorShift(255,80,80); skyColor(80,0,0); doSuperBurst(); singerSalute()
+        camMode = "lowangle"
     end},
     {2*60+11.68, function()
-        camMode = "orbit"; camDist = 18
-        tweenFOV(68, 0.4)
-        flash(255,80,200, 0.3)
-        colorShift(255,100,255)
-        skyColor(60,0,60)
-        singerDance()
-        spawnLaserRing(5)
+        camMode = "orbit"; camDist = 18; tweenFOV(68, 0.4); flash(255,80,200, 0.32)
+        colorShift(255,100,255); skyColor(60,0,60); singerDance()
+        spawnLaserRing(5); spawnPillarRing(8, 12, 12)
     end},
     {2*60+20.0, function()
-        zoomToFace("player", 34, 0.5, 2.5)
-        flash(200,150,255, 0.2)
-        burstParticles(playerParticles, 25)
+        zoomToFace("player", 34, 0.5, 2.5); flash(200,140,255, 0.22)
+        burstParticles(playerParticles, 30); growPlayerGiant()
     end},
     {2*60+29.62, function()
-        floatSinger(50, 3)
-        glitch(12, 2.5)
-        camMode = "top"
-        tweenFOV(95, 0.6)
-        colorShift(150,200,255)
-        skyColor(0,20,60)
-        spawnExplosiveCubes(25, singerHRP and singerHRP.Position)
-        shockwave(Color3.fromRGB(150,200,255))
-        burstParticles(singerParticles, 60)
+        floatSinger(50, 3); glitch(13, 2.8); camMode = "top"; tweenFOV(95, 0.6)
+        colorShift(140,200,255); skyColor(0,20,60); spawnExplosiveCubes(30, singerHRP and singerHRP.Position)
+        shockwave(Color3.fromRGB(140,200,255)); burstParticles(singerParticles, 70)
         task.delay(0.1, function() spawnLaserRing(6) end)
         task.delay(0.3, function() spawnLaserRing(12) end)
+        spawnDNAHelix(4); doChromaticAberration(0.6, 1.0); addCameraShake(0.8, 0.7)
     end},
     {2*60+37.95, function()
-        lightningFlash()
-        flash(255,255,255, 0.4)
-        camMode = "orbit"; camDist = 40
-        tweenFOV(85, 0.5)
-        colorShift(255,255,255)
-        skyColor(80,80,80)
-        doSuperBurst()
-        singerCheer()
-        spawnLaserRing(10)
+        lightningFlash(); flash(255,255,255, 0.4); camMode = "orbit"; camDist = 40; tweenFOV(85, 0.5)
+        colorShift(255,255,255); skyColor(80,80,80); doSuperBurst(); singerCheer()
+        spawnLaserRing(10); spawnGeometricRing(20, 12, 18, 0.5, 3)
     end},
     {2*60+42.70, function()
-        zoomToFace("singer", 30, 0.5, 3)
-        colorShift(200,100,255)
-        skyColor(40,0,60)
-        singerRobot()
+        zoomToFace("singer", 30, 0.5, 3); colorShift(200,100,255); skyColor(40,0,60)
+        singerRobot(); spawnSpiralRings(20); camMode = "dutch"
     end},
     {2*60+48.36, function()
-        camMode = "orbit"; camDist = 50
-        tweenFOV(90, 0.5)
-        glitch(8, 2)
-        colorShift(80,80,255)
-        skyColor(0,0,80)
-        doSuperBurst()
-        spawnExplosiveCubes(30, singerHRP and singerHRP.Position)
-        singerFlip()
+        camMode = "orbit"; camDist = 50; tweenFOV(90, 0.5); glitch(9, 2.2)
+        colorShift(80,80,255); skyColor(0,0,80); doSuperBurst()
+        spawnExplosiveCubes(35, singerHRP and singerHRP.Position); singerFlip()
         task.delay(0.1, function() spawnLaserRing(5) end)
-        task.delay(0.25, function() spawnLaserRing(10) end)
-        task.delay(0.4, function() spawnLaserRing(15) end)
+        task.delay(0.25, function() spawnLaserRing(11) end)
+        task.delay(0.4, function() spawnLaserRing(17) end)
+        spawnStarburstRing(); doChromaticAberration(0.5, 1.0)
+        addCameraShake(1.0, 0.7)
     end},
 }
 
@@ -1408,7 +1606,6 @@ end
 
 local pentaAngle = 0
 local elapsed    = 0
-local finished   = false
 local conn
 
 conn = RunService.RenderStepped:Connect(function(dt)
@@ -1426,46 +1623,60 @@ conn = RunService.RenderStepped:Connect(function(dt)
     updateShowLights(elapsed)
 
     if stagePlatform and singerHRP then
-        local hue = (elapsed * 0.08) % 1
+        local hue = (elapsed * 0.07) % 1
         stagePlatform.Color = Color3.fromHSV(hue, 1, 1)
-        local pulse = 0.25 + math.abs(math.sin(elapsed * 3)) * 0.15
+        local pulse = 0.22 + math.abs(math.sin(elapsed * 2.8)) * 0.18
         stagePlatform.Transparency = pulse
     end
 
-    cloneOrbitAngle = cloneOrbitAngle + dt * cloneOrbitSpeed
-    if cloneHRP and singerHRP and singerHRP.Parent then
-        local cx = math.cos(cloneOrbitAngle) * cloneOrbitRadius
-        local cz = math.sin(cloneOrbitAngle) * cloneOrbitRadius
-        local cy = math.sin(elapsed * 1.5) * 6 + 8
-        cloneHRP.CFrame = CFrame.new(singerHRP.Position + Vector3.new(cx, cy, cz))
-            * CFrame.Angles(0, -cloneOrbitAngle, math.sin(elapsed)*0.4)
+    if playerCloneHRP and playerHRP then
+        playerCloneHRP.CFrame = playerHRP.CFrame
     end
 
-    camAngle = camAngle + dt * 0.15
-    Camera.CFrame = Camera.CFrame:Lerp(getTargetCamCF(), 0.09)
+    camAngle = camAngle + dt * 0.14
+
+    if camShakeDecay > 0 then
+        camShakeX = camShakeX * camShakeDecay
+        camShakeY = camShakeY * camShakeDecay
+        if math.abs(camShakeX) < 0.001 then camShakeX = 0; camShakeY = 0; camShakeDecay = 0 end
+    end
+
+    desiredCamCF = desiredCamCF:Lerp(getTargetCamCF(), 0.1)
+    local shakeCF = CFrame.new(camShakeX, camShakeY, 0)
+        * CFrame.Angles(0, 0, math.rad(camShakeX * 3))
+    Camera.CameraType = Enum.CameraType.Scriptable
+    Camera.CFrame = desiredCamCF * shakeCF
+    Camera.FieldOfView = camFOV
 
     if sound and sound.Parent then
         pcall(function() sound.RollOffMaxDistance = 9999 end)
     end
 
     while lyricIdx <= #lyrics and lyrics[lyricIdx].time <= elapsed do
-        lastLyricTime  = elapsed
-        idleAnimPlaying = false
-        showLyric(lyrics[lyricIdx])
-        lyricIdx = lyricIdx + 1
+        lastLyricTime = elapsed; idleAnimPlaying = false
+        showLyric(lyrics[lyricIdx]); lyricIdx = lyricIdx + 1
     end
 
     while choreoIdx <= #choreo and choreo[choreoIdx][1] <= elapsed do
-        task.spawn(choreo[choreoIdx][2])
-        choreoIdx = choreoIdx + 1
+        task.spawn(choreo[choreoIdx][2]); choreoIdx = choreoIdx + 1
     end
 
     checkIdleAnim(elapsed)
 
     if singerHRP and singerHRP.Parent and singerBasePos and not isFloating then
-        local bob = CFrame.new(0, math.sin(elapsed*2)*0.02, 0)
-            * CFrame.Angles(0, math.sin(elapsed*0.5)*0.01, math.sin(elapsed*2.5)*0.008)
+        local bob = CFrame.new(0, math.sin(elapsed*2)*0.025, 0)
+            * CFrame.Angles(0, math.sin(elapsed*0.5)*0.012, math.sin(elapsed*2.5)*0.009)
         singerHRP.CFrame = singerBasePos * bob
+    end
+
+    local lightHue = (elapsed * 0.14) % 1
+    spotLight.Color = Color3.fromHSV(lightHue, 1, 1)
+    pointLight.Color = Color3.fromHSV((lightHue + 0.33) % 1, 1, 1)
+    singerSpotDown.Color = Color3.fromHSV((lightHue + 0.66) % 1, 1, 1)
+
+    if singerNameTag then
+        local nameLabel2 = singerNameTag:FindFirstChildOfClass("TextLabel")
+        if nameLabel2 then nameLabel2.TextColor3 = Color3.fromHSV((elapsed * 0.22) % 1, 1, 1) end
     end
 
     local soundDone = false
@@ -1479,8 +1690,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
         finished = true
         if conn then conn:Disconnect() end
 
-        flash(255,255,255, 2)
-        doSuperBurst()
+        flash(255,255,255, 2); doSuperBurst()
         task.wait(0.8)
 
         TweenService:Create(cinemaTop, TweenInfo.new(1.5, Enum.EasingStyle.Quint), {Position = UDim2.new(-0.002,0,0,-(BAR_H+4))}):Play()
@@ -1490,35 +1700,38 @@ conn = RunService.RenderStepped:Connect(function(dt)
             TintColor = Color3.new(1,1,1), Saturation = 0, Brightness = 0
         }):Play()
         TweenService:Create(Lighting, TweenInfo.new(2.5), {
-            Ambient        = origAmbient,
-            OutdoorAmbient = origOutdoor,
-            Brightness     = origBrightness,
-            ClockTime      = origClockTime,
-            FogEnd         = origFogEnd,
-            FogColor       = origFogColor,
+            Ambient = origAmbient, OutdoorAmbient = origOutdoor,
+            Brightness = origBrightness, ClockTime = origClockTime,
+            FogEnd = origFogEnd, FogColor = origFogColor,
         }):Play()
         tweenFOV(origFOV, 2)
-
         task.wait(2)
 
+        if lyricEffectConn then lyricEffectConn:Disconnect() end
         pcall(function() sg:Destroy() end)
         pcall(function() mainFolder:Destroy() end)
         pcall(function() singer:Destroy() end)
-        pcall(function() cloneChar:Destroy() end)
+        pcall(function() playerClone:Destroy() end)
         pcall(function() sky:Destroy() end)
         pcall(function() bloom:Destroy() end)
         pcall(function() colorCorrection:Destroy() end)
+        pcall(function() colorCorrectionR:Destroy() end)
+        pcall(function() colorCorrectionB:Destroy() end)
         pcall(function() depthOfField:Destroy() end)
         pcall(function() sunRays:Destroy() end)
         pcall(function() blur:Destroy() end)
 
+        for part, origT in pairs(hiddenParts) do
+            pcall(function() part.Transparency = origT end)
+        end
+        for part, origT in pairs(origPlayerTransp) do
+            pcall(function() part.Transparency = origT end)
+        end
+
         Camera.CameraType  = Enum.CameraType.Custom
         Camera.FieldOfView = origFOV
 
-        if playerHum then
-            playerHum.WalkSpeed  = 16
-            playerHum.JumpHeight = 7.2
-        end
+        if playerHum then playerHum.WalkSpeed = 16; playerHum.JumpHeight = 7.2 end
         if playerHRP then playerHRP.Anchored = false end
 
         pcall(function()
