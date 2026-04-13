@@ -1169,20 +1169,21 @@ end
 
 local function updateGyroRings(t)
     if not singerHRP or not singerHRP.Parent then return end
+    local center = singerHRP.Position + Vector3.new(0, 8, 0)
     for i, gd in ipairs(shared.G.GYRO_RINGS) do
-        local orbitAngle = t * (0.12 + i * 0.03) + gd.phase
-        local orbitRadius = 35 + i * 8
-        local orbitHeight = math.sin(t * 0.4 + gd.phase) * 12 + 10
+        local orbitAngle  = t * (0.12 + i * 0.03) + gd.phase
+        local orbitRadius = 38 + (i - 1) * 7
+        local orbitHeight = math.sin(t * 0.4 + gd.phase) * 10
         local ox = math.cos(orbitAngle) * orbitRadius
         local oz = math.sin(orbitAngle) * orbitRadius
-        local pos = singerHRP.Position + Vector3.new(ox, orbitHeight, oz)
+        local pos = center + Vector3.new(ox, orbitHeight, oz)
         local spinAngle = t * gd.speed + gd.phase
         gd.part.CFrame = CFrame.new(pos)
             * CFrame.fromAxisAngle(gd.axis, spinAngle)
-            * CFrame.Angles(0, 0, math.pi/2)
+            * CFrame.Angles(0, 0, math.pi / 2)
         local col = Color3.fromHSV(((t * 0.05 + gd.phase / (math.pi * 2)) % 1), 1, 1)
         gd.part.Color = col
-        gd.pl.Color = col
+        gd.pl.Color   = col
         gd.part.Transparency = 0.3 + math.abs(math.sin(t * 0.4 + gd.phase)) * 0.35
     end
 end
