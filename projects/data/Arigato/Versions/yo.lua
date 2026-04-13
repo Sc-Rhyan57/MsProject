@@ -2292,6 +2292,166 @@ end
 shared.G.pentaAngle = 0
 shared.G.elapsed = 0
 local conn
+local extraFolder = Instance.new("Folder", mainFolder)
+extraFolder.Name = "extraFX"
+
+local NUM_RIBBONS = 12
+local ribbonParts = {}
+for i = 1, NUM_RIBBONS do
+    local p = Instance.new("Part", extraFolder)
+    p.Size = Vector3.new(0.18, 0.18, 0.18)
+    p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+    p.Material = Enum.Material.Neon
+    p.Color = Color3.fromHSV((i-1)/NUM_RIBBONS, 1, 1)
+    local a0 = Instance.new("Attachment", p); a0.Position = Vector3.new(0, 0.5, 0)
+    local a1 = Instance.new("Attachment", p); a1.Position = Vector3.new(0, -0.5, 0)
+    local tr = Instance.new("Trail", p)
+    tr.Attachment0 = a0; tr.Attachment1 = a1
+    tr.Lifetime = 0.9; tr.MinLength = 0; tr.LightEmission = 1
+    tr.WidthScale = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0.5),
+        NumberSequenceKeypoint.new(1, 0),
+    })
+    tr.Color = ColorSequence.new(Color3.fromHSV((i-1)/NUM_RIBBONS, 1, 1), Color3.fromRGB(255,255,255))
+    tr.Transparency = NumberSequence.new(0, 1)
+    tr.FaceCamera = true
+    table.insert(ribbonParts, {part=p, phase=(i-1)*(math.pi*2/NUM_RIBBONS), speed=0.6+i*0.08})
+end
+
+local NUM_METEORS = 8
+local meteorParts = {}
+for i = 1, NUM_METEORS do
+    local p = Instance.new("Part", extraFolder)
+    p.Size = Vector3.new(0.5, 0.5, 2.5)
+    p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+    p.Material = Enum.Material.Neon
+    p.Color = Color3.fromHSV(math.random(), 1, 1)
+    local a0 = Instance.new("Attachment", p); a0.Position = Vector3.new(0, 0, 1)
+    local a1 = Instance.new("Attachment", p); a1.Position = Vector3.new(0, 0, -1)
+    local tr = Instance.new("Trail", p)
+    tr.Attachment0 = a0; tr.Attachment1 = a1
+    tr.Lifetime = 0.5; tr.MinLength = 0; tr.LightEmission = 1
+    tr.Color = ColorSequence.new(p.Color, Color3.fromRGB(255,255,255))
+    tr.Transparency = NumberSequence.new(0, 1)
+    tr.FaceCamera = true
+    local pl = Instance.new("PointLight", p); pl.Brightness = 3; pl.Range = 14; pl.Color = p.Color
+    table.insert(meteorParts, {part=p, pl=pl, angle=math.random()*math.pi*2, height=math.random(20,55), dist=math.random(55,90), speed=0.4+math.random()*0.6, phase=math.random()*math.pi*2})
+end
+
+local NUM_PRISMS = 7
+local prismParts = {}
+for i = 1, NUM_PRISMS do
+    local p = Instance.new("Part", extraFolder)
+    p.Size = Vector3.new(2.5, 2.5, 0.3)
+    p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+    p.Material = Enum.Material.Neon
+    p.Color = Color3.fromHSV((i-1)/NUM_PRISMS, 1, 1)
+    p.Transparency = 0.45
+    local pl = Instance.new("PointLight", p); pl.Brightness = 2; pl.Range = 18; pl.Color = p.Color
+    table.insert(prismParts, {part=p, pl=pl, angle=(i-1)*(math.pi*2/NUM_PRISMS), dist=math.random(30,60), height=math.random(10,35), speed=0.15+i*0.04, phase=math.random()*math.pi*2})
+end
+
+local NUM_COMETS = 5
+local cometParts = {}
+for i = 1, NUM_COMETS do
+    local p = Instance.new("Part", extraFolder)
+    p.Size = Vector3.new(0.8, 0.8, 0.8); p.Shape = Enum.PartType.Ball
+    p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+    p.Material = Enum.Material.Neon
+    p.Color = Color3.fromHSV((i-1)/NUM_COMETS, 1, 1)
+    local a0 = Instance.new("Attachment", p); a0.Position = Vector3.new(0.3, 0, 0)
+    local a1 = Instance.new("Attachment", p); a1.Position = Vector3.new(-0.3, 0, 0)
+    local tr = Instance.new("Trail", p)
+    tr.Attachment0 = a0; tr.Attachment1 = a1
+    tr.Lifetime = 1.4; tr.MinLength = 0; tr.LightEmission = 1
+    tr.WidthScale = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1.2),
+        NumberSequenceKeypoint.new(1, 0),
+    })
+    tr.Color = ColorSequence.new(p.Color, Color3.fromRGB(255,255,255))
+    tr.Transparency = NumberSequence.new(0, 1)
+    tr.FaceCamera = true
+    local pl = Instance.new("PointLight", p); pl.Brightness = 5; pl.Range = 22; pl.Color = p.Color
+    table.insert(cometParts, {part=p, pl=pl, a=(i-1)*(math.pi*2/NUM_COMETS), r=math.random(65,110), h=math.random(25,70), spd=0.25+i*0.07, ph=math.random()*math.pi*2, tilt=math.random()*math.pi})
+end
+
+local function updateExtraFX(t)
+    if not singerHRP or not singerHRP.Parent then return end
+    local center = singerHRP.Position
+
+    for i, rd in ipairs(ribbonParts) do
+        local angle  = t * rd.speed + rd.phase
+        local radius = 14 + math.sin(t * 0.7 + rd.phase) * 6
+        local height = math.sin(t * 1.1 + rd.phase * 2) * 18 + 10
+        local x = math.cos(angle) * radius
+        local z = math.sin(angle) * radius
+        rd.part.Position = center + Vector3.new(x, height, z)
+        local hue = ((t * 0.09 + (i-1)/NUM_RIBBONS) % 1)
+        rd.part.Color = Color3.fromHSV(hue, 1, 1)
+        local tr = rd.part:FindFirstChildOfClass("Trail")
+        if tr then
+            tr.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1), Color3.fromRGB(255,255,255))
+        end
+    end
+
+    for i, md in ipairs(meteorParts) do
+        local angle = t * md.speed + md.phase
+        local tiltAxis = Vector3.new(math.sin(md.phase), 0.6, math.cos(md.phase)).Unit
+        local up   = math.abs(tiltAxis:Dot(Vector3.new(0,1,0))) < 0.99 and Vector3.new(0,1,0) or Vector3.new(1,0,0)
+        local tang = tiltAxis:Cross(up).Unit
+        local bin  = tiltAxis:Cross(tang).Unit
+        local pos  = center
+            + tang  * math.cos(angle) * md.dist
+            + bin   * math.sin(angle) * md.dist
+            + Vector3.new(0, md.height, 0)
+        local nextAngle = angle + 0.05
+        local nextPos = center
+            + tang  * math.cos(nextAngle) * md.dist
+            + bin   * math.sin(nextAngle) * md.dist
+            + Vector3.new(0, md.height, 0)
+        md.part.CFrame = CFrame.lookAt(pos, nextPos)
+        local hue = ((t * 0.07 + (i-1)/NUM_METEORS) % 1)
+        md.part.Color = Color3.fromHSV(hue, 1, 1)
+        md.pl.Color = md.part.Color
+        local tr = md.part:FindFirstChildOfClass("Trail")
+        if tr then tr.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1), Color3.fromRGB(255,255,255)) end
+    end
+
+    for i, pd in ipairs(prismParts) do
+        local angle = t * pd.speed + pd.phase
+        local vertAngle = t * pd.speed * 0.7 + pd.phase * 1.3
+        local x = math.cos(angle) * pd.dist
+        local z = math.sin(angle) * pd.dist
+        local y = pd.height + math.sin(vertAngle) * 12
+        local pos = center + Vector3.new(x, y, z)
+        pd.part.CFrame = CFrame.new(pos)
+            * CFrame.Angles(t * 0.4 + pd.phase, t * 0.3 + pd.phase * 0.7, t * 0.5)
+        local hue = ((t * 0.05 + (i-1)/NUM_PRISMS) % 1)
+        pd.part.Color = Color3.fromHSV(hue, 1, 1)
+        pd.pl.Color = pd.part.Color
+        pd.part.Transparency = 0.3 + math.abs(math.sin(t * 0.8 + pd.phase)) * 0.35
+    end
+
+    for i, cd in ipairs(cometParts) do
+        local angle = t * cd.spd + cd.ph
+        local up2   = math.abs(math.cos(cd.tilt)) < 0.99 and Vector3.new(0,1,0) or Vector3.new(1,0,0)
+        local axis  = Vector3.new(math.sin(cd.tilt), math.cos(cd.tilt), math.sin(cd.tilt*0.7)).Unit
+        local tang2 = axis:Cross(up2).Unit
+        local bin2  = axis:Cross(tang2).Unit
+        local pos = center
+            + tang2 * math.cos(angle) * cd.r
+            + bin2  * math.sin(angle) * cd.r
+            + Vector3.new(0, cd.h, 0)
+        cd.part.Position = pos
+        local hue = ((t * 0.06 + (i-1)/NUM_COMETS) % 1)
+        cd.part.Color = Color3.fromHSV(hue, 1, 1)
+        cd.pl.Color = cd.part.Color
+        cd.pl.Brightness = 3 + math.abs(math.sin(t * 1.2 + cd.ph)) * 3
+        local tr = cd.part:FindFirstChildOfClass("Trail")
+        if tr then tr.Color = ColorSequence.new(Color3.fromHSV(hue, 1, 1), Color3.fromRGB(255,255,255)) end
+    end
+end
 
 conn = RunService.RenderStepped:Connect(function(dt)
     if shared.G.finished then return end
@@ -2307,6 +2467,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
     updateNebula(shared.G.elapsed)
     updateShowLights(shared.G.elapsed)
     updateGyroRings(shared.G.elapsed)
+    updateExtraFX(shared.G.elapsed)
     checkIdleAnim(shared.G.elapsed)
     updateLyricBoards(shared.G.elapsed)
         
