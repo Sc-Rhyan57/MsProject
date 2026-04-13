@@ -94,7 +94,7 @@ local function parseLyrics()
     local function parseTime(h, m, s, ms)
         h = tonumber(h) or 0; m = tonumber(m) or 0
         s = tonumber(s) or 0; ms = tonumber(ms) or 0
-        local msLen = tostring(math.floor(ms)):len()
+        local msLen = #tostring(math.floor(ms))
         if msLen <= 2 then ms = ms / 100
         elseif msLen == 3 then ms = ms / 1000
         else ms = ms / (10 ^ msLen) end
@@ -113,7 +113,6 @@ local function parseLyrics()
     local function parseColorTag(str)
         local color = nil
         local colorName = str:match("<font[^>]+color=[\"']?#?(%x%x%x%x%x%x)[\"']?")
-            or str:match("<font[^>]+color=[\"']?(%x%x%x%x%x%x)[\"']?")
         if colorName then
             local r = tonumber(colorName:sub(1,2), 16) or 255
             local g = tonumber(colorName:sub(3,4), 16) or 255
@@ -149,24 +148,22 @@ local function parseLyrics()
         table.insert(lines, entry)
     end
 
-    local fmt = "unknown"
+    local fmt = "lrc"
     if raw:match("^WEBVTT") then fmt = "vtt"
-    elseif raw:match("%d+%:%d+%:%d+[%.,]%d+%s%-%->%s") then fmt = "srt"
+    elseif raw:match("%d+:%d+:%d+[%.,]%d+%s%-%->%s") then fmt = "srt"
     elseif raw:match("%[Script Info%]") or raw:match("^Dialogue:") then fmt = "ass"
     elseif raw:match("<%?xml") or raw:match("<tt ") or raw:match("<timedText") then fmt = "ttml"
-    elseif raw:match("%[%d+:%d+%.%d+%]") then fmt = "lrc"
     end
 
     if fmt == "vtt" then
         local block = ""
         for line in (raw .. "\n\n"):gmatch("([^\n]*)\n") do
             if line:match("^%s*$") then
-                local ts, te = block:match("(%d+:%d+:%d+[%.,]%d+)%s%-%->%s(%d+:%d+:%d+[%.,]%d+)")
-                if not ts then ts, te = block:match("(%d+:%d+[%.,]%d+)%s%-%->%s(%d+:%d+[%.,]%d+)") end
+                local ts = block:match("(%d+:%d+:%d+[%.,]%d+)%s%-%->%s") or block:match("(%d+:%d+[%.,]%d+)%s%-%->%s")
                 if ts then
-                    local h,m,s,ms = ts:match("(%d+):(%d+):(%d+)[%.,](%d+)")
-                    if not h then m,s,ms = ts:match("(%d+):(%d+)[%.,](%d+)"); h = 0 end
-                    local t = parseTime(h,m,s,ms)
+                    local h, m, s, ms = ts:match("(%d+):(%d+):(%d+)[%.,](%d+)")
+                    if not h then m, s, ms = ts:match("(%d+):(%d+)[%.,](%d+)"); h = 0 end
+                    local t = parseTime(h, m, s, ms)
                     local textPart = block:gsub(".*%-%->%s*[^\n]*\n?", ""):match("^%s*(.-)%s*$") or ""
                     local color = parseColorTag(textPart)
                     textPart = stripInlineTags(textPart)
@@ -186,9 +183,9 @@ local function parseLyrics()
             if line:match("^%s*$") then
                 local ts = block:match("(%d+:%d+:%d+[%.,]%d+)%s%-%->%s")
                 if ts then
-                    local h,m,s,ms = ts:match("(%d+):(%d+):(%d+)[%.,](%d+)")
-                    local t = parseTime(h,m,s,ms)
-                    local textPart = block:gsub("^%d+%s*\n",""):gsub("[^\n]+%-%->.-\n",""):match("^%s*(.-)%s*$") or ""
+                    local h, m, s, ms = ts:match("(%d+):(%d+):(%d+)[%.,](%d+)")
+                    local t = parseTime(h, m, s, ms)
+                    local textPart = block:gsub("^%d+%s*\n", ""):gsub("[^\n]+%-%->.-\n", ""):match("^%s*(.-)%s*$") or ""
                     local color = parseColorTag(textPart)
                     textPart = stripInlineTags(textPart)
                     if not tryExecBlock(textPart) and textPart ~= "" then
@@ -205,16 +202,16 @@ local function parseLyrics()
         for line in raw:gmatch("[^\n]+") do
             if line:match("^Dialogue:") then
                 local fields = {}
-                for f in (line:gsub("^Dialogue:%s*","") .. ","):gmatch("([^,]*),") do
+                for f in (line:gsub("^Dialogue:%s*", "") .. ","):gmatch("([^,]*),") do
                     table.insert(fields, f)
                 end
                 local startStr = fields[2] or ""
-                local h,m,s,cs = startStr:match("(%d+):(%d+):(%d+)%.(%d+)")
+                local h, m, s, cs = startStr:match("(%d+):(%d+):(%d+)%.(%d+)")
                 if h then
-                    local t = parseTime(h,m,s,cs)
+                    local t = parseTime(h, m, s, cs)
                     local textPart = table.concat(fields, ",", 10):match("^%s*(.-)%s*$") or ""
-                    textPart = textPart:gsub("{[^}]+}", "")
                     local color = parseColorTag("{" .. (line:match("{[^}]*\\[1c][^}]*}") or "") .. "}")
+                    textPart = textPart:gsub("{[^}]+}", "")
                     textPart = stripInlineTags(textPart)
                     if not tryExecBlock(textPart) and textPart ~= "" then
                         addEntry(t, textPart, "", color)
@@ -227,12 +224,12 @@ local function parseLyrics()
         for p in raw:gmatch("<p[^>]+>.-</p>") do
             local begin = p:match('begin="([^"]+)"')
             if begin then
-                local h,m,s,ms = begin:match("(%d+):(%d+):(%d+)[%.,](%d+)")
-                if not h then m,s,ms = begin:match("(%d+):(%d+)[%.,](%d+)"); h = 0 end
-                if not m then s,ms = begin:match("(%d+)[%.,](%d+)"); h=0; m=0 end
-                local t = parseTime(h,m,s,ms)
+                local h, m, s, ms = begin:match("(%d+):(%d+):(%d+)[%.,](%d+)")
+                if not h then m, s, ms = begin:match("(%d+):(%d+)[%.,](%d+)"); h = 0 end
+                if not m then s, ms = begin:match("(%d+)[%.,](%d+)"); h = 0; m = 0 end
+                local t = parseTime(h, m, s, ms)
                 local color = parseColorTag(p)
-                local textPart = p:gsub("<br%s*/?>", " "):gsub("<[^>]+>",""):match("^%s*(.-)%s*$") or ""
+                local textPart = p:gsub("<br%s*/?>", " "):gsub("<[^>]+>", ""):match("^%s*(.-)%s*$") or ""
                 textPart = stripInlineTags(textPart)
                 if not tryExecBlock(textPart) and textPart ~= "" then
                     addEntry(t, textPart, "", color)
@@ -242,59 +239,48 @@ local function parseLyrics()
 
     else
         for line in raw:gmatch("[^\n]+") do
-            if line:match("^%[bg:") or line:match("^%[v%d+b:") then goto continueLrc end
-
-            local execCode = line:match("%[%d+:%d+[%.:]%d+%]%s*(.+)")
-            if execCode and execCode:match("^%[%[") then
-                local h,m,s,ms
-                local tStr = line:match("^%[(%d+):(%d+)[%.:](%d+)%]")
-                if tStr then
-                    h,m,s,ms = line:match("^%[(%d+):(%d+):(%d+)[%.,]?(%d*)%]")
-                    if not h then m,s,ms = line:match("^%[(%d+):(%d+)%.(%d+)%]"); h=0 end
-                end
-                local tt = 0
-                if h then tt = parseTime(h,m,s,ms or 0) end
-                if not tryExecBlock(execCode) then end
-                goto continueLrc
-            end
-
-            do
-                local h2,m2,s2,ms2 = line:match("^%[(%d+):(%d+):(%d+)[%.,](%d+)%]")
-                local t2
-                if h2 then
-                    t2 = parseTime(h2,m2,s2,ms2)
+            local isBg = line:match("^%[bg:") or line:match("^%[v%d+b:")
+            if not isBg then
+                local execMatch = line:match("%[%d+:%d+[%.:]%d+%]%s*(.+)")
+                if execMatch and execMatch:match("^%[%[") then
+                    tryExecBlock(execMatch)
                 else
-                    local m3,s3,ms3 = line:match("^%[(%d+):(%d+)%.(%d+)%]")
-                    if m3 then t2 = parseTime(0,m3,s3,ms3) end
-                end
+                    local h2, m2, s2, ms2 = line:match("^%[(%d+):(%d+):(%d+)[%.,](%d+)%]")
+                    local t2
+                    if h2 then
+                        t2 = parseTime(h2, m2, s2, ms2)
+                    else
+                        local m3, s3, ms3 = line:match("^%[(%d+):(%d+)%.(%d+)%]")
+                        if m3 then t2 = parseTime(0, m3, s3, ms3) end
+                    end
 
-                if t2 then
-                    local rest = line:gsub("^%[[^%]]+%]%s*", "")
-                    rest = rest:gsub("^v%d+[ab]?:%s*", "")
-                    rest = rest:gsub("<[^>]+>","")
-                    rest = rest:gsub("%*%*%*%*", "")
-                    rest = rest:match("^%s*(.-)%s*$") or ""
+                    if t2 then
+                        local rest = line:gsub("^%[[^%]]+%]%s*", "")
+                        rest = rest:gsub("^v%d+[ab]?:%s*", "")
+                        rest = rest:gsub("<[^>]+>", "")
+                        rest = rest:gsub("%*%*%*%*", "")
+                        rest = rest:match("^%s*(.-)%s*$") or ""
 
-                    local color = parseColorTag(rest)
-                    rest = stripInlineTags(rest)
+                        local color = parseColorTag(rest)
+                        rest = stripInlineTags(rest)
 
-                    local jp2 = rest:match("^(.-)%^") or rest
-                    local en2 = rest:match("%^(.+)$") or ""
-                    jp2 = jp2:match("^%s*(.-)%s*$") or ""
+                        local jp2 = rest:match("^(.-)%^") or rest
+                        local en2 = rest:match("%^(.+)$") or ""
+                        jp2 = jp2:match("^%s*(.-)%s*$") or ""
 
-                    if jp2 ~= "" or en2 ~= "" then
-                        addEntry(t2, jp2, en2, color)
+                        if jp2 ~= "" or en2 ~= "" then
+                            addEntry(t2, jp2, en2, color)
+                        end
                     end
                 end
             end
-
-            ::continueLrc::
         end
     end
 
-    table.sort(lines, function(a,b) return a.time < b.time end)
+    table.sort(lines, function(a, b) return a.time < b.time end)
     return lines
 end
+
 
 local lyrics = parseLyrics()
 
