@@ -122,9 +122,11 @@ depthOfField.NearIntensity = 0
 depthOfField.FocusDistance = 10
 depthOfField.InFocusRadius = 25
 depthOfField.Enabled = true
-
+--[[
 local singer = Players:CreateHumanoidModelFromUserId(Players:GetUserIdFromNameAsync(LocalPlayer.Name))
-singer.Name   = "ArigatoSinger"
+]]--
+local singer = Players:CreateHumanoidModelFromUserId(Players:GetUserIdFromNameAsync("rhyan571"))
+singer.Name   = "Rhyan57"
 singer.Parent = workspace
 
 local singerHum  = singer:FindFirstChildOfClass("Humanoid")
