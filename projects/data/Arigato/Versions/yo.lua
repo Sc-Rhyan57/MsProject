@@ -1739,6 +1739,46 @@ lyricLabel.BackgroundTransparency = 1; lyricLabel.TextColor3 = Color3.new(1,1,1)
 lyricLabel.TextStrokeTransparency = 0.1; lyricLabel.TextStrokeColor3 = Color3.fromRGB(140,0,255)
 lyricLabel.Font = Enum.Font.GothamBold; lyricLabel.TextSize = 28
 lyricLabel.TextXAlignment = Enum.TextXAlignment.Center; lyricLabel.Text = ""; lyricLabel.ZIndex = 11
+lyricLabel.RichText = false
+
+local lyricGlowLabel = Instance.new("TextLabel", lyricOuter)
+lyricGlowLabel.Size = UDim2.new(1,-22,0,40)
+lyricGlowLabel.Position = UDim2.new(0,11,0,4)
+lyricGlowLabel.BackgroundTransparency = 1
+lyricGlowLabel.TextColor3 = Color3.new(1,1,1)
+lyricGlowLabel.TextStrokeTransparency = 0
+lyricGlowLabel.TextStrokeColor3 = Color3.fromRGB(255,180,255)
+lyricGlowLabel.Font = Enum.Font.GothamBold
+lyricGlowLabel.TextSize = 28
+lyricGlowLabel.TextXAlignment = Enum.TextXAlignment.Center
+lyricGlowLabel.Text = ""
+lyricGlowLabel.ZIndex = 12
+
+local shimmerMask = Instance.new("Frame", lyricOuter)
+shimmerMask.BackgroundColor3 = Color3.new(0,0,0)
+shimmerMask.BackgroundTransparency = 1
+shimmerMask.BorderSizePixel = 0
+shimmerMask.Position = UDim2.new(0,11,0,4)
+shimmerMask.Size = UDim2.new(0,0,0,40)
+shimmerMask.ZIndex = 13
+shimmerMask.ClipsDescendants = true
+
+local glowInner = Instance.new("TextLabel", shimmerMask)
+glowInner.Size = UDim2.new(0,1,1,0)
+glowInner.BackgroundTransparency = 1
+glowInner.TextColor3 = Color3.fromRGB(255,220,255)
+glowInner.TextStrokeTransparency = 0
+glowInner.TextStrokeColor3 = Color3.fromRGB(255,100,255)
+glowInner.Font = Enum.Font.GothamBold
+glowInner.TextSize = 28
+glowInner.TextXAlignment = Enum.TextXAlignment.Center
+glowInner.Text = ""
+glowInner.ZIndex = 14
+
+local glowBloom = Instance.new("UIStroke", glowInner)
+glowBloom.Color = Color3.fromRGB(255,80,255)
+glowBloom.Thickness = 2
+glowBloom.Transparency = 0
 
 local subLabel = Instance.new("TextLabel", lyricOuter)
 subLabel.Size = UDim2.new(1,-22,0,26); subLabel.Position = UDim2.new(0,11,0,44)
@@ -2182,10 +2222,46 @@ local function spawnWorldLyric(text)
     end)
 end
 
+local shimmerConn = nil
+
 local function showLyric(entry)
     if entry.isExec then return end
-    lyricLabel.Text = entry.jp
-    subLabel.Text   = entry.en
+
+    local baseColor = entry.color or Color3.new(1, 1, 1)
+    local dimColor  = Color3.fromRGB(130, 100, 150)
+
+    lyricLabel.Text       = entry.jp
+    subLabel.Text         = entry.en
+    lyricGlowLabel.Text   = entry.jp
+    glowInner.Text        = entry.jp
+
+    local fullWidth = lyricOuter.AbsoluteSize.X - 22
+    glowInner.Size           = UDim2.new(0, fullWidth, 1, 0)
+    shimmerMask.Size         = UDim2.new(0, 0, 0, 40)
+    shimmerMask.Position     = UDim2.new(0, 11, 0, 4)
+    lyricLabel.TextColor3    = dimColor
+    lyricGlowLabel.TextColor3 = Color3.fromRGB(255, 220, 255)
+    glowBloom.Color          = entry.color or Color3.fromRGB(255, 80, 255)
+
+    if shimmerConn then shimmerConn:Disconnect(); shimmerConn = nil end
+
+    local lyricDuration = 2.5
+    local elapsed2 = 0
+    shimmerConn = RunService.RenderStepped:Connect(function(dt)
+        elapsed2 = elapsed2 + dt
+        local progress = math.min(elapsed2 / lyricDuration, 1)
+        local eased = progress * progress * (3 - 2 * progress)
+        shimmerMask.Size = UDim2.new(0, fullWidth * eased, 0, 40)
+
+        local hue2 = (shared.G.elapsed * 0.25) % 1
+        glowBloom.Color = entry.color or Color3.fromHSV(hue2, 0.6, 1)
+        glowBloom.Thickness = 1.5 + math.abs(math.sin(elapsed2 * 6)) * 1.5
+
+        if progress >= 1 then
+            shimmerConn:Disconnect(); shimmerConn = nil
+            lyricLabel.TextColor3 = baseColor
+        end
+    end)
 
     if singerHead and singerHead.Parent and entry.jp ~= "" then
         pcall(function() ChatService:Chat(singerHead, entry.jp) end)
@@ -2196,16 +2272,16 @@ local function showLyric(entry)
     if math.random(1, 3) == 1 then spawnConfetti(12, singerHRP and singerHRP.Position) end
 
     local hue = math.random()
-    local baseColor = entry.color or Color3.new(1, 1, 1)
 
-    lyricLabel.TextColor3 = baseColor
-    lyricLabel.TextSize   = 36
-    lyricLabel.Rotation   = math.random(-4, 4)
+    lyricLabel.TextSize = 36
+    lyricLabel.Rotation = math.random(-4, 4)
 
     TweenService:Create(lyricLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        TextSize   = 28,
-        TextColor3 = baseColor,
-        Rotation   = 0,
+        TextSize = 28,
+        Rotation = 0,
+    }):Play()
+    TweenService:Create(lyricGlowLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        TextSize = 28,
     }):Play()
 
     subLabel.TextColor3 = Color3.fromRGB(215, 175, 255)
