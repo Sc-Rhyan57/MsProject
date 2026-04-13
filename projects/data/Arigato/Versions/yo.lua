@@ -1841,8 +1841,8 @@ end
 shared.G.lastLyricTime = 0
 shared.G.idleAnimPlaying = false
 
-local function checkIdleAnim(shared.G.elapsed)
-    if shared.G.elapsed - shared.G.lastLyricTime > 4 and not shared.G.idleAnimPlaying then
+local function checkIdleAnim(elapsed)
+    if elapsed - shared.G.lastLyricTime > 4 and not shared.G.idleAnimPlaying then
         shared.G.idleAnimPlaying = true
         local rng = math.random(1, 10)
         if rng == 1 then
