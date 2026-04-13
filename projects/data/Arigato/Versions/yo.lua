@@ -90,17 +90,208 @@ local function parseLyrics()
     local lines = {}
     local ok, raw = pcall(function() return game:HttpGet(LYRICS_URL) end)
     if not ok then return lines end
-    for line in raw:gmatch("[^\n]+") do
-        local m, s, cs, rest = line:match("%[(%d+):(%d+)%.(%d+)%]%s*(.*)")
-        if m then
-            local t  = tonumber(m)*60 + tonumber(s) + tonumber(cs)/100
-            local jp = rest:match("^(.-)%^") or rest
-            local en = rest:match("%^(.+)$") or ""
-            if jp ~= "" or en ~= "" then
-                table.insert(lines, {time = t, jp = jp, en = en})
+
+    local function parseTime(h, m, s, ms)
+        h = tonumber(h) or 0; m = tonumber(m) or 0
+        s = tonumber(s) or 0; ms = tonumber(ms) or 0
+        local msLen = tostring(math.floor(ms)):len()
+        if msLen <= 2 then ms = ms / 100
+        elseif msLen == 3 then ms = ms / 1000
+        else ms = ms / (10 ^ msLen) end
+        return h * 3600 + m * 60 + s + ms
+    end
+
+    local function stripInlineTags(str)
+        str = str:gsub("<[^>]+>", "")
+        str = str:gsub("{\\[^}]+}", "")
+        str = str:gsub("%[/*[a-zA-Z][^%]]*%]", "")
+        str = str:gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&amp;", "&"):gsub("&#39;", "'"):gsub("&quot;", '"')
+        str = str:gsub("%s+", " ")
+        return str:match("^%s*(.-)%s*$") or ""
+    end
+
+    local function parseColorTag(str)
+        local color = nil
+        local colorName = str:match("<font[^>]+color=[\"']?#?(%x%x%x%x%x%x)[\"']?")
+            or str:match("<font[^>]+color=[\"']?(%x%x%x%x%x%x)[\"']?")
+        if colorName then
+            local r = tonumber(colorName:sub(1,2), 16) or 255
+            local g = tonumber(colorName:sub(3,4), 16) or 255
+            local b = tonumber(colorName:sub(5,6), 16) or 255
+            color = Color3.fromRGB(r, g, b)
+        end
+        local assColor = str:match("\\c&H(%x%x%x%x%x%x%x%x)&") or str:match("\\1c&H(%x%x%x%x%x%x%x%x)&")
+        if assColor then
+            local b2 = tonumber(assColor:sub(1,2), 16) or 255
+            local g2 = tonumber(assColor:sub(3,4), 16) or 255
+            local r2 = tonumber(assColor:sub(5,6), 16) or 255
+            color = Color3.fromRGB(r2, g2, b2)
+        end
+        return color
+    end
+
+    local function tryExecBlock(str)
+        local code = str:match("%[%[(.-)%]%]")
+        if code then
+            local fn, err = loadstring(code)
+            if fn then task.spawn(pcall, fn)
+            else warn("[parseLyrics] Erro no bloco [[ ]]: " .. tostring(err)) end
+            return true
+        end
+        return false
+    end
+
+    local function addEntry(t, text, sub, color)
+        text = text or ""; sub = sub or ""
+        if text == "" and sub == "" then return end
+        local entry = {time = t, jp = text, en = sub}
+        if color then entry.color = color end
+        table.insert(lines, entry)
+    end
+
+    local fmt = "unknown"
+    if raw:match("^WEBVTT") then fmt = "vtt"
+    elseif raw:match("%d+%:%d+%:%d+[%.,]%d+%s%-%->%s") then fmt = "srt"
+    elseif raw:match("%[Script Info%]") or raw:match("^Dialogue:") then fmt = "ass"
+    elseif raw:match("<%?xml") or raw:match("<tt ") or raw:match("<timedText") then fmt = "ttml"
+    elseif raw:match("%[%d+:%d+%.%d+%]") then fmt = "lrc"
+    end
+
+    if fmt == "vtt" then
+        local block = ""
+        for line in (raw .. "\n\n"):gmatch("([^\n]*)\n") do
+            if line:match("^%s*$") then
+                local ts, te = block:match("(%d+:%d+:%d+[%.,]%d+)%s%-%->%s(%d+:%d+:%d+[%.,]%d+)")
+                if not ts then ts, te = block:match("(%d+:%d+[%.,]%d+)%s%-%->%s(%d+:%d+[%.,]%d+)") end
+                if ts then
+                    local h,m,s,ms = ts:match("(%d+):(%d+):(%d+)[%.,](%d+)")
+                    if not h then m,s,ms = ts:match("(%d+):(%d+)[%.,](%d+)"); h = 0 end
+                    local t = parseTime(h,m,s,ms)
+                    local textPart = block:gsub(".*%-%->%s*[^\n]*\n?", ""):match("^%s*(.-)%s*$") or ""
+                    local color = parseColorTag(textPart)
+                    textPart = stripInlineTags(textPart)
+                    if not tryExecBlock(textPart) and textPart ~= "" then
+                        addEntry(t, textPart, "", color)
+                    end
+                end
+                block = ""
+            else
+                block = block .. line .. "\n"
             end
         end
+
+    elseif fmt == "srt" then
+        local block = ""
+        for line in (raw .. "\n\n"):gmatch("([^\n]*)\n") do
+            if line:match("^%s*$") then
+                local ts = block:match("(%d+:%d+:%d+[%.,]%d+)%s%-%->%s")
+                if ts then
+                    local h,m,s,ms = ts:match("(%d+):(%d+):(%d+)[%.,](%d+)")
+                    local t = parseTime(h,m,s,ms)
+                    local textPart = block:gsub("^%d+%s*\n",""):gsub("[^\n]+%-%->.-\n",""):match("^%s*(.-)%s*$") or ""
+                    local color = parseColorTag(textPart)
+                    textPart = stripInlineTags(textPart)
+                    if not tryExecBlock(textPart) and textPart ~= "" then
+                        addEntry(t, textPart, "", color)
+                    end
+                end
+                block = ""
+            else
+                block = block .. line .. "\n"
+            end
+        end
+
+    elseif fmt == "ass" then
+        for line in raw:gmatch("[^\n]+") do
+            if line:match("^Dialogue:") then
+                local fields = {}
+                for f in (line:gsub("^Dialogue:%s*","") .. ","):gmatch("([^,]*),") do
+                    table.insert(fields, f)
+                end
+                local startStr = fields[2] or ""
+                local h,m,s,cs = startStr:match("(%d+):(%d+):(%d+)%.(%d+)")
+                if h then
+                    local t = parseTime(h,m,s,cs)
+                    local textPart = table.concat(fields, ",", 10):match("^%s*(.-)%s*$") or ""
+                    textPart = textPart:gsub("{[^}]+}", "")
+                    local color = parseColorTag("{" .. (line:match("{[^}]*\\[1c][^}]*}") or "") .. "}")
+                    textPart = stripInlineTags(textPart)
+                    if not tryExecBlock(textPart) and textPart ~= "" then
+                        addEntry(t, textPart, "", color)
+                    end
+                end
+            end
+        end
+
+    elseif fmt == "ttml" then
+        for p in raw:gmatch("<p[^>]+>.-</p>") do
+            local begin = p:match('begin="([^"]+)"')
+            if begin then
+                local h,m,s,ms = begin:match("(%d+):(%d+):(%d+)[%.,](%d+)")
+                if not h then m,s,ms = begin:match("(%d+):(%d+)[%.,](%d+)"); h = 0 end
+                if not m then s,ms = begin:match("(%d+)[%.,](%d+)"); h=0; m=0 end
+                local t = parseTime(h,m,s,ms)
+                local color = parseColorTag(p)
+                local textPart = p:gsub("<br%s*/?>", " "):gsub("<[^>]+>",""):match("^%s*(.-)%s*$") or ""
+                textPart = stripInlineTags(textPart)
+                if not tryExecBlock(textPart) and textPart ~= "" then
+                    addEntry(t, textPart, "", color)
+                end
+            end
+        end
+
+    else
+        for line in raw:gmatch("[^\n]+") do
+            if line:match("^%[bg:") or line:match("^%[v%d+b:") then goto continueLrc end
+
+            local execCode = line:match("%[%d+:%d+[%.:]%d+%]%s*(.+)")
+            if execCode and execCode:match("^%[%[") then
+                local h,m,s,ms
+                local tStr = line:match("^%[(%d+):(%d+)[%.:](%d+)%]")
+                if tStr then
+                    h,m,s,ms = line:match("^%[(%d+):(%d+):(%d+)[%.,]?(%d*)%]")
+                    if not h then m,s,ms = line:match("^%[(%d+):(%d+)%.(%d+)%]"); h=0 end
+                end
+                local tt = 0
+                if h then tt = parseTime(h,m,s,ms or 0) end
+                if not tryExecBlock(execCode) then end
+                goto continueLrc
+            end
+
+            do
+                local h2,m2,s2,ms2 = line:match("^%[(%d+):(%d+):(%d+)[%.,](%d+)%]")
+                local t2
+                if h2 then
+                    t2 = parseTime(h2,m2,s2,ms2)
+                else
+                    local m3,s3,ms3 = line:match("^%[(%d+):(%d+)%.(%d+)%]")
+                    if m3 then t2 = parseTime(0,m3,s3,ms3) end
+                end
+
+                if t2 then
+                    local rest = line:gsub("^%[[^%]]+%]%s*", "")
+                    rest = rest:gsub("^v%d+[ab]?:%s*", "")
+                    rest = rest:gsub("<[^>]+>","")
+                    rest = rest:gsub("%*%*%*%*", "")
+                    rest = rest:match("^%s*(.-)%s*$") or ""
+
+                    local color = parseColorTag(rest)
+                    rest = stripInlineTags(rest)
+
+                    local jp2 = rest:match("^(.-)%^") or rest
+                    local en2 = rest:match("%^(.+)$") or ""
+                    jp2 = jp2:match("^%s*(.-)%s*$") or ""
+
+                    if jp2 ~= "" or en2 ~= "" then
+                        addEntry(t2, jp2, en2, color)
+                    end
+                end
+            end
+
+            ::continueLrc::
+        end
     end
+
     table.sort(lines, function(a,b) return a.time < b.time end)
     return lines
 end
@@ -2006,52 +2197,7 @@ local function spawnWorldLyric(text)
 end
 
 local function showLyric(entry)
-    lyricLabel.Text = entry.jp; subLabel.Text = entry.en
-    if singerHead and singerHead.Parent and entry.jp ~= "" then
-        pcall(function() ChatService:Chat(singerHead, entry.jp) end)
-    end
-    local worldText = entry.jp ~= "" and entry.jp or entry.en
-    if worldText ~= "" then spawnWorldLyric(worldText) end
-    if math.random(1, 3) == 1 then spawnConfetti(12, singerHRP and singerHRP.Position) end
-
-    local hue = math.random()
-    lyricLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
-    lyricLabel.TextSize = 36; lyricLabel.Rotation = math.random(-4,4)
-
-    TweenService:Create(lyricLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        TextSize = 28, TextColor3 = Color3.new(1,1,1), Rotation = 0,
-    }):Play()
-
-    subLabel.TextColor3 = Color3.fromHSV((hue+0.5)%1, 0.7, 1)
-    subLabel.TextSize = 20
-    TweenService:Create(subLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quint), {
-        TextSize = 16, TextColor3 = Color3.fromRGB(215,175,255),
-    }):Play()
-
-    TweenService:Create(lyricOuter, TweenInfo.new(0.06), {
-        BackgroundTransparency = 0.04, Size = UDim2.new(0.68,0,0,80),
-    }):Play()
-    task.delay(0.4, function()
-        TweenService:Create(lyricOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
-            BackgroundTransparency = 0.4, Size = UDim2.new(0.65,0,0,72),
-        }):Play()
-    end)
-
-    TweenService:Create(lyricStroke, TweenInfo.new(0.05), {
-        Color = Color3.fromHSV(hue,1,1), Thickness = 4,
-    }):Play()
-    task.delay(0.45, function()
-        TweenService:Create(lyricStroke, TweenInfo.new(0.35), {
-            Color = Color3.fromRGB(210,80,255), Thickness = 2.8,
-        }):Play()
-    end)
-
-    TweenService:Create(blur, TweenInfo.new(0.05), {Size = 5}):Play()
-    task.delay(0.12, function() TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = 0}):Play() end)
-    doChromaticAberration(0.1, 0.25)
-end
-
-local function showLyric(entry)
+    if entry.isExec then return end
     lyricLabel.Text = entry.jp
     subLabel.Text   = entry.en
 
@@ -2064,15 +2210,16 @@ local function showLyric(entry)
     if math.random(1, 3) == 1 then spawnConfetti(12, singerHRP and singerHRP.Position) end
 
     local hue = math.random()
+    local baseColor = entry.color or Color3.new(1, 1, 1)
 
-    lyricLabel.TextColor3 = Color3.new(1, 1, 1)
+    lyricLabel.TextColor3 = baseColor
     lyricLabel.TextSize   = 36
     lyricLabel.Rotation   = math.random(-4, 4)
 
     TweenService:Create(lyricLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        TextSize = 28,
-        TextColor3 = Color3.new(1, 1, 1),
-        Rotation = 0,
+        TextSize   = 28,
+        TextColor3 = baseColor,
+        Rotation   = 0,
     }):Play()
 
     subLabel.TextColor3 = Color3.fromRGB(215, 175, 255)
@@ -2094,7 +2241,7 @@ local function showLyric(entry)
     end)
 
     TweenService:Create(lyricStroke, TweenInfo.new(0.05), {
-        Color = Color3.fromHSV(hue, 1, 1), Thickness = 4,
+        Color = entry.color or Color3.fromHSV(hue, 1, 1), Thickness = 4,
     }):Play()
     task.delay(0.45, function()
         TweenService:Create(lyricStroke, TweenInfo.new(0.35), {
