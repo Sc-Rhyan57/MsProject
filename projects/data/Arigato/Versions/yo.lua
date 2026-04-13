@@ -1,4 +1,4 @@
-seif shared.showloaded then
+if shared.showloaded then
     warn("[ ARIGATO ] ALREADY LOADED.")
    return
 end
