@@ -1868,48 +1868,60 @@ local function spawnWorldLyric(text)
 end
 
 local function showLyric(entry)
-    lyricLabel.Text = entry.jp; subLabel.Text = entry.en
+    lyricLabel.Text = entry.jp
+    subLabel.Text   = entry.en
+
     if singerHead and singerHead.Parent and entry.jp ~= "" then
         pcall(function() ChatService:Chat(singerHead, entry.jp) end)
     end
+
     local worldText = entry.jp ~= "" and entry.jp or entry.en
     if worldText ~= "" then spawnWorldLyric(worldText) end
     if math.random(1, 3) == 1 then spawnConfetti(12, singerHRP and singerHRP.Position) end
 
     local hue = math.random()
-    lyricLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
-    lyricLabel.TextSize = 36; lyricLabel.Rotation = math.random(-4,4)
+
+    lyricLabel.TextColor3 = Color3.new(1, 1, 1)
+    lyricLabel.TextSize   = 36
+    lyricLabel.Rotation   = math.random(-4, 4)
 
     TweenService:Create(lyricLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        TextSize = 28, TextColor3 = Color3.new(1,1,1), Rotation = 0,
+        TextSize = 28,
+        TextColor3 = Color3.new(1, 1, 1),
+        Rotation = 0,
     }):Play()
 
-    subLabel.TextColor3 = Color3.fromHSV((hue+0.5)%1, 0.7, 1)
-    subLabel.TextSize = 20
+    subLabel.TextColor3 = Color3.fromRGB(215, 175, 255)
+    subLabel.TextSize   = 20
     TweenService:Create(subLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quint), {
-        TextSize = 16, TextColor3 = Color3.fromRGB(215,175,255),
+        TextSize   = 16,
+        TextColor3 = Color3.fromRGB(215, 175, 255),
     }):Play()
 
     TweenService:Create(lyricOuter, TweenInfo.new(0.06), {
-        BackgroundTransparency = 0.04, Size = UDim2.new(0.68,0,0,80),
+        BackgroundTransparency = 0.04,
+        Size = UDim2.new(0.68, 0, 0, 80),
     }):Play()
     task.delay(0.4, function()
         TweenService:Create(lyricOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
-            BackgroundTransparency = 0.4, Size = UDim2.new(0.65,0,0,72),
+            BackgroundTransparency = 0.4,
+            Size = UDim2.new(0.65, 0, 0, 72),
         }):Play()
     end)
 
     TweenService:Create(lyricStroke, TweenInfo.new(0.05), {
-        Color = Color3.fromHSV(hue,1,1), Thickness = 4,
+        Color = Color3.fromHSV(hue, 1, 1), Thickness = 4,
     }):Play()
     task.delay(0.45, function()
         TweenService:Create(lyricStroke, TweenInfo.new(0.35), {
-            Color = Color3.fromRGB(210,80,255), Thickness = 2.8,
+            Color = Color3.fromRGB(210, 80, 255), Thickness = 2.8,
         }):Play()
     end)
 
     TweenService:Create(blur, TweenInfo.new(0.05), {Size = 5}):Play()
-    task.delay(0.12, function() TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = 0}):Play() end)
+    task.delay(0.12, function()
+        TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = 0}):Play()
+    end)
     doChromaticAberration(0.1, 0.25)
 end
 
