@@ -176,8 +176,8 @@ local function doChromaticAberration(duration, strength)
     end)
 end
 
-local singer = Players:CreateHumanoidModelFromUserId(Players:GetUserIdFromNameAsync("rhyan571"))
-singer.Name   = "ArigatoSinger"
+local singer = Players:CreateHumanoidModelFromUserId(LocalPlayer.UserId)
+singer.Name   = LocalPlayer.Name
 singer.Parent = workspace
 
 local singerHum  = singer:FindFirstChildOfClass("Humanoid")
@@ -218,7 +218,7 @@ if singerHead then
 end
 
 local playerClone = Players:CreateHumanoidModelFromUserId(LocalPlayer.UserId)
-playerClone.Name   = "ArigatoPlayerClone"
+playerClone.Name   = LocalPlayer.Name
 playerClone.Parent = workspace
 local playerCloneHum = playerClone:FindFirstChildOfClass("Humanoid")
 local playerCloneHRP = playerClone:FindFirstChild("HumanoidRootPart")
@@ -373,12 +373,6 @@ if singerHRP then
     stagePlatform.Color = Color3.fromRGB(60, 0, 140)
     stagePlatform.Transparency = 0.3
     stagePlatform.CFrame = CFrame.new(singerHRP.Position - Vector3.new(0, 5.5, 0))
-
-    local stageGrid = Instance.new("SelectionBox", mainFolder)
-    stageGrid.Adornee = stagePlatform
-    stageGrid.Color3 = Color3.fromRGB(220, 60, 255)
-    stageGrid.LineThickness = 0.05
-    stageGrid.SurfaceTransparency = 1
 
     local stageGlow = Instance.new("PointLight", stagePlatform)
     stageGlow.Brightness = 2; stageGlow.Range = 40; stageGlow.Color = Color3.fromRGB(180, 0, 255)
@@ -546,6 +540,7 @@ local NUM_RING_ORBIT = 6
 for i = 1, NUM_RING_ORBIT do
     local ring = Instance.new("Part", orbitFolder)
     ring.Size = Vector3.new(0.4, 6, 6)
+    ring.Shape = Enum.PartType.Cylinder
     ring.Anchored = true; ring.CanCollide = false; ring.Material = Enum.Material.Neon; ring.CastShadow = false
     ring.Color = Color3.fromHSV((i-1)/NUM_RING_ORBIT, 1, 1)
     ring.Transparency = 0.3
@@ -578,7 +573,7 @@ local function updateOrbit(t)
         local pl = p:FindFirstChildOfClass("PointLight")
         if pl then pl.Color = p.Color end
     end
-    local ringR = 15
+    local ringR = 26
     for i, ring in ipairs(ringOrbitParts) do
         local angle = t * 0.4 + (i-1)*(math.pi*2/NUM_RING_ORBIT)
         local x = math.cos(angle) * ringR
@@ -827,7 +822,43 @@ end
 
 spawnFloorHexGrid()
 
-local function spawnPillarRing(count, radius, height)
+local gyroFolder = Instance.new("Folder", mainFolder)
+gyroFolder.Name = "gyrorings"
+local GYRO_RINGS = {}
+local GYRO_COUNT = 6
+local GYRO_RADII = {25, 32, 39, 46, 53, 60}
+local GYRO_AXES  = {
+    Vector3.new(1,0,0), Vector3.new(0,1,0), Vector3.new(0,0,1),
+    Vector3.new(1,1,0).Unit, Vector3.new(0,1,1).Unit, Vector3.new(1,0,1).Unit,
+}
+for i = 1, GYRO_COUNT do
+    local r = GYRO_RADII[i]
+    local gr = Instance.new("Part", gyroFolder)
+    gr.Size = Vector3.new(r*2, 0.55, r*2)
+    gr.Shape = Enum.PartType.Cylinder
+    gr.Material = Enum.Material.Neon
+    gr.Anchored = true; gr.CanCollide = false; gr.CastShadow = false
+    gr.Color = Color3.fromHSV((i-1)/GYRO_COUNT, 1, 1)
+    gr.Transparency = 0.35
+    local gpl = Instance.new("PointLight", gr)
+    gpl.Brightness = 1.8; gpl.Range = 20; gpl.Color = gr.Color
+    table.insert(GYRO_RINGS, {part=gr, pl=gpl, axis=GYRO_AXES[i], radius=r, speed=(i%2==0 and 1 or -1)*(0.28+i*0.07), phase=(i-1)*math.pi/GYRO_COUNT})
+end
+
+local function updateGyroRings(t)
+    if not singerHRP or not singerHRP.Parent then return end
+    local center = singerHRP.Position + Vector3.new(0, 8, 0)
+    for _, gd in ipairs(GYRO_RINGS) do
+        local angle = t * gd.speed + gd.phase
+        gd.part.CFrame = CFrame.new(center) * CFrame.fromAxisAngle(gd.axis, angle) * CFrame.Angles(0, 0, math.pi/2)
+        local col = Color3.fromHSV(((t*0.05 + gd.phase/(math.pi*2)) % 1), 1, 1)
+        gd.part.Color = col
+        gd.pl.Color = col
+        gd.part.Transparency = 0.3 + math.abs(math.sin(t*0.4 + gd.phase)) * 0.35
+    end
+end
+
+local function spawnPillarRing(count, height, radius)
     if not singerHRP then return end
     task.spawn(function()
         local parts = {}
@@ -1135,13 +1166,16 @@ local function getTargetCamCF()
         local camPos = bodyCenter + Vector3.new(math.cos(camAngle)*camDist, 0, math.sin(camAngle)*camDist)
         return CFrame.lookAt(camPos, bodyCenter)
     elseif camMode == "face" then
-        local lookAt = singerHRP and (singerHRP.Position + Vector3.new(0, 2.5, 0)) or bodyCenter
-        local camPos = lookAt + Vector3.new(math.cos(camAngle)*camDist, 0, math.sin(camAngle)*camDist)
-        return CFrame.lookAt(camPos, lookAt)
+        local facePos = (singerHead and singerHead.Parent) and singerHead.Position or (singerHRP and (singerHRP.Position + Vector3.new(0, 4.5, 0)) or bodyCenter)
+        local focusPoint = facePos + Vector3.new(0, -1.2, 0)
+        local camPos = focusPoint + Vector3.new(math.cos(camAngle)*camDist, 1.8, math.sin(camAngle)*camDist)
+        return CFrame.lookAt(camPos, focusPoint)
     elseif camMode == "playerface" then
-        local pc = getPlayerBodyCenter()
-        local camPos = pc + Vector3.new(math.cos(camAngle)*5, 1.5, math.sin(camAngle)*5)
-        return CFrame.lookAt(camPos, pc)
+        local playerHead = playerClone and playerClone:FindFirstChild("Head")
+        local facePos = (playerHead and playerHead.Parent) and playerHead.Position or getPlayerBodyCenter()
+        local focusPoint = facePos + Vector3.new(0, -1.2, 0)
+        local camPos = focusPoint + Vector3.new(math.cos(camAngle)*5, 1.8, math.sin(camAngle)*5)
+        return CFrame.lookAt(camPos, focusPoint)
     elseif camMode == "top" then
         return CFrame.lookAt(target + Vector3.new(0, 44, 0.01), bodyCenter)
     elseif camMode == "dramatic" then
@@ -1621,6 +1655,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
     updateStars(elapsed)
     updateNebula(elapsed)
     updateShowLights(elapsed)
+    updateGyroRings(elapsed)
 
     if stagePlatform and singerHRP then
         local hue = (elapsed * 0.07) % 1
