@@ -2184,22 +2184,19 @@ local function spawnWorldLyric(text)
     end)
 end
 
+local karaokeConn = nil
+
 local function showLyric(entry)
-    if entry.isExec then return end
+    if entry.isExec then
+        task.spawn(pcall, entry.fn)
+        return
+    end
 
-    local baseColor = entry.color and string.format("#%02X%02X%02X",
-        math.floor(entry.color.R*255),
-        math.floor(entry.color.G*255),
-        math.floor(entry.color.B*255)
-    ) or "#FFFFFF"
-
-    lyricLabel.Text = '<font color="' .. baseColor .. '"><stroke color="#FF50FF" thickness="3" transparency="0.2">' .. entry.jp .. '</stroke></font>'
-    subLabel.Text   = '<font color="#DFB0FF">' .. entry.en .. '</font>'
+    if karaokeConn then karaokeConn:Disconnect(); karaokeConn = nil end
 
     if singerHead and singerHead.Parent and entry.jp ~= "" then
         pcall(function() ChatService:Chat(singerHead, entry.jp) end)
     end
-
     local worldText = entry.jp ~= "" and entry.jp or entry.en
     if worldText ~= "" then spawnWorldLyric(worldText) end
     if math.random(1, 3) == 1 then spawnConfetti(12, singerHRP and singerHRP.Position) end
@@ -2208,33 +2205,28 @@ local function showLyric(entry)
 
     lyricLabel.TextSize = 36
     lyricLabel.Rotation = math.random(-4, 4)
-
     TweenService:Create(lyricLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        TextSize   = 28,
-        TextColor3 = entry.color or Color3.new(1, 1, 1),
-        Rotation   = 0,
+        TextSize = 28, Rotation = 0,
     }):Play()
 
     subLabel.TextColor3 = Color3.fromRGB(215, 175, 255)
     subLabel.TextSize   = 20
+    subLabel.Text       = entry.en
     TweenService:Create(subLabel, TweenInfo.new(0.18, Enum.EasingStyle.Quint), {
-        TextSize   = 16,
-        TextColor3 = Color3.fromRGB(215, 175, 255),
+        TextSize = 16, TextColor3 = Color3.fromRGB(215, 175, 255),
     }):Play()
 
     TweenService:Create(lyricOuter, TweenInfo.new(0.06), {
-        BackgroundTransparency = 0.04,
-        Size = UDim2.new(0.68, 0, 0, 80),
+        BackgroundTransparency = 0.04, Size = UDim2.new(0.68, 0, 0, 80),
     }):Play()
     task.delay(0.4, function()
         TweenService:Create(lyricOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
-            BackgroundTransparency = 0.4,
-            Size = UDim2.new(0.65, 0, 0, 72),
+            BackgroundTransparency = 0.4, Size = UDim2.new(0.65, 0, 0, 72),
         }):Play()
     end)
 
     TweenService:Create(lyricStroke, TweenInfo.new(0.05), {
-        Color = entry.color or Color3.fromHSV(hue, 1, 1), Thickness = 4,
+        Color = Color3.fromHSV(hue, 1, 1), Thickness = 4,
     }):Play()
     task.delay(0.45, function()
         TweenService:Create(lyricStroke, TweenInfo.new(0.35), {
@@ -2247,6 +2239,24 @@ local function showLyric(entry)
         TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = 0}):Play()
     end)
     doChromaticAberration(0.1, 0.25)
+
+    local fullText = entry.jp
+    local words = {}
+    for w in fullText:gmatch("%S+") do table.insert(words, w) end
+
+    lyricLabel.TextColor3 = Color3.new(1, 1, 1)
+    lyricLabel.Text = ""
+
+    local idx = 0
+    karaokeConn = RunService.RenderStepped:Connect(function(dt)
+        if shared.G.finished then karaokeConn:Disconnect(); karaokeConn = nil; return end
+        if idx < #words then
+            idx = idx + 1
+            lyricLabel.Text = table.concat(words, " ", 1, idx)
+        else
+            karaokeConn:Disconnect(); karaokeConn = nil
+        end
+    end)
 end
 
 shared.G.lastLyricTime = 0
