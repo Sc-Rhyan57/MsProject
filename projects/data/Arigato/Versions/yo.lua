@@ -93,6 +93,47 @@ local function PlayGitSound(githubLink, soundName, volume, parent)
     return s
 end
 
+local function getLoudness()
+    local ok, rms = pcall(function() return audioAnalyzer.RmsLevel end)
+    if ok and rms and rms > 0 then return math.clamp(rms, 0, 1) end
+    return math.clamp((sound and sound.PlaybackLoudness or 0) / 100, 0, 1)
+end
+
+local function getFreqBands()
+    local ok, spec = pcall(function() return audioAnalyzer:GetSpectrum() end)
+    local loudness = getLoudness()
+    if not ok or not spec or #spec == 0 then
+        return loudness, loudness * 0.5, loudness * 0.25
+    end
+    local n = #spec
+    local bassN = math.max(1, math.floor(n * 0.08))
+    local midN  = math.max(1, math.floor(n * 0.35))
+    local bass, mid, treble = 0, 0, 0
+    for i = 1, bassN do bass = bass + (spec[i] or 0) end
+    for i = bassN+1, bassN+midN do mid = mid + (spec[i] or 0) end
+    for i = bassN+midN+1, n do treble = treble + (spec[i] or 0) end
+    bass   = math.clamp(math.sqrt(bass / bassN) * 2, 0, 1)
+    mid    = math.clamp(math.sqrt(mid / math.max(1, midN)) * 2, 0, 1)
+    treble = math.clamp(math.sqrt(treble / math.max(1, n-bassN-midN)) * 2, 0, 1)
+    return bass, mid, treble
+end
+
+local function pushBassHistory(v)
+    table.insert(shared.G.bassHistory, v)
+    if #shared.G.bassHistory > 43 then table.remove(shared.G.bassHistory, 1) end
+end
+
+local function avgBassHistory()
+    if #shared.G.bassHistory == 0 then return 0 end
+    local s = 0
+    for _, v in ipairs(shared.G.bassHistory) do s = s + v end
+    return s / #shared.G.bassHistory
+end
+
+local function isRealBeat(bass)
+    return bass > avgBassHistory() * 1.45 and bass > 0.12 and (tick() - shared.G.lastRealBeat) > 0.22
+end
+
 local function parseLyrics()
     local lines = {}
     local ok, raw = pcall(function() return game:HttpGet(LYRICS_URL) end)
@@ -2592,47 +2633,6 @@ task.spawn(function()
         end
     end)
 end)
-
-local function getLoudness()
-    local ok, rms = pcall(function() return audioAnalyzer.RmsLevel end)
-    if ok and rms and rms > 0 then return math.clamp(rms, 0, 1) end
-    return math.clamp((sound and sound.PlaybackLoudness or 0) / 100, 0, 1)
-end
-
-local function getFreqBands()
-    local ok, spec = pcall(function() return audioAnalyzer:GetSpectrum() end)
-    local loudness = getLoudness()
-    if not ok or not spec or #spec == 0 then
-        return loudness, loudness * 0.5, loudness * 0.25
-    end
-    local n = #spec
-    local bassN = math.max(1, math.floor(n * 0.08))
-    local midN  = math.max(1, math.floor(n * 0.35))
-    local bass, mid, treble = 0, 0, 0
-    for i = 1, bassN do bass = bass + (spec[i] or 0) end
-    for i = bassN+1, bassN+midN do mid = mid + (spec[i] or 0) end
-    for i = bassN+midN+1, n do treble = treble + (spec[i] or 0) end
-    bass   = math.clamp(math.sqrt(bass / bassN) * 2, 0, 1)
-    mid    = math.clamp(math.sqrt(mid / math.max(1, midN)) * 2, 0, 1)
-    treble = math.clamp(math.sqrt(treble / math.max(1, n-bassN-midN)) * 2, 0, 1)
-    return bass, mid, treble
-end
-
-local function pushBassHistory(v)
-    table.insert(shared.G.bassHistory, v)
-    if #shared.G.bassHistory > 43 then table.remove(shared.G.bassHistory, 1) end
-end
-
-local function avgBassHistory()
-    if #shared.G.bassHistory == 0 then return 0 end
-    local s = 0
-    for _, v in ipairs(shared.G.bassHistory) do s = s + v end
-    return s / #shared.G.bassHistory
-end
-
-local function isRealBeat(bass)
-    return bass > avgBassHistory() * 1.45 and bass > 0.12 and (tick() - shared.G.lastRealBeat) > 0.22
-end
 
 shared.G.startTick = tick()
 local started   = sound ~= nil
