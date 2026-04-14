@@ -2124,6 +2124,62 @@ local function slamDown()
     end)
 end
 
+local function doTornado()
+    if tornadoActive or not singerHRP then return end
+    tornadoActive = true
+    local tornadoFolder = Instance.new("Folder", mainFolder)
+    local parts = {}
+    local NUM_T = 30
+    for i = 1, NUM_T do
+        local p = Instance.new("Part", tornadoFolder)
+        p.Anchored = true; p.CanCollide = false; p.CastShadow = false
+        p.Material = Enum.Material.Neon
+        p.Size = Vector3.new(0.6, 0.6, 0.6)
+        p.Shape = Enum.PartType.Ball
+        p.Color = Color3.fromHSV((i-1)/NUM_T, 1, 1)
+        table.insert(parts, {part=p, phase=(i-1)*(math.pi*2/NUM_T), idx=i})
+    end
+
+    local prevCamMode = camMode
+    local prevCamDist = camDist
+    local prevFOV = camFOV
+    camMode = "top"; tweenFOV(95, 1.2)
+
+    local t2 = 0
+    local tornadoConn
+    tornadoConn = RunService.RenderStepped:Connect(function(dt)
+        if shared.G.finished then tornadoConn:Disconnect(); return end
+        t2 = t2 + dt
+        local center = singerHRP.Position
+        for _, d in ipairs(parts) do
+            local progress = math.min(t2 / 2.5, 1)
+            local radius = 12 * (1 - progress * 0.5)
+            local height = t2 * 14 * progress
+            local angle = d.phase + t2 * 3.5
+            d.part.Position = center + Vector3.new(
+                math.cos(angle) * radius,
+                height,
+                math.sin(angle) * radius
+            )
+            d.part.Color = Color3.fromHSV(((t2 * 0.1 + (d.idx-1)/NUM_T) % 1), 1, 1)
+            d.part.Transparency = math.clamp(t2 / 4, 0, 0.8)
+        end
+        if t2 >= 4 then
+            tornadoConn:Disconnect()
+            for _, d in ipairs(parts) do
+                TweenService:Create(d.part, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
+                    Position = singerHRP.Position, Transparency = 1
+                }):Play()
+            end
+            task.delay(0.9, function()
+                pcall(function() tornadoFolder:Destroy() end)
+            end)
+            camMode = prevCamMode; camDist = prevCamDist; tweenFOV(prevFOV, 1)
+            tornadoActive = false
+        end
+    end)
+end
+
 local function doSuperBurst()
     local pos = singerHRP and singerHRP.Position or Vector3.new(0,10,0)
     spawnExplosiveCubes(25, pos)
@@ -2760,6 +2816,79 @@ conn = RunService.RenderStepped:Connect(function(dt)
         and sound.TimePosition
         or (tick() - shared.G.startTick)
 
+    local bass, mid, treble = getFreqBands()
+    local loudness = getLoudness()
+    pushBassHistory(bass)
+
+    if isRealBeat(bass) then
+        lastRealBeat = tick()
+        shared.G.beatCount = shared.G.beatCount + 1
+        shared.G.beatStrength = 0.5 + bass * 0.8 + mid * 0.3
+        silenceTimer = 0
+
+        if singerHRP then
+            spawnBeatRing(singerHRP.Position, Color3.fromHSV((shared.G.beatCount*0.13)%1,1,1), shared.G.beatStrength)
+        end
+        if shared.G.beatCount % 4 == 0 then
+            punchCam(0.3 + shared.G.beatStrength * 0.4)
+            doColorSplit(0.12, 0.006 + shared.G.beatStrength * 0.01)
+        end
+        if shared.G.beatCount % 8 == 0 then
+            doZoomBlurHit(0.1)
+            if singerHRP then
+                spawnFloatingTriangle(singerHRP.Position + Vector3.new(math.random(-5,5),3,math.random(-5,5)), math.random(3,7), 2)
+            end
+        end
+        if shared.G.beatCount % 16 == 0 then
+            if treble > 0.55 then
+                lightningFlash()
+                spawnSpiralRings(10)
+            elseif mid > 0.5 then
+                shockwave(Color3.fromHSV(math.random(),1,1))
+                spawnStarburstRing()
+            else
+                spawnLaserRing(4)
+                doChromaticAberration(0.2, 0.4)
+            end
+        end
+        if shared.G.beatCount % 32 == 0 then
+            doSuperBurst()
+        end
+        burstParticles(singerParticles, math.floor(2 + shared.G.beatStrength * 6))
+
+        shared.G.BPM = math.clamp(60 / math.max(0.1, tick() - lastRealBeat + 0.001), 80, 180)
+    else
+        silenceTimer = silenceTimer + dt
+    end
+
+    if silenceTimer > 1.5 and not tornadoActive and shared.G.elapsed > 5 then
+        doTornado()
+        silenceTimer = 0
+    end
+
+    if treble > 0.7 and bass < 0.2 then
+        doColorSplit(0.08, 0.005)
+    end
+    if mid > 0.65 then
+        local hue = (shared.G.elapsed * 0.3) % 1
+        TweenService:Create(colorCorrection, TweenInfo.new(0.1), {
+            TintColor = Color3.fromHSV(hue, 0.4, 1)
+        }):Play()
+    end
+
+    camStuckTimer = camStuckTimer + dt
+    if lastCamMode ~= camMode then
+        lastCamMode = camMode
+        camStuckTimer = 0
+    end
+    if camStuckTimer > 12 then
+        camStuckTimer = 0
+        local modes = {"orbit","dramatic","close","worm","cinematic","lowangle","dutch"}
+        camMode = modes[math.random(1, #modes)]
+        camDist = math.random(18, 35)
+        tweenFOV(math.random(60, 85), 0.6)
+    end
+
     shared.G.pentaAngle = shared.G.pentaAngle + dt * 0.9
     updatePentagon(shared.G.pentaAngle)
     updateOrbit(shared.G.elapsed)
@@ -2770,33 +2899,8 @@ conn = RunService.RenderStepped:Connect(function(dt)
     updateExtraFX(shared.G.elapsed)
     checkIdleAnim(shared.G.elapsed)
     updateLyricBoards(shared.G.elapsed)
-        
-    local nowTick = tick()
-    local dynamicBeatInterval = 60 / shared.G.BPM
-    if nowTick - shared.G.lastBeatTick >= dynamicBeatInterval then
-        shared.G.lastBeatTick = nowTick
-        shared.G.beatCount = shared.G.beatCount + 1
-        shared.G.beatStrength = 0.7 + math.abs(math.sin(shared.G.elapsed * 0.3)) * 0.6
-        if singerHRP then
-            local hue = (shared.G.beatCount * 0.13) % 1
-            spawnBeatRing(singerHRP.Position, Color3.fromHSV(hue, 1, 1), shared.G.beatStrength)
-        end
-        if shared.G.beatCount % 4 == 0 then
-            punchCam(0.4 + shared.G.beatStrength * 0.3)
-            doColorSplit(0.15, 0.008 + shared.G.beatStrength * 0.012)
-        end
-        if shared.G.beatCount % 8 == 0 then
-            doZoomBlurHit(0.1)
-            if singerHRP then
-                spawnFloatingTriangle(singerHRP.Position + Vector3.new(math.random(-5,5), 3, math.random(-5,5)), math.random(3,7), 2)
-            end
-        end
-        if shared.G.beatCount % 16 == 0 then
-            shared.G.BPM = 120 + math.random(0, 20)
-        end
-        burstParticles(singerParticles, math.floor(3 + shared.G.beatStrength * 5))
-    end
-
+    updateSpectrum3D(shared.G.elapsed)
+    updateWaveform3D(shared.G.elapsed)
     updateSoundWaves(shared.G.elapsed, shared.G.beatStrength)
     updateStarShape(shared.G.elapsed)
     updateHexShape(shared.G.elapsed)
@@ -2805,8 +2909,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
     if stagePlatform and singerHRP then
         local hue = (shared.G.elapsed * 0.07) % 1
         stagePlatform.Color = Color3.fromHSV(hue, 1, 1)
-        local pulse = 0.22 + math.abs(math.sin(shared.G.elapsed * 2.8)) * 0.18
-        stagePlatform.Transparency = pulse
+        stagePlatform.Transparency = 0.22 + math.abs(math.sin(shared.G.elapsed * 2.8)) * 0.18
     end
 
     if playerCloneHRP and playerHRP then
@@ -2822,8 +2925,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
     end
 
     desiredCamCF = desiredCamCF:Lerp(getTargetCamCF(), 0.1)
-    local shakeCF = CFrame.new(camShakeX, camShakeY, 0)
-        * CFrame.Angles(0, 0, math.rad(camShakeX * 3))
+    local shakeCF = CFrame.new(camShakeX, camShakeY, 0) * CFrame.Angles(0, 0, math.rad(camShakeX * 3))
     Camera.CameraType = Enum.CameraType.Scriptable
     Camera.CFrame = desiredCamCF * shakeCF
     Camera.FieldOfView = camFOV
@@ -2870,6 +2972,10 @@ conn = RunService.RenderStepped:Connect(function(dt)
         shared.G.finished = true
         if conn then conn:Disconnect() end
 
+        for s, vol in pairs(mutedSounds) do
+            pcall(function() s.Volume = vol end)
+        end
+
         flash(255,255,255, 2); doSuperBurst()
         task.wait(0.8)
 
@@ -2910,6 +3016,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
         pcall(function() colorSplitFrame1:Destroy() end)
         pcall(function() colorSplitFrame2:Destroy() end)
         pcall(function() scanlines:Destroy() end)
+        pcall(function() audioAnalyzer:Destroy() end)
 
         for part, origT in pairs(shared.G.hiddenParts) do
             pcall(function() part.Transparency = origT end)
@@ -2927,7 +3034,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
         pcall(function()
             for _, t in ipairs({
                 Enum.CoreGuiType.PlayerList, Enum.CoreGuiType.Health,
-                Enum.CoreGuiType.Backpack,   Enum.CoreGuiType.Chat,
+                Enum.CoreGuiType.Backpack, Enum.CoreGuiType.Chat,
             }) do StarterGui:SetCoreGuiEnabled(t, true) end
         end)
     end
