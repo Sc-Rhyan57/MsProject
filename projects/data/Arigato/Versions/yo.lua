@@ -2431,6 +2431,82 @@ shared.G.choreoIdx = 1
 shared.G.lyricIdx = 1
 
 local sound     = PlayGitSound(AUDIO_URL, "ArigatoTokyo", 2, Camera)
+local audioAnalyzer = Instance.new("AudioAnalyzer", workspace)
+audioAnalyzer.SpectrumEnabled = true
+pcall(function()
+    local audioPlayer = Instance.new("AudioPlayer", workspace)
+    audioPlayer.AssetId = sound and sound.SoundId or ""
+    local wire = Instance.new("Wire", workspace)
+    wire.SourceInstance = audioPlayer
+    wire.TargetInstance = audioAnalyzer
+end)
+
+local mutedSounds = {}
+task.spawn(function()
+    for _, s in ipairs(workspace:GetDescendants()) do
+        if s:IsA("Sound") and s ~= sound and s.Volume > 0 then
+            mutedSounds[s] = s.Volume
+            s.Volume = 0
+        end
+    end
+    workspace.DescendantAdded:Connect(function(d)
+        if shared.G.finished then return end
+        if d:IsA("Sound") and d ~= sound then
+            task.wait(0.1)
+            mutedSounds[d] = d.Volume
+            d.Volume = 0
+        end
+    end)
+end)
+
+local function getLoudness()
+    local rms = pcall(function() return audioAnalyzer.RmsLevel end) and audioAnalyzer.RmsLevel or 0
+    if rms and rms > 0 then return math.clamp(rms, 0, 1) end
+    return math.clamp((sound and sound.PlaybackLoudness or 0) / 100, 0, 1)
+end
+
+local function getFreqBands()
+    local spec = pcall(function() return audioAnalyzer:GetSpectrum() end) and audioAnalyzer:GetSpectrum()
+    local loudness = getLoudness()
+    if not spec or #spec == 0 then
+        return loudness, loudness * 0.5, loudness * 0.25
+    end
+    local n = #spec
+    local bassN = math.max(1, math.floor(n * 0.08))
+    local midN  = math.max(1, math.floor(n * 0.35))
+    local bass, mid, treble = 0, 0, 0
+    for i = 1, bassN do bass = bass + (spec[i] or 0) end
+    for i = bassN+1, bassN+midN do mid = mid + (spec[i] or 0) end
+    for i = bassN+midN+1, n do treble = treble + (spec[i] or 0) end
+    bass   = math.clamp(math.sqrt(bass / bassN) * 2, 0, 1)
+    mid    = math.clamp(math.sqrt(mid / math.max(1, midN)) * 2, 0, 1)
+    treble = math.clamp(math.sqrt(treble / math.max(1, n-bassN-midN)) * 2, 0, 1)
+    return bass, mid, treble
+end
+
+local bassHistory = {}
+local lastRealBeat = 0
+local silenceTimer = 0
+local tornadoActive = false
+local camStuckTimer = 0
+local lastCamMode = camMode
+
+local function pushBassHistory(v)
+    table.insert(bassHistory, v)
+    if #bassHistory > 43 then table.remove(bassHistory, 1) end
+end
+
+local function avgBassHistory()
+    if #bassHistory == 0 then return 0 end
+    local s = 0
+    for _, v in ipairs(bassHistory) do s = s + v end
+    return s / #bassHistory
+end
+
+local function isRealBeat(bass)
+    return bass > avgBassHistory() * 1.45 and bass > 0.12 and (tick() - lastRealBeat) > 0.22
+end
+
 shared.G.startTick = tick()
 local started   = sound ~= nil
 
