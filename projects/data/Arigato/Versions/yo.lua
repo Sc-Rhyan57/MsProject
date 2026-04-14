@@ -2132,8 +2132,8 @@ local function slamDown()
 end
 
 local function doTornado()
-    if tornadoActive or not singerHRP then return end
-    tornadoActive = true
+    if shared.G.tornadoActive or not singerHRP then return end
+    shared.G.tornadoActive = true
     local tornadoFolder = Instance.new("Folder", mainFolder)
     local parts = {}
     local NUM_T = 30
@@ -2178,11 +2178,9 @@ local function doTornado()
                     Position = singerHRP.Position, Transparency = 1
                 }):Play()
             end
-            task.delay(0.9, function()
-                pcall(function() tornadoFolder:Destroy() end)
-            end)
+            task.delay(0.9, function() pcall(function() tornadoFolder:Destroy() end) end)
             camMode = prevCamMode; camDist = prevCamDist; tweenFOV(prevFOV, 1)
-            tornadoActive = false
+            shared.G.tornadoActive = false
         end
     end)
 end
@@ -2578,11 +2576,10 @@ pcall(function()
     wire.TargetInstance = audioAnalyzer
 end)
 
-local mutedSounds = {}
 task.spawn(function()
     for _, s in ipairs(workspace:GetDescendants()) do
         if s:IsA("Sound") and s ~= sound and s.Volume > 0 then
-            mutedSounds[s] = s.Volume
+            shared.G.mutedSounds[s] = s.Volume
             s.Volume = 0
         end
     end
@@ -2590,22 +2587,22 @@ task.spawn(function()
         if shared.G.finished then return end
         if d:IsA("Sound") and d ~= sound then
             task.wait(0.1)
-            mutedSounds[d] = d.Volume
+            shared.G.mutedSounds[d] = d.Volume
             d.Volume = 0
         end
     end)
 end)
 
 local function getLoudness()
-    local rms = pcall(function() return audioAnalyzer.RmsLevel end) and audioAnalyzer.RmsLevel or 0
-    if rms and rms > 0 then return math.clamp(rms, 0, 1) end
+    local ok, rms = pcall(function() return audioAnalyzer.RmsLevel end)
+    if ok and rms and rms > 0 then return math.clamp(rms, 0, 1) end
     return math.clamp((sound and sound.PlaybackLoudness or 0) / 100, 0, 1)
 end
 
 local function getFreqBands()
-    local spec = pcall(function() return audioAnalyzer:GetSpectrum() end) and audioAnalyzer:GetSpectrum()
+    local ok, spec = pcall(function() return audioAnalyzer:GetSpectrum() end)
     local loudness = getLoudness()
-    if not spec or #spec == 0 then
+    if not ok or not spec or #spec == 0 then
         return loudness, loudness * 0.5, loudness * 0.25
     end
     local n = #spec
@@ -2621,27 +2618,20 @@ local function getFreqBands()
     return bass, mid, treble
 end
 
-local bassHistory = {}
-local lastRealBeat = 0
-local silenceTimer = 0
-local tornadoActive = false
-local camStuckTimer = 0
-local lastCamMode = camMode
-
 local function pushBassHistory(v)
-    table.insert(bassHistory, v)
-    if #bassHistory > 43 then table.remove(bassHistory, 1) end
+    table.insert(shared.G.bassHistory, v)
+    if #shared.G.bassHistory > 43 then table.remove(shared.G.bassHistory, 1) end
 end
 
 local function avgBassHistory()
-    if #bassHistory == 0 then return 0 end
+    if #shared.G.bassHistory == 0 then return 0 end
     local s = 0
-    for _, v in ipairs(bassHistory) do s = s + v end
-    return s / #bassHistory
+    for _, v in ipairs(shared.G.bassHistory) do s = s + v end
+    return s / #shared.G.bassHistory
 end
 
 local function isRealBeat(bass)
-    return bass > avgBassHistory() * 1.45 and bass > 0.12 and (tick() - lastRealBeat) > 0.22
+    return bass > avgBassHistory() * 1.45 and bass > 0.12 and (tick() - shared.G.lastRealBeat) > 0.22
 end
 
 shared.G.startTick = tick()
@@ -2824,14 +2814,13 @@ conn = RunService.RenderStepped:Connect(function(dt)
         or (tick() - shared.G.startTick)
 
     local bass, mid, treble = getFreqBands()
-    local loudness = getLoudness()
     pushBassHistory(bass)
 
     if isRealBeat(bass) then
-        lastRealBeat = tick()
+        shared.G.lastRealBeat = tick()
         shared.G.beatCount = shared.G.beatCount + 1
         shared.G.beatStrength = 0.5 + bass * 0.8 + mid * 0.3
-        silenceTimer = 0
+        shared.G.silenceTimer = 0
 
         if singerHRP then
             spawnBeatRing(singerHRP.Position, Color3.fromHSV((shared.G.beatCount*0.13)%1,1,1), shared.G.beatStrength)
@@ -2862,34 +2851,32 @@ conn = RunService.RenderStepped:Connect(function(dt)
             doSuperBurst()
         end
         burstParticles(singerParticles, math.floor(2 + shared.G.beatStrength * 6))
-
-        shared.G.BPM = math.clamp(60 / math.max(0.1, tick() - lastRealBeat + 0.001), 80, 180)
+        shared.G.BPM = math.clamp(60 / math.max(0.1, tick() - shared.G.lastRealBeat + 0.001), 80, 180)
     else
-        silenceTimer = silenceTimer + dt
+        shared.G.silenceTimer = shared.G.silenceTimer + dt
     end
 
-    if silenceTimer > 1.5 and not tornadoActive and shared.G.elapsed > 5 then
+    if shared.G.silenceTimer > 1.5 and not shared.G.tornadoActive and shared.G.elapsed > 5 then
         doTornado()
-        silenceTimer = 0
+        shared.G.silenceTimer = 0
     end
 
     if treble > 0.7 and bass < 0.2 then
         doColorSplit(0.08, 0.005)
     end
     if mid > 0.65 then
-        local hue = (shared.G.elapsed * 0.3) % 1
         TweenService:Create(colorCorrection, TweenInfo.new(0.1), {
-            TintColor = Color3.fromHSV(hue, 0.4, 1)
+            TintColor = Color3.fromHSV((shared.G.elapsed * 0.3) % 1, 0.4, 1)
         }):Play()
     end
 
-    camStuckTimer = camStuckTimer + dt
-    if lastCamMode ~= camMode then
-        lastCamMode = camMode
-        camStuckTimer = 0
+    shared.G.camStuckTimer = shared.G.camStuckTimer + dt
+    if shared.G.lastCamMode ~= camMode then
+        shared.G.lastCamMode = camMode
+        shared.G.camStuckTimer = 0
     end
-    if camStuckTimer > 12 then
-        camStuckTimer = 0
+    if shared.G.camStuckTimer > 12 then
+        shared.G.camStuckTimer = 0
         local modes = {"orbit","dramatic","close","worm","cinematic","lowangle","dutch"}
         camMode = modes[math.random(1, #modes)]
         camDist = math.random(18, 35)
@@ -2914,8 +2901,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
     updatePortal(shared.G.elapsed)
 
     if stagePlatform and singerHRP then
-        local hue = (shared.G.elapsed * 0.07) % 1
-        stagePlatform.Color = Color3.fromHSV(hue, 1, 1)
+        stagePlatform.Color = Color3.fromHSV((shared.G.elapsed * 0.07) % 1, 1, 1)
         stagePlatform.Transparency = 0.22 + math.abs(math.sin(shared.G.elapsed * 2.8)) * 0.18
     end
 
@@ -2979,7 +2965,7 @@ conn = RunService.RenderStepped:Connect(function(dt)
         shared.G.finished = true
         if conn then conn:Disconnect() end
 
-        for s, vol in pairs(mutedSounds) do
+        for s, vol in pairs(shared.G.mutedSounds) do
             pcall(function() s.Volume = vol end)
         end
 
