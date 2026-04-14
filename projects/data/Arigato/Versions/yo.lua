@@ -6,6 +6,13 @@ end
 shared.showloaded = true
 shared.G = shared.G or {
     BPM = 128,
+    bassHistory = {},
+    lastRealBeat = 0,
+    silenceTimer = 0,
+    tornadoActive = false,
+    camStuckTimer = 0,
+    lastCamMode = "orbit",
+    mutedSounds = {},
     GYRO_RINGS = {},
     beatCount = 0,
     beatStrength = 0,
