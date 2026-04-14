@@ -1055,6 +1055,80 @@ local function spawnFloorHexGrid()
 end
 
 spawnFloorHexGrid()
+local specFolder = Instance.new("Folder", mainFolder)
+specFolder.Name = "spectrum3d"
+local NUM_SPEC = 48
+local specBars = {}
+if singerHRP then
+    for i = 1, NUM_SPEC do
+        local angle = (i-1) * (math.pi*2 / NUM_SPEC)
+        local bar = Instance.new("Part", specFolder)
+        bar.Anchored = true; bar.CanCollide = false; bar.CastShadow = false
+        bar.Material = Enum.Material.Neon
+        bar.Size = Vector3.new(0.5, 1, 0.5)
+        bar.Color = Color3.fromHSV((i-1)/NUM_SPEC, 1, 1)
+        local pl = Instance.new("PointLight", bar)
+        pl.Brightness = 1; pl.Range = 5; pl.Color = bar.Color
+        table.insert(specBars, {part=bar, angle=angle, pl=pl})
+    end
+end
+
+local waveFolder2 = Instance.new("Folder", mainFolder)
+waveFolder2.Name = "waveform3d"
+local NUM_WAVE = 64
+local waveParts = {}
+if singerHRP then
+    for i = 1, NUM_WAVE do
+        local wp = Instance.new("Part", waveFolder2)
+        wp.Anchored = true; wp.CanCollide = false; wp.CastShadow = false
+        wp.Material = Enum.Material.Neon
+        wp.Size = Vector3.new(0.3, 0.3, 0.3)
+        wp.Shape = Enum.PartType.Ball
+        wp.Color = Color3.fromHSV((i-1)/NUM_WAVE, 0.8, 1)
+        table.insert(waveParts, wp)
+    end
+end
+
+local function updateSpectrum3D(t)
+    if not singerHRP or #specBars == 0 then return end
+    local spec
+    pcall(function() spec = audioAnalyzer:GetSpectrum() end)
+    local center = singerHRP.Position
+    local r = 14
+    for i, bd in ipairs(specBars) do
+        local rawVal
+        if spec and #spec > 0 then
+            local idx = math.max(1, math.floor(math.pow(#spec, i/NUM_SPEC)))
+            rawVal = math.clamp(math.sqrt(spec[idx] or 0) * 2, 0, 1)
+        else
+            rawVal = math.abs(math.sin(t * 3 + i * 0.4)) * getLoudness()
+        end
+        local h = math.clamp(rawVal * 16, 0.3, 20)
+        local hue = ((t * 0.05 + (i-1)/NUM_SPEC) % 1)
+        bd.part.Size = Vector3.new(0.5, h, 0.5)
+        bd.part.CFrame = CFrame.new(center + Vector3.new(math.cos(bd.angle)*r, h/2 - 4, math.sin(bd.angle)*r))
+        bd.part.Color = Color3.fromHSV(hue, 1, 1)
+        bd.pl.Color = bd.part.Color
+        bd.pl.Brightness = 0.5 + rawVal * 2
+    end
+end
+
+local function updateWaveform3D(t)
+    if not singerHRP or #waveParts == 0 then return end
+    local loudness = getLoudness()
+    local center = singerHRP.Position + Vector3.new(0, 8, 0)
+    local lineLen = 30
+    for i, wp in ipairs(waveParts) do
+        local frac = (i-1) / (NUM_WAVE-1)
+        local x = (frac - 0.5) * lineLen
+        local wave = math.sin(t * 6 + frac * math.pi * 4) * loudness * 3
+            + math.sin(t * 11 + frac * math.pi * 8) * loudness * 1.2
+        local hue = ((t * 0.08 + frac) % 1)
+        wp.Position = center + Vector3.new(x, wave, 0)
+        wp.Color = Color3.fromHSV(hue, 1, 1)
+        wp.Size = Vector3.new(0.3 + loudness * 0.4, 0.3 + math.abs(wave) * 0.15, 0.3)
+    end
+end
 
 shared.G.BPM = 128
 local beatInterval = 60 / shared.G.BPM
