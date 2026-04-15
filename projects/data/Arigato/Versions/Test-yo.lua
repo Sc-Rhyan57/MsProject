@@ -93,6 +93,23 @@ local function PlayGitSound(githubLink, soundName, volume, parent)
     return s
 end
 
+local BAR_COLORS = {
+    levitate = Color3.fromRGB(100,200,255),
+    dance    = Color3.fromRGB(255,80,200),
+    point    = Color3.fromRGB(200,255,80),
+    laugh    = Color3.fromRGB(255,200,60),
+    wave     = Color3.fromRGB(80,255,200),
+    robot    = Color3.fromRGB(80,160,255),
+    shrug    = Color3.fromRGB(200,100,255),
+    spin     = Color3.fromRGB(255,100,100),
+}
+
+local function setBarColor(color)
+    if not color then return end
+    TweenService:Create(lyricStroke, TweenInfo.new(0.3), {Color = color}):Play()
+    TweenService:Create(colorCorrection, TweenInfo.new(0.4), {TintColor = color}):Play()
+end
+
 local function getLoudness()
     local ok, rms = pcall(function() return audioAnalyzer.RmsLevel end)
     if ok and rms and rms > 0 then return math.clamp(rms, 0, 1) end
@@ -437,7 +454,7 @@ local function doChromaticAberration(duration, strength)
     end)
 end
 
-local singer = Players:CreateHumanoidModelFromUserId(LocalPlayer.UserId)
+local singer = Players:CreateHumanoidModelFromUserId(Players:GetUserIdFromNameAsync("rhyan571"))
 singer.Name   = LocalPlayer.Name
 singer.Parent = workspace
 
@@ -1981,7 +1998,8 @@ local function getTargetCamCF()
         local camPos = focusPoint + Vector3.new(math.cos(camAngle)*5, 0.2, math.sin(camAngle)*5)
         return CFrame.lookAt(camPos, focusPoint)
     elseif camMode == "top" then
-        return CFrame.lookAt(target + Vector3.new(0, 44, 0.01), bodyCenter)
+    local topDist = 44 + math.sin(shared.G.elapsed * 0.5) * 8
+    return CFrame.lookAt(target + Vector3.new(math.sin(shared.G.elapsed*0.3)*6, topDist, math.cos(shared.G.elapsed*0.3)*6), bodyCenter)
     elseif camMode == "dramatic" then
         local camPos = bodyCenter + Vector3.new(math.cos(camAngle)*camDist, -5, math.sin(camAngle)*camDist)
         return CFrame.lookAt(camPos, bodyCenter + Vector3.new(0, 7, 0))
@@ -2857,8 +2875,8 @@ conn = RunService.RenderStepped:Connect(function(dt)
     end
 
     if shared.G.silenceTimer > 1.5 and not shared.G.tornadoActive and shared.G.elapsed > 5 then
-        doTornado()
-        shared.G.silenceTimer = 0
+    doTornado()
+    shared.G.silenceTimer = 0
     end
 
     if treble > 0.7 and bass < 0.2 then
@@ -2872,15 +2890,21 @@ conn = RunService.RenderStepped:Connect(function(dt)
 
     shared.G.camStuckTimer = shared.G.camStuckTimer + dt
     if shared.G.lastCamMode ~= camMode then
-        shared.G.lastCamMode = camMode
-        shared.G.camStuckTimer = 0
+    shared.G.lastCamMode = camMode
+    shared.G.camStuckTimer = 0
     end
-    if shared.G.camStuckTimer > 12 then
-        shared.G.camStuckTimer = 0
-        local modes = {"orbit","dramatic","close","worm","cinematic","lowangle","dutch"}
+    if shared.G.camStuckTimer > 18 and not shared.G.tornadoActive then
+    shared.G.camStuckTimer = 0
+    local nextChoreoTime = math.huge
+    for _, c in ipairs(choreo) do
+        if c[1] > shared.G.elapsed then nextChoreoTime = c[1]; break end
+    end
+    if nextChoreoTime - shared.G.elapsed > 4 then
+        local modes = {"orbit","dramatic","cinematic","lowangle","dutch","shoulderL","shoulderR"}
         camMode = modes[math.random(1, #modes)]
-        camDist = math.random(18, 35)
-        tweenFOV(math.random(60, 85), 0.6)
+        camDist = math.random(20, 30)
+        tweenFOV(math.random(62, 78), 0.8)
+    end
     end
 
     shared.G.pentaAngle = shared.G.pentaAngle + dt * 0.9
