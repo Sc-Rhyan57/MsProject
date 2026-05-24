@@ -71,7 +71,7 @@ local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 local LocalPlayer = Players.LocalPlayer
 
 local Core = {
-    version = "2.3.0",
+    version = "2.3.1",
     initialized = false,
     active = false,
 
@@ -127,7 +127,7 @@ local Core = {
     cache = {players = {}, lastUpdate = 0},
 
     items = {
-        common = {"Flashlight","Lighter","Candle","Shakelight","Glowsticks","Vitamins","Bread","Cheese","Donut","Nanner","AloeVera","Key","Lockpick","BatteryPack","Compass","LibraryHintPaper","NannerPeel", "Scanner", "Lotus"},
+        common = {"Flashlight","Lighter","Candle","Shakelight","Glowsticks","Vitamins","Bread","Cheese","Donut","Nanner","AloeVera","Key","Lockpick","BatteryPack","Compass","LibraryHintPaper","NannerPeel","Scanner","Lotus"},
         uncommon = {"Bulklight","Straplight","Lantern","Smoothie","GweenSoda","BandagePack","TipJar","StarVial","Shears","AlarmClock","LaserPointer","HintBook","KeyIron","KeyElectrical","KeyRetro","GeneratorFuse","LibraryHintPaperHard"},
         rare = {"Crucifix","SkeletonKey","StarJug","HolyGrenade","Bomb","BigBomb","Knockbomb","BoxingGloves","StopSign","SnakeBox","Multitool","BigPropTool"},
         legendary = {"RiftSmoothie","RiftCandle","RiftJar","StarBottle","GoldGun","KeyBackdoor"},
@@ -396,7 +396,7 @@ end
 
 local function ApiConnect()
     if not Executor.httpenabled then
-        NotifyPlayer("API", "⚠️ Executor does not support HTTP!", 5, Color3.fromRGB(255, 0, 0))
+        NotifyPlayer("API", "Executor does not support HTTP!", 5, Color3.fromRGB(255, 0, 0))
         return
     end
     local hwid = GenerateHWID()
@@ -430,7 +430,7 @@ local function ApiConnect()
             Core.api.sessionId = data.sessionId
             local sessionUrl = Core.api.url .. "/api/rh1/session-view?id=" .. data.sessionId
             if Executor.clipboard then Executor.clipboard(sessionUrl) end
-            NotifyPlayer("API", "✅ Session created! Link copied.", 8, Color3.fromRGB(0, 200, 255))
+            NotifyPlayer("API", "Session created! Link copied.", 8, Color3.fromRGB(0, 200, 255))
             DiscordEvent("Session created", "Host: " .. LocalPlayer.Name, 3447003)
             task.spawn(function()
                 while Core.api.sessionId do
@@ -441,11 +441,55 @@ local function ApiConnect()
             return
         end
     end
-    NotifyPlayer("API", "⚠️ Failed to connect!", 5, Color3.fromRGB(255, 0, 0))
+    NotifyPlayer("API", "Failed to connect!", 5, Color3.fromRGB(255, 0, 0))
+end
+
+local function SpawnEntity(entity, targetPlayer)
+    local players = targetPlayer and {targetPlayer} or UpdatePlayerCache()
+    if entity == "A-90" then
+        for _, p in ipairs(players) do ExecuteCommand("A90Player", {["Players"] = {[p.Name] = p.Name}}) end
+    elseif entity == "Screech" then
+        for _, p in ipairs(players) do ExecuteCommand("ScreechPlayer", {["Players"] = {[p.Name] = p.Name}}) end
+    elseif entity == "Glitch" then
+        for _, p in ipairs(players) do ExecuteCommand("GlitchPlayer", {["Players"] = {[p.Name] = p.Name}}) end
+    else
+        ExecuteCommand(entity, {})
+    end
+    Core.state.roundStats.entitiesSpawned += 1
+end
+
+-- FIX: PunishMovement declarada ANTES de SetLight para evitar forward reference
+local function PunishMovement(player)
+    local entity = Core.entitiesList[math.random(#Core.entitiesList)]
+    local killMethod = math.random(1, 2) == 1 and "KillPlayer" or "ExplodePlayer"
+    ExecuteCommand(killMethod, {["Players"] = {[player.Name] = player.Name}})
+    task.wait(0.1)
+    SpawnEntity(entity, player)
+    Core.state.roundStats.deaths += 1
+    Core.state.deadPlayers[player.UserId] = {name = player.Name, time = os.time(), entity = entity}
+    Core.state.lastDead = player.Name
+    SendChat(player.Name .. " moved on red light! " .. entity .. " appeared!")
+    DiscordEvent("Death", player.Name .. " moved | Entity: **" .. entity .. "** | Room " .. Core.config.currentRoom, 15158332)
+    ApiUpdate({event = "death", player = player.Name, entity = entity, room = Core.config.currentRoom})
+end
+
+local function CheckAllDead()
+    if not Core.config.autoRevive then return false end
+    local deadCount = 0
+    local totalPlayers = #UpdatePlayerCache()
+    for _, player in ipairs(Core.cache.players) do
+        if not IsPlayerAlive(player) then deadCount += 1 end
+    end
+    if deadCount >= totalPlayers then
+        -- ReviveAll chamada depois de ser definida
+        return "revive"
+    end
+    return false
 end
 
 local movementLoop = nil
 
+-- FIX: SetLight agora chama PunishMovement que já está declarada acima
 local function SetLight(color)
     Core.config.light = color
     ExecuteCommand("LightRoom", {
@@ -454,7 +498,8 @@ local function SetLight(color)
 
     if color == "green" then
         PlaySound(Core.sounds.green, "GreenLight", 5)
-        SendChat("🟩 - MOVE!")
+        -- FIX: emojis removidos para evitar tags do Roblox
+        SendChat("[GL] - MOVE!")
         NotifyPlayer("Green Light", "Movement allowed!", 4, Color3.fromRGB(0, 255, 0))
         if movementLoop then task.cancel(movementLoop) movementLoop = nil end
         Core.state.acceptingMovement = false
@@ -462,14 +507,18 @@ local function SetLight(color)
         ApiUpdate({event = "green", room = Core.config.currentRoom})
     else
         PlaySound(Core.sounds.red, "RedLight", 5)
-        SendChat("🟥 - STOP WALKING!")
+        -- FIX: emojis removidos para evitar tags do Roblox
+        SendChat("[RL] - STOP WALKING!")
         NotifyPlayer("Red Light", "STOP MOVING!", 4, Color3.fromRGB(255, 0, 0))
         DiscordEvent("Red Light", "Players must stop | Room " .. Core.config.currentRoom, 15158332)
         ApiUpdate({event = "red", room = Core.config.currentRoom})
+
+        -- FIX: grace period correto — acceptingMovement bloqueia punição durante o delay
         Core.state.acceptingMovement = true
         task.delay(Core.config.redAcceptDelay, function()
             Core.state.acceptingMovement = false
         end)
+
         movementLoop = task.spawn(function()
             task.wait(Core.config.redAcceptDelay)
             while Core.active and Core.config.light == "red" do
@@ -481,23 +530,14 @@ local function SetLight(color)
                         end
                     end
                 end
-                CheckAllDead()
+                local allDead = CheckAllDead()
+                if allDead == "revive" then
+                    -- ReviveAll será chamada mais abaixo, só quebramos o loop aqui
+                    break
+                end
                 task.wait(0.5)
             end
         end)
-    end
-end
-
-local function IncreaseDifficulty()
-    Core.config.roundNumber += 2
-    if Core.config.difficulty < Core.config.maxDifficulty then
-        Core.config.difficulty = math.min(Core.config.maxDifficulty, 1 + math.floor(Core.config.roundNumber / 3))
-        Core.config.greenTime.max = math.max(40, 70 - (Core.config.difficulty * 5))
-        Core.config.redTime.min = math.max(15, 25 - (Core.config.difficulty * 2))
-        SendChat("Difficulty increased: Level " .. Core.config.difficulty)
-        NotifyPlayer("Difficulty", "Level " .. Core.config.difficulty, 3, Color3.fromRGB(255, 165, 0))
-        DiscordEvent("Difficulty", "Level " .. Core.config.difficulty .. " | Room " .. Core.config.currentRoom, 16776960)
-        ApiUpdate({event = "difficulty", difficulty = Core.config.difficulty})
     end
 end
 
@@ -536,43 +576,28 @@ local function ReviveAll()
     SetLight("green")
 end
 
-local function CheckAllDead()
-    if not Core.config.autoRevive then return false end
-    local deadCount = 0
-    local totalPlayers = #UpdatePlayerCache()
-    for _, player in ipairs(Core.cache.players) do
-        if not IsPlayerAlive(player) then deadCount += 1 end
+-- Reconecta CheckAllDead com ReviveAll agora que está definida
+local _checkAllDeadOriginal = CheckAllDead
+CheckAllDead = function()
+    local result = _checkAllDeadOriginal()
+    if result == "revive" then
+        ReviveAll()
+        return true
     end
-    if deadCount >= totalPlayers then ReviveAll() return true end
-    return false
+    return result
 end
 
-local function SpawnEntity(entity, targetPlayer)
-    local players = targetPlayer and {targetPlayer} or UpdatePlayerCache()
-    if entity == "A-90" then
-        for _, p in ipairs(players) do ExecuteCommand("A90Player", {["Players"] = {[p.Name] = p.Name}}) end
-    elseif entity == "Screech" then
-        for _, p in ipairs(players) do ExecuteCommand("ScreechPlayer", {["Players"] = {[p.Name] = p.Name}}) end
-    elseif entity == "Glitch" then
-        for _, p in ipairs(players) do ExecuteCommand("GlitchPlayer", {["Players"] = {[p.Name] = p.Name}}) end
-    else
-        ExecuteCommand(entity, {})
+local function IncreaseDifficulty()
+    Core.config.roundNumber += 2
+    if Core.config.difficulty < Core.config.maxDifficulty then
+        Core.config.difficulty = math.min(Core.config.maxDifficulty, 1 + math.floor(Core.config.roundNumber / 3))
+        Core.config.greenTime.max = math.max(40, 70 - (Core.config.difficulty * 5))
+        Core.config.redTime.min = math.max(15, 25 - (Core.config.difficulty * 2))
+        SendChat("Difficulty increased: Level " .. Core.config.difficulty)
+        NotifyPlayer("Difficulty", "Level " .. Core.config.difficulty, 3, Color3.fromRGB(255, 165, 0))
+        DiscordEvent("Difficulty", "Level " .. Core.config.difficulty .. " | Room " .. Core.config.currentRoom, 16776960)
+        ApiUpdate({event = "difficulty", difficulty = Core.config.difficulty})
     end
-    Core.state.roundStats.entitiesSpawned += 1
-end
-
-local function PunishMovement(player)
-    local entity = Core.entitiesList[math.random(#Core.entitiesList)]
-    local killMethod = math.random(1, 2) == 1 and "KillPlayer" or "ExplodePlayer"
-    ExecuteCommand(killMethod, {["Players"] = {[player.Name] = player.Name}})
-    task.wait(0.1)
-    SpawnEntity(entity, player)
-    Core.state.roundStats.deaths += 1
-    Core.state.deadPlayers[player.UserId] = {name = player.Name, time = os.time(), entity = entity}
-    Core.state.lastDead = player.Name
-    SendChat(player.Name .. " moved on red light! " .. entity .. " appeared!")
-    DiscordEvent("Death", player.Name .. " moved | Entity: **" .. entity .. "** | Room " .. Core.config.currentRoom, 15158332)
-    ApiUpdate({event = "death", player = player.Name, entity = entity, room = Core.config.currentRoom})
 end
 
 local entitySpawnThread = nil
@@ -608,7 +633,7 @@ local function ToggleMod(enable)
         ApiUpdate({event = "resume", room = Core.config.currentRoom})
     end
     local status = enable and "enabled" or "disabled"
-    SendChat("💿 Mod " .. status .. "!")
+    SendChat("Mod " .. status .. "!")
     NotifyPlayer("System", "Mod " .. status .. "!", 5, enable and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0))
 end
 
@@ -633,7 +658,7 @@ local function MonitorRoom()
                 Core.active = false
                 Core.config.specialRoomNotified = true
                 StopRandomEntitySpawning()
-                SendChat("⚠️ System paused - Special room detected!")
+                SendChat("System paused - Special room detected!")
                 NotifyPlayer("Special Room", "System temporarily paused", 5, Color3.fromRGB(255, 0, 0))
                 ApiUpdate({event = "pause", reason = roomName, room = currentRoom})
             end
@@ -643,7 +668,7 @@ local function MonitorRoom()
                 Core.active = true
                 Core.config.specialRoomNotified = false
                 StartRandomEntitySpawning()
-                SendChat("⚠️ System resumed - Normal room detected!")
+                SendChat("System resumed - Normal room detected!")
                 NotifyPlayer("System Resumed", "Continuing normal operation", 5, Color3.fromRGB(0, 255, 0))
                 ApiUpdate({event = "resume", room = currentRoom})
             end
@@ -665,7 +690,7 @@ local function MonitorRoom()
         Core.config.gameWon = true
         local alivePlayers = GetAlivePlayers()
         if #alivePlayers > 0 then
-            SendChat("🎉 CONGRATULATIONS! Door " .. Core.config.winRoom .. " reached!")
+            SendChat("CONGRATULATIONS! Door " .. Core.config.winRoom .. " reached!")
             SendChat(#alivePlayers .. " players survived!")
             NotifyPlayer("VICTORY", "Challenge complete!", 10, Color3.fromRGB(0, 255, 0))
             for _, player in ipairs(alivePlayers) do
@@ -717,10 +742,11 @@ StatsLabel.Parent = TimerFrame
 
 local Commands = {}
 
+-- FIX: todos os comandos que afetam stats do player preservam o HP atual com GetPlayerHealth
 function Commands:godmode(player)
     if not Core.config.commandsEnabled and player.Name ~= Core.config.host then return end
     local hp = GetPlayerHealth(player)
-    ExecuteCommand("Apply Changes", {["Players"] = {[player.Name] = player.Name}, ["Health"] = hp, ["Max Health"] = 100, ["God Mode"] = true})
+    ExecuteCommand("Apply Changes", {["Players"] = {[player.Name] = player.Name}, ["Health"] = hp, ["Max Health"] = math.max(hp, 100), ["God Mode"] = true})
     SendChat(player.Name .. " - God Mode enabled!")
 end
 
@@ -734,6 +760,7 @@ function Commands:revive(player)
     ExecuteCommand("RevivePlayer", {["Players"] = {[player.Name] = player.Name}})
 end
 
+-- FIX: Speed preserva HP atual para não matar o player
 function Commands:speed(player)
     if not Core.config.commandsEnabled and player.Name ~= Core.config.host then return end
     local hp = GetPlayerHealth(player)
@@ -754,10 +781,12 @@ function Commands:item(player)
     SendChat(player.Name .. " received: " .. item)
 end
 
+-- FIX: Shield preserva HP atual para não matar o player
 function Commands:shield(player)
     if not Core.config.commandsEnabled and player.Name ~= Core.config.host then return end
     local hp = GetPlayerHealth(player)
     ExecuteCommand("Apply Changes", {["Players"] = {[player.Name] = player.Name}, ["Health"] = hp, ["Max Health"] = math.max(hp, 100), ["Star Shield"] = 100})
+    SendChat(player.Name .. " - Shield applied!")
 end
 
 function Commands:pxitem(player, args)
@@ -771,7 +800,7 @@ function Commands:pxitem(player, args)
         end
         if foundItem then break end
     end
-    if not foundItem then SendChat("❌ Item not found! Use !items to see the list.") return end
+    if not foundItem then SendChat("Item not found! Use !items to see the list.") return end
     local target = nil
     for _, p in ipairs(Players:GetPlayers()) do
         if p.UserId == player.UserId then target = p break end
@@ -1027,12 +1056,13 @@ local Window = Library:CreateWindow({
     ToggleKeybind = Enum.KeyCode.RightShift,
 })
 
-local TabMain     = Window:AddTab("Main")
-local TabDiff     = Window:AddTab("Difficulty")
-local TabEntities = Window:AddTab("Entities")
-local TabItems    = Window:AddTab("Items")
-local TabDiscord  = Window:AddTab("Discord")
-local TabAPI      = Window:AddTab("API Session")
+-- FIX: tabs com icones Lucide
+local TabMain     = Window:AddTab("Main", "layout-dashboard")
+local TabDiff     = Window:AddTab("Difficulty", "trending-up")
+local TabEntities = Window:AddTab("Entities", "ghost")
+local TabItems    = Window:AddTab("Items", "gift")
+local TabDiscord  = Window:AddTab("Discord", "message-circle")
+local TabAPI      = Window:AddTab("API Session", "plug")
 
 local GbControl  = TabMain:AddLeftGroupbox("Control")
 local GbSettings = TabMain:AddRightGroupbox("Settings")
@@ -1083,13 +1113,13 @@ GbSettings:AddInput("WinRoom", {
     end,
 })
 GbSettings:AddSlider("RedAcceptDelay", {
-    Text = "Red light accept delay (s)",
+    Text = "Red light grace period (s)",
     Default = 2,
     Min = 0,
     Max = 10,
     Rounding = 1,
     Suffix = "s",
-    Tooltip = "Grace period after red light alert before movement is detected",
+    Tooltip = "Seconds after red light alert before movement detection starts",
     Callback = function(v) Core.config.redAcceptDelay = v end,
 })
 
@@ -1204,9 +1234,7 @@ GbItemsManual:AddButton({Text = "Common to All", Func = function() GiveRewardToA
 GbItemsAuto:AddToggle("AutoItemDrop", {
     Text = "Auto delivery active",
     Default = true,
-    Callback = function(v)
-        Core.config.autoItemDrop = v
-    end,
+    Callback = function(v) Core.config.autoItemDrop = v end,
 })
 
 GbItemsAuto:AddSlider("ItemDropMin", {
@@ -1288,7 +1316,7 @@ end)
 SaveManager:SetLibrary(Library)
 ThemeManager:SetLibrary(Library)
 SaveManager:SetFolder("GLRL")
-ThemeManager:ApplyToTab(Window:AddTab("Themes"))
+ThemeManager:ApplyToTab(Window:AddTab("Themes", "palette"))
 
 for _, player in ipairs(Players:GetPlayers()) do
     Core.state.playerScores[player.UserId] = 0
@@ -1299,4 +1327,4 @@ Caption("GLRL v" .. Core.version .. " loaded!")
 task.wait(3)
 Caption("Made by Rhyan57 | v" .. Core.version)
 NotifyPlayer("Mod Loaded", "RShift to open the menu! Pass door 2 to activate.", 10, Color3.fromRGB(255,255,0))
-SendChat("[ GLRL ] Green Light Red Light!(active after door 2)")
+SendChat("[ GLRL ] Green Light Red Light! (active after door 2)")
