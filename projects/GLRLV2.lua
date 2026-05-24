@@ -71,7 +71,7 @@ local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 local LocalPlayer = Players.LocalPlayer
 
 local Core = {
-    version = "2.1.0",
+    version = "2.2.0",
     initialized = false,
     active = false,
 
@@ -118,7 +118,7 @@ local Core = {
 
     api = {
         enabled = false,
-        url = "https://glrl-api.onrender.com",
+        url = "https://rlrl.onrender.com",
         sessionId = nil,
     },
 
@@ -275,6 +275,19 @@ local function GetAlivePlayers()
     return alive
 end
 
+local function BuildPlayersList()
+    local list = {}
+    for _, player in ipairs(UpdatePlayerCache()) do
+        table.insert(list, {
+            name = player.Name,
+            displayName = player.DisplayName,
+            userId = player.UserId,
+            alive = IsPlayerAlive(player),
+        })
+    end
+    return list
+end
+
 local function DiscordSend(content, embeds)
     if not Core.discord.enabled or not Executor.httpenabled then return end
     task.spawn(function()
@@ -326,10 +339,16 @@ end
 
 local function ApiUpdate(data)
     if not Core.api.enabled or not Core.api.sessionId or not Executor.httpenabled then return end
-    data.alive = #GetAlivePlayers()
-    data.total = #UpdatePlayerCache()
+    local alivePlayers = GetAlivePlayers()
+    local allPlayers = UpdatePlayerCache()
+    data.alive = #alivePlayers
+    data.total = #allPlayers
+    data.players = BuildPlayersList()
     data.room = data.room or Core.config.currentRoom
     data.difficulty = data.difficulty or Core.config.difficulty
+    data.itemsGiven = Core.state.roundStats.itemsGiven
+    data.entitiesSpawned = Core.state.roundStats.entitiesSpawned
+    data.deaths = Core.state.roundStats.deaths
     task.spawn(function()
         pcall(function()
             Executor.request({
@@ -337,6 +356,37 @@ local function ApiUpdate(data)
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode({sessionId = Core.api.sessionId, data = data}),
+            })
+        end)
+    end)
+end
+
+local function ApiChatRelay(playerName, text)
+    if not Core.api.enabled or not Core.api.sessionId or not Executor.httpenabled then return end
+    task.spawn(function()
+        pcall(function()
+            Executor.request({
+                Url = Core.api.url .. "/api/rh1/session-update",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({
+                    sessionId = Core.api.sessionId,
+                    data = {chatMessage = text, player = playerName},
+                }),
+            })
+        end)
+    end)
+end
+
+local function ApiHeartbeat()
+    if not Core.api.enabled or not Core.api.sessionId or not Executor.httpenabled then return end
+    task.spawn(function()
+        pcall(function()
+            Executor.request({
+                Url = Core.api.url .. "/api/rh1/heartbeat",
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode({sessionId = Core.api.sessionId}),
             })
         end)
     end)
@@ -380,6 +430,12 @@ local function ApiConnect()
             if Executor.clipboard then Executor.clipboard(sessionUrl) end
             NotifyPlayer("API", "Sessão criada! Link copiado.", 8, Color3.fromRGB(0, 200, 255))
             DiscordEvent("🌐 Sessão criada", "Host: " .. LocalPlayer.Name, 3447003)
+            task.spawn(function()
+                while Core.api.sessionId do
+                    task.wait(5)
+                    ApiHeartbeat()
+                end
+            end)
             return
         end
     end
@@ -414,6 +470,7 @@ local function GiveRewardToAll(rarity)
     for _, player in ipairs(UpdatePlayerCache()) do GiveReward(player, rarity) end
     SendChat("🎁 Itens " .. (rarity or "aleatórios") .. " distribuídos!")
     NotifyPlayer("Itens", "Você recebeu um item " .. (rarity or "aleatório") .. "!", 5, Color3.fromRGB(0, 255, 0))
+    ApiUpdate({event = "item", room = Core.config.currentRoom})
 end
 
 local function ReviveAll()
@@ -428,6 +485,7 @@ local function ReviveAll()
     SendChat("✨ Todos revividos! Entidades removidas!")
     NotifyPlayer("Reviver", "Todos foram revividos!", 5, Color3.fromRGB(0, 255, 0))
     DiscordEvent("✨ Reviver", "Todos os jogadores foram revividos | Sala " .. Core.config.currentRoom, 3066993)
+    ApiUpdate({event = "revive_all", room = Core.config.currentRoom})
 end
 
 local function CheckAllDead()
@@ -534,8 +592,10 @@ local function ToggleMod(enable)
         SetLight("🟢")
         if movementLoop then task.cancel(movementLoop) movementLoop = nil end
         StopRandomEntitySpawning()
+        ApiUpdate({event = "pause", reason = "manual", room = Core.config.currentRoom})
     else
         StartRandomEntitySpawning()
+        ApiUpdate({event = "resume", room = Core.config.currentRoom})
     end
     local status = enable and "ativado" or "desativado"
     SendChat("🔄 Mod " .. status .. "!")
@@ -565,6 +625,7 @@ local function MonitorRoom()
                 StopRandomEntitySpawning()
                 SendChat("⚠️ Sistema pausado - Sala especial detectada!")
                 NotifyPlayer("Sala Especial", "Sistema pausado temporariamente", 5, Color3.fromRGB(255, 0, 0))
+                ApiUpdate({event = "pause", reason = roomName, room = currentRoom})
             end
         else
             if Core.config.pausedByRoom then
@@ -574,6 +635,7 @@ local function MonitorRoom()
                 StartRandomEntitySpawning()
                 SendChat("✅ Sistema retomado - Sala normal detectada!")
                 NotifyPlayer("Sistema Retomado", "Continuando operação normal", 5, Color3.fromRGB(0, 255, 0))
+                ApiUpdate({event = "resume", room = currentRoom})
             end
         end
     end
@@ -608,6 +670,8 @@ local function MonitorRoom()
             ApiUpdate({event = "win", room = currentRoom})
         end
     end
+
+    ApiUpdate({event = "room_change", room = currentRoom})
 end
 
 local TimerGui = Instance.new("ScreenGui")
@@ -706,6 +770,7 @@ function Commands:pxitem(player, args)
     })
     Core.state.roundStats.itemsGiven += 1
     SendChat("🎁 " .. target.Name .. " recebeu: " .. foundItem)
+    ApiUpdate({event = "item", player = target.Name, room = Core.config.currentRoom})
 end
 
 function Commands:items()
@@ -821,6 +886,7 @@ function Commands:kill(player, args)
     Core.config.voteActive = true
     Core.state.votes = {yes = 0, no = 0}
     SendChat("🎯 Votação: eliminar " .. target.Name .. "? Digite Y ou N (19s)")
+    ApiUpdate({event = "vote_start", player = target.Name, room = Core.config.currentRoom})
     local voters = {}
     local conn = TextChatService.MessageReceived:Connect(function(msg)
         if not Core.config.voteActive then return end
@@ -836,15 +902,28 @@ function Commands:kill(player, args)
     if Core.state.votes.yes > Core.state.votes.no then
         ExecuteCommand("KillPlayer", {["Players"] = {[target.Name] = target.Name}})
         SendChat("☠️ " .. target.Name .. " foi eliminado! (" .. Core.state.votes.yes .. " vs " .. Core.state.votes.no .. ")")
+        ApiUpdate({event = "vote_result", player = target.Name, result = "eliminated", room = Core.config.currentRoom})
     else
         SendChat("✨ " .. target.Name .. " foi poupado! (" .. Core.state.votes.no .. " vs " .. Core.state.votes.yes .. ")")
+        ApiUpdate({event = "vote_result", player = target.Name, result = "spared", room = Core.config.currentRoom})
     end
 end
 
 TextChatService.MessageReceived:Connect(function(message)
-    local text = message.Text:lower()
+    local text = message.Text
     local player = message.TextSource
-    local args = text:split(" ")
+    if not player then return end
+
+    local playerObj = nil
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.UserId == player.UserId then playerObj = p break end
+    end
+    local playerName = playerObj and playerObj.Name or "Desconhecido"
+
+    ApiChatRelay(playerName, text)
+
+    local ltext = text:lower()
+    local args = ltext:split(" ")
     local command = args[1]
     if command:sub(1, 1) == "!" then
         local cmdName = command:sub(2)
@@ -924,6 +1003,7 @@ Players.PlayerRemoving:Connect(function(player)
     Core.state.playerScores[player.UserId] = nil
     Core.state.survivalTime[player.UserId] = nil
     Core.state.deadPlayers[player.UserId] = nil
+    ApiUpdate({event = "player_leave", player = player.Name, room = Core.config.currentRoom})
 end)
 
 local Window = Library:CreateWindow({
@@ -961,6 +1041,7 @@ GbControl:AddButton("🎲 Entidade Aleatória", function()
     local e = Core.entitiesList[math.random(#Core.entitiesList)]
     SpawnEntity(e, nil)
     SendChat("👻 " .. e .. " invocado!")
+    ApiUpdate({event = "entity_spawn", entity = e, room = Core.config.currentRoom})
 end)
 
 GbSettings:AddToggle("AutoRevive", {
@@ -1005,6 +1086,7 @@ GbDiffCtrl:AddButton("🔄 Resetar Dificuldade", function()
     Core.config.greenTime = {min=50, max=70}
     Core.config.redTime = {min=25, max=35}
     SendChat("🔄 Dificuldade resetada!")
+    ApiUpdate({event = "difficulty_reset", room = Core.config.currentRoom})
 end)
 
 local GbEntitySpawn  = TabEntities:AddLeftGroupbox("Spawn Aleatório")
@@ -1077,6 +1159,7 @@ GbItemsManual:AddButton("🎁 Dar Item", function()
             if p.Name == selectedItemPlayer then
                 local item = GiveReward(p, rarity)
                 SendChat("🎁 " .. p.Name .. " recebeu: " .. item .. " (" .. (rarity or "aleatório") .. ")")
+                ApiUpdate({event = "item", player = p.Name, room = Core.config.currentRoom})
                 break
             end
         end
