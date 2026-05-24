@@ -1233,8 +1233,8 @@ local GbAPIStatus = TabAPI:AddRightGroupbox("Status da Sessão")
 GbAPIConfig:AddToggle("APIEnabled", {Text="Sistema de sessão ativo", Default=false, Callback=function(v) Core.api.enabled=v end})
 GbAPIConfig:AddInput("APIUrl", {
     Text = "URL da API",
-    Default = "https://glrl-api.onrender.com",
-    Placeholder = "https://sua-api.com",
+    Default = "https://rlrl.onrender.com",
+    Placeholder = "Your api",
     Finished = true,
     Callback = function(v) Core.api.url=v end,
 })
