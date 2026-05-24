@@ -458,7 +458,6 @@ local function SpawnEntity(entity, targetPlayer)
     Core.state.roundStats.entitiesSpawned += 1
 end
 
--- FIX: PunishMovement declarada ANTES de SetLight para evitar forward reference
 local function PunishMovement(player)
     local entity = Core.entitiesList[math.random(#Core.entitiesList)]
     local killMethod = math.random(1, 2) == 1 and "KillPlayer" or "ExplodePlayer"
@@ -481,7 +480,6 @@ local function CheckAllDead()
         if not IsPlayerAlive(player) then deadCount += 1 end
     end
     if deadCount >= totalPlayers then
-        -- ReviveAll chamada depois de ser definida
         return "revive"
     end
     return false
@@ -489,7 +487,6 @@ end
 
 local movementLoop = nil
 
--- FIX: SetLight agora chama PunishMovement que já está declarada acima
 local function SetLight(color)
     Core.config.light = color
     ExecuteCommand("LightRoom", {
@@ -498,7 +495,6 @@ local function SetLight(color)
 
     if color == "green" then
         PlaySound(Core.sounds.green, "GreenLight", 5)
-        -- FIX: emojis removidos para evitar tags do Roblox
         SendChat("[GL] - MOVE!")
         NotifyPlayer("Green Light", "Movement allowed!", 4, Color3.fromRGB(0, 255, 0))
         if movementLoop then task.cancel(movementLoop) movementLoop = nil end
@@ -507,13 +503,11 @@ local function SetLight(color)
         ApiUpdate({event = "green", room = Core.config.currentRoom})
     else
         PlaySound(Core.sounds.red, "RedLight", 5)
-        -- FIX: emojis removidos para evitar tags do Roblox
         SendChat("[RL] - STOP WALKING!")
         NotifyPlayer("Red Light", "STOP MOVING!", 4, Color3.fromRGB(255, 0, 0))
         DiscordEvent("Red Light", "Players must stop | Room " .. Core.config.currentRoom, 15158332)
         ApiUpdate({event = "red", room = Core.config.currentRoom})
 
-        -- FIX: grace period correto — acceptingMovement bloqueia punição durante o delay
         Core.state.acceptingMovement = true
         task.delay(Core.config.redAcceptDelay, function()
             Core.state.acceptingMovement = false
@@ -532,7 +526,6 @@ local function SetLight(color)
                 end
                 local allDead = CheckAllDead()
                 if allDead == "revive" then
-                    -- ReviveAll será chamada mais abaixo, só quebramos o loop aqui
                     break
                 end
                 task.wait(0.5)
@@ -576,7 +569,6 @@ local function ReviveAll()
     SetLight("green")
 end
 
--- Reconecta CheckAllDead com ReviveAll agora que está definida
 local _checkAllDeadOriginal = CheckAllDead
 CheckAllDead = function()
     local result = _checkAllDeadOriginal()
@@ -742,7 +734,6 @@ StatsLabel.Parent = TimerFrame
 
 local Commands = {}
 
--- FIX: todos os comandos que afetam stats do player preservam o HP atual com GetPlayerHealth
 function Commands:godmode(player)
     if not Core.config.commandsEnabled and player.Name ~= Core.config.host then return end
     local hp = GetPlayerHealth(player)
@@ -760,7 +751,6 @@ function Commands:revive(player)
     ExecuteCommand("RevivePlayer", {["Players"] = {[player.Name] = player.Name}})
 end
 
--- FIX: Speed preserva HP atual para não matar o player
 function Commands:speed(player)
     if not Core.config.commandsEnabled and player.Name ~= Core.config.host then return end
     local hp = GetPlayerHealth(player)
@@ -781,7 +771,6 @@ function Commands:item(player)
     SendChat(player.Name .. " received: " .. item)
 end
 
--- FIX: Shield preserva HP atual para não matar o player
 function Commands:shield(player)
     if not Core.config.commandsEnabled and player.Name ~= Core.config.host then return end
     local hp = GetPlayerHealth(player)
@@ -1056,7 +1045,6 @@ local Window = Library:CreateWindow({
     ToggleKeybind = Enum.KeyCode.RightShift,
 })
 
--- FIX: tabs com icones Lucide
 local TabMain     = Window:AddTab("Main", "layout-dashboard")
 local TabDiff     = Window:AddTab("Difficulty", "trending-up")
 local TabEntities = Window:AddTab("Entities", "ghost")
