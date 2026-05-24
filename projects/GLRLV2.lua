@@ -127,7 +127,7 @@ local Core = {
     cache = {players = {}, lastUpdate = 0},
 
     items = {
-        common = {"Flashlight","Lighter","Candle","Shakelight","Glowsticks","Vitamins","Bread","Cheese","Donut","Nanner","AloeVera","Key","Lockpick","BatteryPack","Compass","LibraryHintPaper","NannerPeel"},
+        common = {"Flashlight","Lighter","Candle","Shakelight","Glowsticks","Vitamins","Bread","Cheese","Donut","Nanner","AloeVera","Key","Lockpick","BatteryPack","Compass","LibraryHintPaper","NannerPeel", "Scanner", "Lotus"},
         uncommon = {"Bulklight","Straplight","Lantern","Smoothie","GweenSoda","BandagePack","TipJar","StarVial","Shears","AlarmClock","LaserPointer","HintBook","KeyIron","KeyElectrical","KeyRetro","GeneratorFuse","LibraryHintPaperHard"},
         rare = {"Crucifix","SkeletonKey","StarJug","HolyGrenade","Bomb","BigBomb","Knockbomb","BoxingGloves","StopSign","SnakeBox","Multitool","BigPropTool"},
         legendary = {"RiftSmoothie","RiftCandle","RiftJar","StarBottle","GoldGun","KeyBackdoor"},
