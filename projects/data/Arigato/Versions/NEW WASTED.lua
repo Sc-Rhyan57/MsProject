@@ -505,7 +505,7 @@ if singerHead then
     nameLabel.TextColor3 = Color3.fromRGB(255,160,255)
     nameLabel.TextStrokeTransparency = 0; nameLabel.TextStrokeColor3 = Color3.fromRGB(100,0,200)
     nameLabel.Font = Enum.Font.GothamBold; nameLabel.TextSize = 22
-    nameLabel.Text = "rhyan57 ♪"
+    nameLabel.Text = " rhyan57"
 end
 
 playerClone = Players:CreateHumanoidModelFromUserId(LocalPlayer.UserId)
