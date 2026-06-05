@@ -5,6 +5,7 @@ local LocalPlayer = Players.LocalPlayer
 local Achievements = require(RS:WaitForChild("ModulesShared"):WaitForChild("Achievements"))
 local ReplicaSetValueEvent = RS:WaitForChild("ReplicaRemoteEvents"):WaitForChild("Replica_ReplicaSetValue")
 local AchievementUnlockEvent = RS:WaitForChild("RemotesFolder"):WaitForChild("AchievementUnlock")
+local FlexAchievementEvent = RS:WaitForChild("RemotesFolder"):WaitForChild("FlexAchievement")
 local AchievementsUpdated = RS:WaitForChild("ReplicaDataModule"):WaitForChild("AchievementsUpdated")
 local ReplicaDataModule = require(RS:WaitForChild("ReplicaDataModule"))
 local ReplicaController = require(RS:WaitForChild("ReplicaController"))
@@ -46,8 +47,16 @@ local AchievementsFrame = LobbyFrame:WaitForChild("Achievements")
 local List = AchievementsFrame:WaitForChild("List")
 local DetailFrame = AchievementsFrame:WaitForChild("Frame")
 local TextHolder = DetailFrame:WaitForChild("TextHolder")
-local ApplyButton = DetailFrame:WaitForChild("Apply")
 local AppliedLabel = DetailFrame:WaitForChild("Applied")
+
+local OriginalApply = DetailFrame:WaitForChild("Apply")
+OriginalApply.Name = "Apply_DISABLED"
+OriginalApply.Visible = false
+
+local ApplyButton = OriginalApply:Clone()
+ApplyButton.Name = "Apply"
+ApplyButton.Visible = false
+ApplyButton.Parent = DetailFrame
 
 local keys = {}
 for key in pairs(Achievements) do
@@ -100,8 +109,8 @@ for _, badge in ipairs(List:GetChildren()) do
         local imgLabel = DetailFrame:FindFirstChild("ImageLabel")
         if imgLabel then imgLabel.Image = image end
 
-        ApplyButton.Visible = playerData.data.FlexAchievement ~= achName
-        AppliedLabel.Visible = playerData.data.FlexAchievement == achName
+        ApplyButton.Visible = true
+        AppliedLabel.Visible = false
     end)
 end
 
@@ -116,6 +125,8 @@ ApplyButton.MouseButton1Click:Connect(function()
     if playerData.event and playerData.event.FlexAchievement and playerData.event.FlexAchievement.Event then
         firesignal(playerData.event.FlexAchievement.Event)
     end
+
+    FlexAchievementEvent:FireServer(achName)
 
     ApplyButton.Visible = false
     AppliedLabel.Visible = true
