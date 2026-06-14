@@ -88,8 +88,8 @@ shared.G_debris        = game:GetService("Debris")
 shared.G_camera        = workspace.CurrentCamera
 shared.G_localPlayer   = shared.G_players.LocalPlayer
 
-shared.G_AUDIO_URL  = "https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/WakaWaka/waka_waka_shakira.ogg"
-shared.G_LYRICS_URL = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/WakaWaka/Lyrics.txt"
+shared.G_AUDIO_URL  = "https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/Waka%20Waka/wakawaka.ogg"
+shared.G_LYRICS_URL = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Waka%20Waka/Wakawaka.txt"
 
 shared.G_BAR_COLORS = {
     levitate = Color3.fromRGB(100,200,255),
