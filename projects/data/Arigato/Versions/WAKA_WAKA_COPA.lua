@@ -258,10 +258,15 @@ local function setBarColor(color)
 end
 
 local function getLoudness()
+    return 0
+end
+--[[
+local function getLoudness()
     local ok, rms = pcall(function() return shared.G_audioAnalyzer.RmsLevel end)
     if ok and rms and rms > 0 then return math.clamp(rms, 0, 1) end
     return math.clamp((shared.G_sound and shared.G_sound.PlaybackLoudness or 0) / 100, 0, 1)
 end
+]]--
 
 local function getFreqBands()
     local ok, spec = pcall(function() return shared.G_audioAnalyzer:GetSpectrum() end)
