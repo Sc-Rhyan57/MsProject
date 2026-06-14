@@ -635,13 +635,12 @@ if singerHead then
     shared.G_singerNameTag.Size = UDim2.new(0, 160, 0, 40)
     shared.G_singerNameTag.StudsOffset = Vector3.new(0, 4.5, 0)
     shared.G_singerNameTag.AlwaysOnTop = true
-    shared.G_singerNameTag.IgnoreGuiInset = true
     local nameLabel = Instance.new("TextLabel", shared.G_singerNameTag)
     nameLabel.Size = UDim2.new(1,0,1,0); nameLabel.BackgroundTransparency = 1
     nameLabel.TextColor3 = Color3.fromRGB(255,220,80)
     nameLabel.TextStrokeTransparency = 0; nameLabel.TextStrokeColor3 = Color3.fromRGB(180,100,0)
     nameLabel.Font = Enum.Font.GothamBold; nameLabel.TextSize = 22
-    nameLabel.Text = "🎵 Waka Waka"
+    nameLabel.Text = "rhyan57"
 end
 
 shared.G_playerClone = Players:CreateHumanoidModelFromUserId(LocalPlayer.UserId)
