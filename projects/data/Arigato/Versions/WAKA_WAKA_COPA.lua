@@ -799,7 +799,7 @@ local stagePlatform = shared.G_stagePlatform
 local showLightFolder = Instance.new("Folder", mainFolder)
 showLightFolder.Name = "showlights"
 G.showLights = {}
-local NUM_SHOW_LIGHTS = 8
+local NUM_SHOW_LIGHTS = 10
 
 for i = 1, NUM_SHOW_LIGHTS do
     local base = Instance.new("Part", showLightFolder)
@@ -889,7 +889,7 @@ end
 local orbitFolder = Instance.new("Folder", mainFolder)
 orbitFolder.Name = "orbit"
 G.orbitParts = {}
-local NUM_ORBIT = 20; local ORBIT_RADIUS = 22
+local NUM_ORBIT = 29; local ORBIT_RADIUS = 22
 
 for i = 1, NUM_ORBIT do
     local p = Instance.new("Part", orbitFolder)
@@ -908,7 +908,7 @@ for i = 1, NUM_ORBIT do
 end
 
 G.outerOrbitParts = {}
-local NUM_OUTER = 10
+local NUM_OUTER = 16
 for i = 1, NUM_OUTER do
     local p = Instance.new("Part", orbitFolder)
     p.Size = Vector3.new(3, 3, 3); p.Shape = Enum.PartType.Ball
@@ -919,7 +919,7 @@ for i = 1, NUM_OUTER do
 end
 
 G.ringOrbitParts = {}
-local NUM_RING_ORBIT = 6
+local NUM_RING_ORBIT = 19
 for i = 1, NUM_RING_ORBIT do
     local ring = Instance.new("Part", orbitFolder)
     ring.Size = Vector3.new(0.4, 6, 6); ring.Shape = Enum.PartType.Cylinder
@@ -1669,6 +1669,7 @@ local EMOTE_IDS = {
     twerk    = "rbxassetid://6899544869",
     clap     = "rbxassetid://6899663224",
     groove   = "rbxassetid://6899663224",
+    celebrate = "rbxassetid://507770677",
     
     wave        = "rbxassetid://507770718",
     point       = "rbxassetid://507770453",
