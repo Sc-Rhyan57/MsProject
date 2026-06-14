@@ -2062,7 +2062,6 @@ local function spawnWorldLyric(text)
         board.CFrame = CFrame.new(playerHRP.Position + Vector3.new(math.cos(angle)*radius, height, math.sin(angle)*radius))
         local sg2 = Instance.new("SurfaceGui", board)
         sg2.Face = Enum.NormalId.Front; sg2.AlwaysOnTop = true
-        sg2.IgnoreGuiInset = true
         sg2.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud; sg2.PixelsPerStud = 50
         local back = Instance.new("Frame", sg2)
         back.Size = UDim2.new(1,0,1,0); back.BackgroundColor3 = Color3.new(0,0,0); back.BackgroundTransparency = 0.4
