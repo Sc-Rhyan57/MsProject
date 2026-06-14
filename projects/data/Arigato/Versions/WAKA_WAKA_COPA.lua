@@ -1006,13 +1006,54 @@ local confettiFolder = Instance.new("Folder", mainFolder)
 confettiFolder.Name = "confetti"
 
 local COPA_COLORS = {
-    Color3.fromRGB(255,220,0),
-    Color3.fromRGB(0,180,80),
-    Color3.fromRGB(255,80,0),
-    Color3.fromRGB(200,255,80),
-    Color3.fromRGB(80,200,255),
-    Color3.fromRGB(255,60,120),
-    Color3.fromRGB(255,255,255),
+    Color3.fromRGB(255, 220, 0),    -- Amarelo (Brasil/Colômbia)
+    Color3.fromRGB(0, 180, 80),    -- Verde (México/Arábia Saudita)
+    Color3.fromRGB(255, 80, 0),    -- Laranja (Holanda)
+    Color3.fromRGB(255, 255, 255),  -- Branco (Alemanha/Inglaterra)
+    Color3.fromRGB(0, 32, 91),      -- Azul Escuro (França/Itália)
+    Color3.fromRGB(218, 41, 28),    -- Vermelho (Canadá/Espanha)
+    Color3.fromRGB(116, 172, 223),  -- Azul Claro (Argentina/Uruguai)
+    Color3.fromRGB(141, 20, 59),    -- Vinho (Catar/Venezuela)
+    Color3.fromRGB(0, 0, 0),        -- Preto (Nova Zelândia)
+    Color3.fromRGB(254, 203, 0),    -- Amarelo Ouro (Equador)
+    Color3.fromRGB(227, 27, 35),    -- Vermelho Vivo (Bélgica/Suíça)
+    Color3.fromRGB(12, 35, 64),     -- Azul Marinho (EUA/Japão)
+    Color3.fromRGB(0, 104, 71),     -- Verde Escuro (Nigéria/Camarões)
+    Color3.fromRGB(218, 18, 26),    -- Vermelho Sangue (Marrocos/Portugal)
+    Color3.fromRGB(0, 123, 196),    -- Azul Royal (Suécia/Ucrânia)
+    Color3.fromRGB(244, 195, 0),    -- Amarelo Canário (Austrália)
+    Color3.fromRGB(200, 16, 46),    -- Vermelho Escuro (Coreia do Sul)
+    Color3.fromRGB(0, 154, 68),     -- Verde Copa (Argélia/Senegal)
+    Color3.fromRGB(196, 30, 58),    -- Carmim (Croácia/Sérvia)
+    Color3.fromRGB(0, 94, 184),     -- Azul Escocês (Escócia)
+    Color3.fromRGB(224, 0, 37),     -- Vermelho Turco (Turquia)
+    Color3.fromRGB(206, 17, 38),    -- Vermelho Intenso (Tunísia/Egito)
+    Color3.fromRGB(255, 242, 0),    -- Amarelo Brilhante (Jamaica)
+    Color3.fromRGB(11, 29, 58),     -- Azul Petróleo (Panamá/Honduras)
+    Color3.fromRGB(0, 166, 81),     -- Verde Bandeira (Mali/Costa do Marfim)
+    Color3.fromRGB(221, 0, 0),      -- Vermelho Fogo (Dinamarca/Áustria)
+    Color3.fromRGB(0, 81, 186),     -- Azul Celeste (Grécia)
+    Color3.fromRGB(252, 209, 22),   -- Amarelo Sol (Gana/Iraque)
+    Color3.fromRGB(213, 0, 50),     -- Magenta/Vermelho (Peru/Chile)
+    Color3.fromRGB(0, 114, 206),    -- Azul Vivo (Ubequistão)
+    Color3.fromRGB(0, 107, 63),     -- Verde Musgo (Irã)
+    Color3.fromRGB(166, 25, 46),    -- Cereja (República Checa)
+    Color3.fromRGB(255, 204, 0),    -- Amarelo Torrado (Romênia)
+    Color3.fromRGB(0, 47, 108),     -- Azul Noturno (Costa Rica)
+    Color3.fromRGB(117, 16, 35),    -- Bordô (Geórgia)
+    Color3.fromRGB(0, 145, 213),    -- Azul Turquesa (U do Norte)
+    Color3.fromRGB(204, 9, 47),     -- Escarlate (Angola/Zâmbia)
+    Color3.fromRGB(0, 122, 61),     -- Verde Oliva (África do Sul)
+    Color3.fromRGB(198, 12, 48),    -- Vermelho Coral (Polônia)
+    Color3.fromRGB(0, 51, 153),     -- Azul Elétrico (Noruega)
+    Color3.fromRGB(253, 185, 19),   -- Amarelo Ocre (Omã)
+    Color3.fromRGB(204, 0, 0),      -- Vermelho Puro (Hungria)
+    Color3.fromRGB(0, 165, 81),     -- Verde Menta (Bolívia)
+    Color3.fromRGB(0, 76, 151),     -- Azul Profundo (Eslováquia)
+    Color3.fromRGB(210, 16, 52),    -- Rubi (País de Gales)
+    Color3.fromRGB(255, 103, 31),   -- Laranja Escuro (Irlanda)
+    Color3.fromRGB(15, 71, 175),    -- Azul Índigo (Paraguai)
+    Color3.fromRGB(255, 198, 30),   -- Amarelo Neon (Emirados Árabes)
 }
 
 local function spawnConfetti(count, origin)
@@ -1623,7 +1664,41 @@ local EMOTE_IDS = {
     twerk    = "rbxassetid://6899544869",
     clap     = "rbxassetid://6899663224",
     groove   = "rbxassetid://6899663224",
-    celebrate = "rbxassetid://507770677",
+    
+    wave        = "rbxassetid://507770718",
+    point       = "rbxassetid://507770453",
+    cheer       = "rbxassetid://507770677",
+    laugh       = "rbxassetid://507770818",
+    dance       = "rbxassetid://507771019",
+    dance2      = "rbxassetid://507771341",
+    dance3      = "rbxassetid://507771619",
+
+    -- Emotes Oficiais da Loja (R15)
+    robot       = "rbxassetid://3360695866",
+    shrug       = "rbxassetid://3360692915",
+    salute      = "rbxassetid://3360689775",
+    tilt        = "rbxassetid://3360704386",
+    stadium     = "rbxassetid://3360686498",
+    flex        = "rbxassetid://3360677536",
+    breathe     = "rbxassetid://3360641154",
+    bow         = "rbxassetid://3360655416",
+    rest        = "rbxassetid://3360662369",
+    confused    = "rbxassetid://3360647185",
+    
+    -- Novas Adições (Animações de Dança, Poses e Reações)
+    hype        = "rbxassetid://3658428525",
+    applause    = "rbxassetid://4513192233",
+    iconic      = "rbxassetid://5141315510",
+    line_dance  = "rbxassetid://4049037604",
+    my_avatar   = "rbxassetid://4841434944",
+    pro_gamer   = "rbxassetid://4512004245",
+    savage      = "rbxassetid://5537750864",
+    shuffle     = "rbxassetid://4315494291",
+    spin        = "rbxassetid://5160359858",
+    surprised   = "rbxassetid://4841029257",
+    victory     = "rbxassetid://4254199732",
+    wind        = "rbxassetid://4049034261",
+    zombie      = "rbxassetid://6161111666"
 }
 
 local function playSingerAnim(animId)
