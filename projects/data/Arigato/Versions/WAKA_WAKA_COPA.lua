@@ -78,6 +78,8 @@ shared.G = shared.G or {
     audioBlurActive = false,
 }
 
+print(shared.G.BPM) -- PEGOU O VALOR DE "BPM"
+
 shared.G_players       = game:GetService("Players")
 shared.G_runService    = game:GetService("RunService")
 shared.G_tweenService  = game:GetService("TweenService")
@@ -88,8 +90,8 @@ shared.G_debris        = game:GetService("Debris")
 shared.G_camera        = workspace.CurrentCamera
 shared.G_localPlayer   = shared.G_players.LocalPlayer
 
-shared.G_AUDIO_URL  = "https://github.com/Sc-Rhyan57/MsProject/raw/refs/heads/main/projects/data/Waka%20Waka/wakawaka.ogg"
-shared.G_LYRICS_URL = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Waka%20Waka/Wakawaka.txt"
+shared.G_AUDIO_URL = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Arigato/Tokyo%20(online-audio-converter.com).ogg"
+shared.G_LYRICS_URL = "https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/Arigato/lyrics.txt"
 
 shared.G_BAR_COLORS = {
     levitate = Color3.fromRGB(100,200,255),
