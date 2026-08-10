@@ -86,7 +86,18 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 
 - **Custom Guiding light**
 ```lua
---SOON--
+shared.config = {
+    color = "Yellow" --// OR: Rush, Blue, Glitch
+}
+
+shared.texts = {
+    [1] = "Rhyan",
+    [2] = "Can",
+    [3] = "Hear",
+    [4] = "Us..."
+}
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/CUSTOMGUIDINGLIGHT.lua"))()
 ```
 ![omg it's a image](https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/you-calling-it-guiding-light-or-moonlight-gif-maybe-v0-6dp3tihir3le1.jpeg)
   
