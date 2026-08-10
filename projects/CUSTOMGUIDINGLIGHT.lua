@@ -23,11 +23,13 @@ local function resetDeathUI()
     Death.Hodler.Visible = true
     Death.Hodler.Position = UDim2.new(0.5, 0, 0.5, 0)
     Death.Hodler.Rotation = 0
-    Death.Hodler.Label.Visible = true
+    
+    Death.Hodler.Label.Visible = false
     Death.Hodler.Label.ImageTransparency = 1
     Death.Hodler.Label.Size = UDim2.new(0.5, 0, 0.5, 0)
     Death.Hodler.Label.Position = UDim2.new(0.5, 0, 0.5, 0)
     Death.Hodler.Label.Label.ImageTransparency = 1
+    
     Death.Hodler.GlitchLabel.Visible = false
     Death.Hodler.GlitchLabel.ImageTransparency = 1
     Death.Hodler.GlitchLabel.ImageRectOffset = Vector2.new(0, 0)
@@ -60,6 +62,14 @@ local function resetDeathUI()
     Death.GlitchDialogue.TextTransparency = 1
     Death.GlitchDialogue.Position = UDim2.new(0.5, 0, 0.5, 0)
     Death.GlitchDialogue.Rotation = 0
+
+    if HealthScript:FindFirstChild("Death") then HealthScript.Death:Stop() end
+    if HealthScript:FindFirstChild("DeathGlitch") then HealthScript.DeathGlitch:Stop() end
+    if HealthScript:FindFirstChild("Music") then
+        for _, sound in ipairs(HealthScript.Music:GetChildren()) do
+            sound:Stop()
+        end
+    end
 end
 
 local function playFakeGuidingLight()
@@ -84,15 +94,8 @@ local function playFakeGuidingLight()
 
         resetDeathUI()
 
-        Death.Visible = true
-        Death.ImageTransparency = 0
-        Death.ImageColor3 = Color3.fromRGB(0, 0, 0)
-        Death.BackgroundTransparency = 1
-        
         MainGame.stopcam = true
         Camera.CameraType = Enum.CameraType.Scriptable
-        
-        task.wait(0.5)
 
         local oldLighting = {}
         for _, prop in ipairs({"Ambient", "Brightness", "ExposureCompensation", "FogEnd", "FogStart"}) do
@@ -100,6 +103,12 @@ local function playFakeGuidingLight()
         end
 
         if lightColor == "Glitch" then
+            if HealthScript:FindFirstChild("DeathGlitch") then HealthScript.DeathGlitch:Play() end
+            
+            Death.Visible = true
+            Death.ImageTransparency = 0
+            Death.ImageColor3 = Color3.fromRGB(0, 0, 0)
+            Death.BackgroundTransparency = 1
             Death.Hodler.Label.Visible = false
             
             Lighting.Ambient = Color3.fromRGB(0, 0, 0)
@@ -256,6 +265,9 @@ local function playFakeGuidingLight()
             if v15 then v15:Destroy() end
             if StaticSound then StaticSound:Destroy() end
         else
+            if HealthScript:FindFirstChild("DeathGlitch") then HealthScript.DeathGlitch:Stop() end
+            if HealthScript:FindFirstChild("Death") then HealthScript.Death:Play() end
+            
             Death.Hodler.GlitchLabel.Visible = false
             Death.GlitchStatic.Visible = false
             Death.GlitchStatic.ImageTransparency = 1
