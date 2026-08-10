@@ -268,15 +268,12 @@ local function playFakeGuidingLight()
             if HealthScript:FindFirstChild("DeathGlitch") then HealthScript.DeathGlitch:Stop() end
             if HealthScript:FindFirstChild("Death") then HealthScript.Death:Play() end
             
-            Death.Hodler.GlitchLabel.Visible = false
-            Death.GlitchStatic.Visible = false
-            Death.GlitchStatic.ImageTransparency = 1
-            Death.GlitchStatic.BackgroundTransparency = 1
-            Death.GlitchStatic.Static.Visible = false
-            Death.GlitchStatic.Static.ImageTransparency = 1
-            Death.GlitchDialogue.Visible = false
-            Death.GlitchDialogue.TextTransparency = 1
-
+            Death.Visible = true
+            Death.ImageTransparency = 0
+            Death.ImageColor3 = Color3.fromRGB(0, 0, 0)
+            Death.BackgroundTransparency = 1
+            Death.Hodler.Visible = false
+            
             local disabledCCEs = {}
             for _, v in ipairs(Camera:GetChildren()) do
                 if v:IsA("ColorCorrectionEffect") and v.Enabled then
@@ -389,24 +386,8 @@ local function playFakeGuidingLight()
                 ImageTransparency = 1, ImageColor3 = Color3.fromRGB(0, 0, 0)
             }):Play()
             
-            TweenService:Create(Death.Hodler.Label, TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                ImageTransparency = 1, ImageColor3 = t2[5]
-            }):Play()
-            
-            TweenService:Create(Death.Hodler.Label.Label, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                ImageTransparency = 0, ImageColor3 = t2[6]
-            }):Play()
-            
             task.wait(1)
             TweenService:Create(Camera, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { FieldOfView = 45 }):Play()
-            TweenService:Create(Death.Hodler.Label.Label, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-                ImageTransparency = 1, ImageColor3 = t2[7]
-            }):Play()
-            
-            task.wait(0.5)
-            TweenService:Create(Death.Hodler.Label, TweenInfo.new(2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
-                Size = UDim2.new(3, 0, 3, 0)
-            }):Play()
             
             Death.HelpfulDialogue.TextTransparency = 1
             Death.HelpfulDialogue.Visible = true
