@@ -14,6 +14,50 @@ local MainGame = require(MainUI:WaitForChild("Initiator"):WaitForChild("Main_Gam
 local HealthScript = MainUI.Initiator.Main_Game:WaitForChild("Health")
 local Death = MainUI:WaitForChild("Death")
 
+local function resetDeathUI()
+    Death.Visible = false
+    Death.ImageTransparency = 1
+    Death.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Death.BackgroundTransparency = 1
+    
+    Death.Hodler.Visible = true
+    Death.Hodler.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Death.Hodler.Rotation = 0
+    Death.Hodler.Label.Visible = true
+    Death.Hodler.Label.ImageTransparency = 1
+    Death.Hodler.Label.Size = UDim2.new(0.5, 0, 0.5, 0)
+    Death.Hodler.Label.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Death.Hodler.Label.Label.ImageTransparency = 1
+    
+    Death.Static.Visible = true
+    Death.Static.BackgroundTransparency = 0
+    Death.Static.ImageTransparency = 0
+    Death.Static.Position = UDim2.new(0, 0, 0, 0)
+    Death.Static.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    Death.Static.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Death.Static.Static.Visible = true
+    Death.Static.Static.ImageTransparency = 0
+    
+    Death.GlitchStatic.Visible = false
+    Death.GlitchStatic.ImageTransparency = 0
+    Death.GlitchStatic.BackgroundTransparency = 0
+    Death.GlitchStatic.Position = UDim2.new(0, 0, 0, 0)
+    Death.GlitchStatic.Rotation = 0
+    Death.GlitchStatic.Static.Visible = false
+    Death.GlitchStatic.Static.Position = UDim2.new(0, 0, 0, 0)
+    Death.GlitchStatic.Static.Rotation = 0
+    
+    Death.HelpfulDialogue.Visible = false
+    Death.HelpfulDialogue.TextTransparency = 1
+    Death.HelpfulDialogue.Position = UDim2.new(0.5, 0, 0.42, 0)
+    Death.HelpfulDialogue.Rotation = 0
+    
+    Death.GlitchDialogue.Visible = false
+    Death.GlitchDialogue.TextTransparency = 1
+    Death.GlitchDialogue.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Death.GlitchDialogue.Rotation = 0
+end
+
 local function playFakeGuidingLight()
     if shared.GUIDINGRUNNING then return end
     shared.GUIDINGRUNNING = true
@@ -34,9 +78,12 @@ local function playFakeGuidingLight()
         end
         if #finalTexts == 0 then finalTexts = defaultTexts end
 
+        resetDeathUI()
+
         Death.Visible = true
         Death.ImageTransparency = 0
         Death.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        Death.BackgroundTransparency = 0
         Death.Hodler.Label.Visible = false
         Death.Hodler.Label.ImageTransparency = 1
         Death.Hodler.Label.Label.ImageTransparency = 1
@@ -46,12 +93,12 @@ local function playFakeGuidingLight()
         
         task.wait(0.5)
 
-        if lightColor == "Glitch" then
-            local oldLighting = {}
-            for _, prop in ipairs({"Ambient", "Brightness", "ExposureCompensation", "FogEnd", "FogStart"}) do
-                oldLighting[prop] = Lighting[prop]
-            end
+        local oldLighting = {}
+        for _, prop in ipairs({"Ambient", "Brightness", "ExposureCompensation", "FogEnd", "FogStart"}) do
+            oldLighting[prop] = Lighting[prop]
+        end
 
+        if lightColor == "Glitch" then
             Lighting.Ambient = Color3.fromRGB(0, 0, 0)
             Lighting.Brightness = 0
             Lighting.ExposureCompensation = 0.4
@@ -108,16 +155,6 @@ local function playFakeGuidingLight()
             Death.Hodler.Visible = false
 
             local v5 = Random.new()
-            local v6 = v5:NextNumber(0.45, 0.55)
-            local v7 = v5:NextNumber(0.47, 0.625)
-
-            local shakeConn = RunService.RenderStepped:Connect(function()
-                local rx = v5:NextNumber(-1, 1) * 0.1
-                local ry = v5:NextNumber(-1, 1) * 0.1
-                Death.GlitchDialogue.Position = UDim2.new(v6 + rx, 0, v7 + ry, 40)
-                Death.GlitchDialogue.Rotation = rx * 2
-            end)
-
             local clicked = false
             local inputConn = UserInputService.InputBegan:Connect(function(input, gpe)
                 if not gpe and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
@@ -154,8 +191,6 @@ local function playFakeGuidingLight()
                     Death.GlitchDialogue.Text = text
                     Death.GlitchDialogue.TextTransparency = 0
                     Death.GlitchDialogue.Visible = true
-                    v6 = v5:NextNumber(0.45, 0.55)
-                    v7 = v5:NextNumber(0.45, 0.525)
 
                     local waitTime = 5 + utf8.len(text) / 30
                     if i == 1 or clicked then
@@ -163,7 +198,7 @@ local function playFakeGuidingLight()
                     else
                         task.wait(0.1)
                     end
-
+                    
                     clicked = false
                     local startTick = tick()
                     while task.wait() do
@@ -179,7 +214,6 @@ local function playFakeGuidingLight()
             end
 
             inputConn:Disconnect()
-            shakeConn:Disconnect()
             v4 = false
 
             if StaticSound and StaticSound.Playing then
@@ -212,16 +246,7 @@ local function playFakeGuidingLight()
             task.wait(1)
             if v15 then v15:Destroy() end
             if StaticSound then StaticSound:Destroy() end
-
-            for prop, val in pairs(oldLighting) do
-                Lighting[prop] = val
-            end
         else
-            local oldLighting = {}
-            for _, prop in ipairs({"Ambient", "Brightness", "ExposureCompensation", "FogEnd", "FogStart"}) do
-                oldLighting[prop] = Lighting[prop]
-            end
-            
             local disabledCCEs = {}
             for _, v in ipairs(Camera:GetChildren()) do
                 if v:IsA("ColorCorrectionEffect") and v.Enabled then
@@ -434,11 +459,13 @@ local function playFakeGuidingLight()
         end
 
         MainGame.stopcam = false
-        Death.Visible = false
+        resetDeathUI()
     end)
 
     if not success then
         warn("Guiding Light Error: " .. tostring(err))
+        MainGame.stopcam = false
+        resetDeathUI()
     end
 
     shared.GUIDINGRUNNING = false
