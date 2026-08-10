@@ -82,6 +82,14 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/achievement-extractor.lua"))()
 ```
+
+
+- **Custom Guiding light**
+```lua
+--SOON--
+```
+![omg it's a image](https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/data/you-calling-it-guiding-light-or-moonlight-gif-maybe-v0-6dp3tihir3le1.jpeg)
+  
 # **MATH : SCRIPTS**
 [![MATH SCRIPTS](https://tr.rbxcdn.com/180DAY-060501087344cd90641f0e31ea40bc15/768/432/Image/Webp/noFilter)](https://www.roblox.com/pt/games/127707120843339/Math-Murder)
 - **AUTO CÁLCULO BY RHYAN57**
