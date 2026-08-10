@@ -30,6 +30,7 @@ local function resetDeathUI()
     Death.Hodler.Label.Label.ImageTransparency = 1
     Death.Hodler.GlitchLabel.Visible = false
     Death.Hodler.GlitchLabel.ImageTransparency = 1
+    Death.Hodler.GlitchLabel.ImageRectOffset = Vector2.new(0, 0)
     
     Death.Static.Visible = true
     Death.Static.BackgroundTransparency = 1
@@ -46,6 +47,7 @@ local function resetDeathUI()
     Death.GlitchStatic.Position = UDim2.new(0, 0, 0, 0)
     Death.GlitchStatic.Rotation = 0
     Death.GlitchStatic.Static.Visible = false
+    Death.GlitchStatic.Static.ImageTransparency = 1
     Death.GlitchStatic.Static.Position = UDim2.new(0, 0, 0, 0)
     Death.GlitchStatic.Static.Rotation = 0
     
@@ -98,6 +100,8 @@ local function playFakeGuidingLight()
         end
 
         if lightColor == "Glitch" then
+            Death.Hodler.Label.Visible = false
+            
             Lighting.Ambient = Color3.fromRGB(0, 0, 0)
             Lighting.Brightness = 0
             Lighting.ExposureCompensation = 0.4
@@ -131,6 +135,10 @@ local function playFakeGuidingLight()
 
             Death.Hodler.GlitchLabel.Visible = true
             Death.GlitchStatic.Visible = true
+            Death.GlitchStatic.ImageTransparency = 0
+            Death.GlitchStatic.BackgroundTransparency = 0
+            Death.GlitchStatic.Static.Visible = true
+            Death.GlitchStatic.Static.ImageTransparency = 0
 
             local v4 = true
             task.spawn(function()
@@ -144,6 +152,8 @@ local function playFakeGuidingLight()
             end)
 
             Death.Hodler.GlitchLabel.ImageTransparency = 0
+            task.wait(0.2)
+            Death.Hodler.Label.Visible = false
             task.wait(0.3)
 
             for k = 1, 6 do
@@ -246,6 +256,15 @@ local function playFakeGuidingLight()
             if v15 then v15:Destroy() end
             if StaticSound then StaticSound:Destroy() end
         else
+            Death.Hodler.GlitchLabel.Visible = false
+            Death.GlitchStatic.Visible = false
+            Death.GlitchStatic.ImageTransparency = 1
+            Death.GlitchStatic.BackgroundTransparency = 1
+            Death.GlitchStatic.Static.Visible = false
+            Death.GlitchStatic.Static.ImageTransparency = 1
+            Death.GlitchDialogue.Visible = false
+            Death.GlitchDialogue.TextTransparency = 1
+
             local disabledCCEs = {}
             for _, v in ipairs(Camera:GetChildren()) do
                 if v:IsA("ColorCorrectionEffect") and v.Enabled then
