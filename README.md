@@ -87,7 +87,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/
 - **Custom Guiding light**
 ```lua
 shared.config = {
-    color = "Yellow" --// OR: Rush, Blue, Glitch
+    color = "Yellow" --// OR: Rush, Blue, Yellow, Glitch
 }
 
 shared.texts = {
