@@ -28,19 +28,21 @@ local function resetDeathUI()
     Death.Hodler.Label.Size = UDim2.new(0.5, 0, 0.5, 0)
     Death.Hodler.Label.Position = UDim2.new(0.5, 0, 0.5, 0)
     Death.Hodler.Label.Label.ImageTransparency = 1
+    Death.Hodler.GlitchLabel.Visible = false
+    Death.Hodler.GlitchLabel.ImageTransparency = 1
     
     Death.Static.Visible = true
-    Death.Static.BackgroundTransparency = 0
-    Death.Static.ImageTransparency = 0
+    Death.Static.BackgroundTransparency = 1
+    Death.Static.ImageTransparency = 1
     Death.Static.Position = UDim2.new(0, 0, 0, 0)
     Death.Static.ImageColor3 = Color3.fromRGB(255, 255, 255)
     Death.Static.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Death.Static.Static.Visible = true
-    Death.Static.Static.ImageTransparency = 0
+    Death.Static.Static.ImageTransparency = 1
     
     Death.GlitchStatic.Visible = false
-    Death.GlitchStatic.ImageTransparency = 0
-    Death.GlitchStatic.BackgroundTransparency = 0
+    Death.GlitchStatic.ImageTransparency = 1
+    Death.GlitchStatic.BackgroundTransparency = 1
     Death.GlitchStatic.Position = UDim2.new(0, 0, 0, 0)
     Death.GlitchStatic.Rotation = 0
     Death.GlitchStatic.Static.Visible = false
@@ -83,10 +85,7 @@ local function playFakeGuidingLight()
         Death.Visible = true
         Death.ImageTransparency = 0
         Death.ImageColor3 = Color3.fromRGB(0, 0, 0)
-        Death.BackgroundTransparency = 0
-        Death.Hodler.Label.Visible = false
-        Death.Hodler.Label.ImageTransparency = 1
-        Death.Hodler.Label.Label.ImageTransparency = 1
+        Death.BackgroundTransparency = 1
         
         MainGame.stopcam = true
         Camera.CameraType = Enum.CameraType.Scriptable
@@ -452,6 +451,10 @@ local function playFakeGuidingLight()
             
             if Atmosphere then
                 Atmosphere.Density = oldDensity
+            end
+            
+            for _, v in ipairs(disabledCCEs) do
+                v.Enabled = true
             end
             
             Camera.CameraType = Enum.CameraType.Custom
