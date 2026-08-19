@@ -1,5 +1,5 @@
 local function BAIXARIMAGEM(githubLink)
-    local deltaimg = "new_logo.png"
+    local deltaimg = "./Internals/Assets/logo.png"
     if isfile(deltaimg) then
         delfile(deltaimg)
         print("[ HM ] FOTO DO DELTA JÁ EXISTIA:(APAGADA) " .. deltaimg)
