@@ -1,39 +1,35 @@
 local HttpService = game:GetService("HttpService")
-local targetFolder = game:GetService("Players").LocalPlayer.PlayerGui.MainUI.LobbyFrame.Achievements.List
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local playerGui = LocalPlayer:WaitForChild("PlayerGui", 15)
+local mainUI = playerGui:WaitForChild("MainUI", 15)
+local targetFolder = mainUI:WaitForChild("LobbyFrame", 15):WaitForChild("Achievements", 15):WaitForChild("List", 15)
 
 local achievements = {}
 
 for _, child in pairs(targetFolder:GetChildren()) do
-    local badgeId = child:GetAttribute("BadgeId")
-    local category = child:GetAttribute("Category")
-    local title = child:GetAttribute("Title")
-    local desc = child:GetAttribute("Desc")
-    local reason = child:GetAttribute("Reason")
-    local secret = child:GetAttribute("Secret")
-    local order = child:GetAttribute("Order")
-    local image = child:GetAttribute("Image")
+    local achievement = {
+        Name = child.Name
+    }
     
-    if badgeId and category and title and desc and reason and order and image then
-        local imageId = tostring(image):gsub("rbxassetid://", "")
-        
-        local achievement = {
-            Name = child.Name,
-            BadgeId = badgeId,
-            Category = category,
-            Title = title,
-            Desc = desc,
-            Reason = reason,
-            Secret = secret or false,
-            Order = order,
-            Image = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. imageId .. "&returnPolicy=PlaceHolder&size=420x420&format=Png&isCircular=false"
-        }
-        
-        table.insert(achievements, achievement)
+    local attrs = child:GetAttributes()
+    for attrName, attrValue in pairs(attrs) do
+        achievement[attrName] = attrValue
     end
+    
+    if achievement.Image and type(achievement.Image) == "string" then
+        local imageId = tostring(achievement.Image):gsub("rbxassetid://", "")
+        achievement.ImageUrl = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. imageId .. "&returnPolicy=PlaceHolder&size=420x420&format=Png&isCircular=false"
+    end
+    
+    table.insert(achievements, achievement)
 end
 
 table.sort(achievements, function(a, b)
-    return a.Order < b.Order
+    local aOrder = tonumber(a.Order) or 999999
+    local bOrder = tonumber(b.Order) or 999999
+    return aOrder < bOrder
 end)
 
 local currentDate = os.date("%Y-%m-%d")
@@ -44,6 +40,8 @@ end
 
 local jsonFileName = "success/" .. currentDate .. "-achievements.json"
 local jsonData = HttpService:JSONEncode(achievements)
+
+local safeJsonData = jsonData:gsub("<", "\\u003c")
 writefile(jsonFileName, jsonData)
 
 print("(ok 1/2)")
@@ -419,6 +417,23 @@ local htmlTemplate = [[<!DOCTYPE html>
             margin-right: 6px;
         }
 
+        .achievement-extras {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #a0a0a0;
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .achievement-extras div {
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+
         .achievement-footer {
             display: flex;
             justify-content: space-between;
@@ -573,12 +588,13 @@ local htmlTemplate = [[<!DOCTYPE html>
     </div>
 
     <script>
-        const ACHIEVEMENTS_DATA = ]] .. jsonData .. [[;
+        const ACHIEVEMENTS_DATA = ]] .. safeJsonData .. [[;
 
         let currentFilter = 'all';
         let currentPage = 1;
         let searchQuery = '';
         const ITEMS_PER_PAGE = 10;
+        const knownKeys = ['Name', 'Title', 'Desc', 'Reason', 'Secret', 'Order', 'BadgeId', 'Category', 'Image', 'ImageUrl'];
 
         function init() {
             createFilters();
@@ -588,7 +604,7 @@ local htmlTemplate = [[<!DOCTYPE html>
         }
 
         function createFilters() {
-            const categories = ['all', ...new Set(ACHIEVEMENTS_DATA.map(a => a.Category))];
+            const categories = ['all', ...new Set(ACHIEVEMENTS_DATA.map(a => a.Category).filter(Boolean))];
             const filtersContainer = document.getElementById('filters');
             
             categories.forEach(cat => {
@@ -624,10 +640,10 @@ local htmlTemplate = [[<!DOCTYPE html>
 
             if (searchQuery) {
                 filtered = filtered.filter(a => 
-                    a.Title.toLowerCase().includes(searchQuery) ||
-                    a.Desc.toLowerCase().includes(searchQuery) ||
-                    a.Reason.toLowerCase().includes(searchQuery) ||
-                    a.Name.toLowerCase().includes(searchQuery)
+                    (a.Title && a.Title.toLowerCase().includes(searchQuery)) ||
+                    (a.Desc && a.Desc.toLowerCase().includes(searchQuery)) ||
+                    (a.Reason && a.Reason.toLowerCase().includes(searchQuery)) ||
+                    (a.Name && a.Name.toLowerCase().includes(searchQuery))
                 );
             }
 
@@ -636,6 +652,10 @@ local htmlTemplate = [[<!DOCTYPE html>
 
         function extractImageUrl(thumbnailApiUrl) {
             return new Promise((resolve) => {
+                if (!thumbnailApiUrl) {
+                    resolve('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%230a0a0f%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2250%22 fill=%22%234682b4%22%3E🏆%3C/text%3E%3C/svg%3E');
+                    return;
+                }
                 fetch(thumbnailApiUrl)
                     .then(res => res.json())
                     .then(data => {
@@ -674,30 +694,41 @@ local htmlTemplate = [[<!DOCTYPE html>
             grid.innerHTML = '';
             
             for (const achievement of pageAchievements) {
-                const imageUrl = await extractImageUrl(achievement.Image);
+                const imageUrl = await extractImageUrl(achievement.ImageUrl);
+                
+                let extraAttrsHtml = '';
+                for (const key in achievement) {
+                    if (!knownKeys.includes(key)) {
+                        let val = achievement[key];
+                        if (typeof val === 'boolean') val = val ? 'Yes' : 'No';
+                        if (typeof val === 'object') val = JSON.stringify(val);
+                        extraAttrsHtml += `<div><strong>${key}:</strong> ${val}</div>`;
+                    }
+                }
                 
                 const card = document.createElement('div');
                 card.className = `achievement-card ${achievement.Secret ? 'secret' : ''}`;
                 card.innerHTML = `
-                    <div class="order-number">#${achievement.Order}</div>
+                    <div class="order-number">#${achievement.Order || '?'}</div>
                     <div class="achievement-header">
                         <div class="achievement-image-wrapper">
                             <img src="${imageUrl}" 
-                                 alt="${achievement.Title}" 
+                                 alt="${achievement.Title || achievement.Name}" 
                                  class="achievement-image">
                             ${achievement.Secret ? '<div class="secret-icon">🔒</div>' : ''}
                         </div>
                         <div class="achievement-title-section">
-                            <div class="achievement-title">${achievement.Title}</div>
-                            <span class="achievement-category">${achievement.Category}</span>
+                            <div class="achievement-title">${achievement.Title || achievement.Name}</div>
+                            <span class="achievement-category">${achievement.Category || 'Unknown'}</span>
                         </div>
                     </div>
                     <div class="achievement-body">
-                        <div class="achievement-desc">${achievement.Desc}</div>
-                        <div class="achievement-reason">${achievement.Reason}</div>
+                        <div class="achievement-desc">${achievement.Desc || 'No description available.'}</div>
+                        <div class="achievement-reason">${achievement.Reason || 'No reason available.'}</div>
+                        ${extraAttrsHtml ? `<div class="achievement-extras">${extraAttrsHtml}</div>` : ''}
                     </div>
                     <div class="achievement-footer">
-                        <span class="badge-id">Badge ID: ${achievement.BadgeId}</span>
+                        <span class="badge-id">Badge ID: ${achievement.BadgeId || 'N/A'}</span>
                         ${achievement.Secret ? '<span class="secret-badge">🔒 SECRET</span>' : ''}
                     </div>
                 `;
