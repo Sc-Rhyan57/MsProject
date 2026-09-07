@@ -5,6 +5,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local LatestRoom = ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom")
+
 _G.savingRooms = false
 _G.removeLoot = false
 _G.notifications = true
@@ -66,16 +68,18 @@ end
 local function MonitorarTrocaDeSala()
     ConsoleLog("MONITORANDO TROCA DE SALA...")
 
-    local player = Players.LocalPlayer
-    local lastRoom = player:GetAttribute("CurrentRoom")
-    player:GetAttributeChangedSignal("CurrentRoom"):Connect(function()
+    local lastRoom = LatestRoom.Value
+    LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
         if not _G.savingRooms then return end
 
-        local currentRoom = player:GetAttribute("CurrentRoom")
-        if not currentRoom or currentRoom == lastRoom then return end
-        lastRoom = currentRoom
-        if tonumber(currentRoom) == 1300 then
-            ConsoleLog("PORTA 100 DETECTADA! PARANDO O SALVAMENTO...")
+        local internalRoom = LatestRoom.Value
+        local currentRoom = internalRoom + 1
+        
+        if not currentRoom or internalRoom == lastRoom then return end
+        lastRoom = internalRoom
+        
+        if currentRoom == 1300 then
+            ConsoleLog("PORTA 1300 DETECTADA! PARANDO O SALVAMENTO...")
             _G.savingRooms = false 
 
             NotifyMsdoors(
@@ -107,9 +111,9 @@ Tab:AddToggle({
     Name = "Ativar Salvamento de Salas",
     Default = false,
     Callback = function(value)
-        if value and Players.LocalPlayer:GetAttribute("CurrentRoom") == 1300 then
-            ConsoleLog("TENTATIVA DE ATIVAR NA PORTA 100! O SALVAMENTO NÃO SERÁ INICIADO.")
-            NotifyMsdoors("Erro!", "Você já está na porta 100. O sistema não será ativado.")
+        if value and (LatestRoom.Value + 1) == 1300 then
+            ConsoleLog("TENTATIVA DE ATIVAR NA PORTA 1300! O SALVAMENTO NÃO SERÁ INICIADO.")
+            NotifyMsdoors("Erro!", "Você já está na porta 1300. O sistema não será ativado.")
             return
         end
 
@@ -142,16 +146,16 @@ Tab:AddToggle({
 })
 Tab:AddLabel("")
 Tab:AddButton({
-	Name = "Salvar Mapa no dispositivo atual[PORTA 1300]",
-	Callback = function(value)
-	if value and Players.LocalPlayer:GetAttribute("CurrentRoom") == 1300 then
-            ConsoleLog("TENTATIVA DE ATIVAR NA PORTA 100! O SALVAMENTO NÃO SERÁ INICIADO.")
-			Notify("Son", "Você já está na porta 100. O sistema não será ativado.", "#00FF34")
+    Name = "Salvar Mapa no dispositivo atual[PORTA 1300]",
+    Callback = function(value)
+        if value and (LatestRoom.Value + 1) == 1300 then
+            ConsoleLog("TENTATIVA DE ATIVAR NA PORTA 1300! O SALVAMENTO NÃO SERÁ INICIADO.")
+            Notify("Son", "Você já está na porta 1300. O sistema não será ativado.", "#00FF34")
             
-			else
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/SaveAll.lua"))()
-	end
-  	end    
+            else
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/SaveAll.lua"))()
+    end
+      end    
 })
 
 OrionLib:Init()
