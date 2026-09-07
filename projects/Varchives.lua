@@ -107,7 +107,7 @@ Tab:AddToggle({
     Name = "Ativar Salvamento de Salas",
     Default = false,
     Callback = function(value)
-        if value and Players.LocalPlayer:GetAttribute("CurrentRoom") == 100 then
+        if value and Players.LocalPlayer:GetAttribute("CurrentRoom") == 1300 then
             ConsoleLog("TENTATIVA DE ATIVAR NA PORTA 100! O SALVAMENTO NÃO SERÁ INICIADO.")
             NotifyMsdoors("Erro!", "Você já está na porta 100. O sistema não será ativado.")
             return
@@ -143,7 +143,14 @@ Tab:AddToggle({
 Tab:AddLabel("")
 Tab:AddButton({
 	Name = "Salvar Mapa no dispositivo atual[PORTA 1300]",
-	Callback = function()
+	Callback = function(value)
+	if value and Players.LocalPlayer:GetAttribute("CurrentRoom") == 1300 then
+            ConsoleLog("TENTATIVA DE ATIVAR NA PORTA 100! O SALVAMENTO NÃO SERÁ INICIADO.")
+			Notify("Son", "Você já está na porta 100. O sistema não será ativado.", "#00FF34")
+            
+			else
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/SaveAll.lua"))()
+	end
   	end    
 })
 
