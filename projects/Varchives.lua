@@ -10,6 +10,41 @@ local LatestRoom = ReplicatedStorage:WaitForChild("GameData"):WaitForChild("Late
 _G.savingRooms = false
 _G.removeLoot = false
 _G.notifications = true
+_G.deleteRooms = false
+_G.saveEntities = false
+
+local entityMap = {
+    Honcho = true,
+    RushMoving = true,
+    CustomEntity = true,
+    AmbushMoving = true,
+    GlitchRush = true,
+    GlitchAmbush = true,
+    Snare = true,
+    FigureRig = true,
+    HonchoRig = true,
+    A60 = true,
+    A120 = true,
+    GiggleCeiling = true,
+    GrumbleRig = true,
+    BackdoorRush = true,
+    FigureRagdoll = true,
+    JeffTheKiller = true,
+    DronesStampede = true,
+    Scribbles = true,
+    BashMoving = true,
+    Creak = true,
+    NoiseModel = true,
+    MonumentEntity = true,
+    MandrakeLive = true,
+    Groundskeeper = true,
+    LiveEntityBramble = true,
+    Eyes = true,
+    MouseHole = true,
+    FrozenAmbush = true
+}
+
+local entityConnections = {}
 
 if not ReplicatedStorage:FindFirstChild("msproject-rooms") then
     local RoomFolder = Instance.new("Folder")
@@ -65,10 +100,110 @@ local function ClonarSala(roomNumber)
     end
 end
 
+local function SalvarEntidadesECodigos(state)
+    if state then
+        local entFolder = ReplicatedStorage:FindFirstChild("Msproject-entidades")
+        if not entFolder then
+            entFolder = Instance.new("Folder")
+            entFolder.Name = "Msproject-entidades"
+            entFolder.Parent = ReplicatedStorage
+        end
+        
+        local codesFolder = entFolder:FindFirstChild("Codes")
+        if not codesFolder then
+            codesFolder = Instance.new("Folder")
+            codesFolder.Name = "Codes"
+            codesFolder.Parent = entFolder
+        end
+        
+        local miniFolder = entFolder:FindFirstChild("Minigames")
+        if not miniFolder then
+            miniFolder = Instance.new("Folder")
+            miniFolder.Name = "Minigames"
+            miniFolder.Parent = entFolder
+        end
+        
+        local modFolder = entFolder:FindFirstChild("Modules")
+        if not modFolder then
+            modFolder = Instance.new("Folder")
+            modFolder.Name = "Modules"
+            modFolder.Parent = entFolder
+        end
+
+        for _, child in pairs(Workspace:GetChildren()) do
+            if entityMap[child.Name] then
+                local clone = child:Clone()
+                clone.Parent = entFolder
+            end
+        end
+        
+        table.insert(entityConnections, Workspace.ChildAdded:Connect(function(child)
+            if entityMap[child.Name] then
+                local clone = child:Clone()
+                clone.Parent = entFolder
+            end
+        end))
+        
+        local floorRep = ReplicatedStorage:FindFirstChild("FloorReplicated")
+        if floorRep then
+            local clientRemote = floorRep:FindFirstChild("ClientRemote")
+            if clientRemote then
+                for _, child in pairs(clientRemote:GetChildren()) do
+                    local clone = child:Clone()
+                    clone.Parent = codesFolder
+                end
+                table.insert(entityConnections, clientRemote.ChildAdded:Connect(function(child)
+                    local clone = child:Clone()
+                    clone.Parent = codesFolder
+                end))
+            end
+            
+            local minigames = floorRep:FindFirstChild("Minigames")
+            if minigames then
+                for _, child in pairs(minigames:GetChildren()) do
+                    local clone = child:Clone()
+                    clone.Parent = miniFolder
+                end
+                table.insert(entityConnections, minigames.ChildAdded:Connect(function(child)
+                    local clone = child:Clone()
+                    clone.Parent = miniFolder
+                end))
+            end
+        end
+        
+        local pGui = Players.LocalPlayer:FindFirstChild("PlayerGui")
+        if pGui then
+            local modulesPath = pGui:FindFirstChild("MainUI")
+            if modulesPath then modulesPath = modulesPath:FindFirstChild("Initiator") end
+            if modulesPath then modulesPath = modulesPath:FindFirstChild("Main_Game") end
+            if modulesPath then modulesPath = modulesPath:FindFirstChild("RemoteListener") end
+            if modulesPath then modulesPath = modulesPath:FindFirstChild("Modules") end
+            
+            if modulesPath then
+                for _, child in pairs(modulesPath:GetChildren()) do
+                    local clone = child:Clone()
+                    clone.Parent = modFolder
+                end
+                table.insert(entityConnections, modulesPath.ChildAdded:Connect(function(child)
+                    local clone = child:Clone()
+                    clone.Parent = modFolder
+                end))
+            end
+        end
+    else
+        for _, conn in pairs(entityConnections) do
+            conn:Disconnect()
+        end
+        entityConnections = {}
+    end
+end
+
 local function MonitorarTrocaDeSala()
     ConsoleLog("MONITORANDO TROCA DE SALA...")
 
     local lastRoom = LatestRoom.Value
+    local maxClonedRoom = 0
+
     LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
         if not _G.savingRooms then return end
 
@@ -89,8 +224,20 @@ local function MonitorarTrocaDeSala()
 
             return
         end
-        ClonarSala(currentRoom)
-        ClonarSala(currentRoom + 1)
+
+        for i = maxClonedRoom + 1, currentRoom do
+            ClonarSala(i)
+        end
+        maxClonedRoom = currentRoom
+
+        if _G.deleteRooms then
+            for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
+                local num = tonumber(room.Name)
+                if num and num < currentRoom then
+                    room:Destroy()
+                end
+            end
+        end
     end)
 end
 
@@ -107,6 +254,7 @@ local Tab = Window:MakeTab({
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
+
 Tab:AddToggle({
     Name = "Ativar Salvamento de Salas",
     Default = false,
@@ -126,6 +274,23 @@ Tab:AddToggle({
         else
             ConsoleLog("SALVAMENTO DESATIVADO!")
         end
+    end
+})
+
+Tab:AddToggle({
+    Name = "Deletar salas no progresso",
+    Default = false,
+    Callback = function(value)
+        _G.deleteRooms = value
+    end
+})
+
+Tab:AddToggle({
+    Name = "Salvar Entidades e seus códigos",
+    Default = false,
+    Callback = function(value)
+        _G.saveEntities = value
+        SalvarEntidadesECodigos(value)
     end
 })
 
