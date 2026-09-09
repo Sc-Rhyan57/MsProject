@@ -198,15 +198,10 @@ local function SalvarEntidadesECodigos(state)
     end
 end
 
-local function CleanRooms()
-    if not _G.deleteRooms then return end
-    
-    local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom")
-    if not playerRoom then return end
-
+local function DeletarSalasAnteriores(limite)
     for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
         local num = tonumber(room.Name)
-        if num and num < playerRoom then
+        if num and num < limite then
             if salasClonadas[num] or ReplicatedStorage["msproject-rooms"]:FindFirstChild(tostring(num)) then
                 room:Destroy()
             end
@@ -246,11 +241,25 @@ local function MonitorarTrocaDeSala()
         end
         maxClonedRoom = currentRoom
 
-        CleanRooms()
+        if _G.deleteRooms then
+            local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom")
+            if playerRoom then
+                DeletarSalasAnteriores(playerRoom)
+            end
+        else
+            if currentRoom % 5 == 0 then
+                DeletarSalasAnteriores(currentRoom)
+            end
+        end
     end)
 
     Players.LocalPlayer:GetAttributeChangedSignal("CurrentRoom"):Connect(function()
-        CleanRooms()
+        if _G.deleteRooms then
+            local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom")
+            if playerRoom then
+                DeletarSalasAnteriores(playerRoom)
+            end
+        end
     end)
 end
 
@@ -295,7 +304,12 @@ Tab:AddToggle({
     Default = false,
     Callback = function(value)
         _G.deleteRooms = value
-        CleanRooms()
+        if _G.deleteRooms then
+            local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom")
+            if playerRoom then
+                DeletarSalasAnteriores(playerRoom)
+            end
+        end
     end
 })
 
@@ -326,15 +340,15 @@ Tab:AddToggle({
 Tab:AddLabel("")
 Tab:AddButton({
     Name = "Salvar Mapa no dispositivo atual[PORTA 1300]",
-    Callback = function(value)
-        if value and (LatestRoom.Value + 1) == 1300 then
-            ConsoleLog("TENTATIVA DE ATIVAR NA PORTA 1300! O SALVAMENTO NÃO SERÁ INICIADO.")
-            Notify("Son", "Você já está na porta 1300. O sistema não será ativado.", "#00FF34")
-            
-            else
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/SaveAll.lua"))()
+    Callback = function()
+        if (LatestRoom.Value + 1) ~= 1300 then
+            ConsoleLog("TENTATIVA DE SALVAR MAPA FORA DA PORTA 1300!")
+            Notify("Erro", "Você precisa estar na porta 1300 para salvar o mapa.", "#FF0000")
+        else
+            ConsoleLog("SALVANDO MAPA NO DISPOSITIVO ATUAL...")
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/SaveAll.lua"))()
+        end
     end
-      end    
 })
 
 OrionLib:Init()
