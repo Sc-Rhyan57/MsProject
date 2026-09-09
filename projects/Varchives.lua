@@ -198,6 +198,22 @@ local function SalvarEntidadesECodigos(state)
     end
 end
 
+local function CleanRooms()
+    if not _G.deleteRooms then return end
+    
+    local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom")
+    if not playerRoom then return end
+
+    for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
+        local num = tonumber(room.Name)
+        if num and num < playerRoom then
+            if salasClonadas[num] or ReplicatedStorage["msproject-rooms"]:FindFirstChild(tostring(num)) then
+                room:Destroy()
+            end
+        end
+    end
+end
+
 local function MonitorarTrocaDeSala()
     ConsoleLog("MONITORANDO TROCA DE SALA...")
 
@@ -230,14 +246,11 @@ local function MonitorarTrocaDeSala()
         end
         maxClonedRoom = currentRoom
 
-        if _G.deleteRooms then
-            for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
-                local num = tonumber(room.Name)
-                if num and num < currentRoom then
-                    room:Destroy()
-                end
-            end
-        end
+        CleanRooms()
+    end)
+
+    Players.LocalPlayer:GetAttributeChangedSignal("CurrentRoom"):Connect(function()
+        CleanRooms()
     end)
 end
 
@@ -282,6 +295,7 @@ Tab:AddToggle({
     Default = false,
     Callback = function(value)
         _G.deleteRooms = value
+        CleanRooms()
     end
 })
 
