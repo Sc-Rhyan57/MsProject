@@ -214,6 +214,7 @@ local function MonitorarTrocaDeSala()
 
     local lastRoom = LatestRoom.Value
     local maxClonedRoom = 0
+    local lastPlayerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom") or 0
 
     LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
         if not _G.savingRooms then return end
@@ -248,10 +249,14 @@ local function MonitorarTrocaDeSala()
         end
         maxClonedRoom = currentRoom
 
+        local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom") or 0
+        
         if _G.deleteRooms then
-            local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom")
-            if playerRoom then
+            if playerRoom > lastPlayerRoom then
+                lastPlayerRoom = playerRoom
                 DeletarSalasAnteriores(playerRoom)
+            elseif currentRoom % 5 == 0 then
+                DeletarSalasAnteriores(currentRoom)
             end
         else
             if currentRoom % 5 == 0 then
@@ -262,8 +267,9 @@ local function MonitorarTrocaDeSala()
 
     Players.LocalPlayer:GetAttributeChangedSignal("CurrentRoom"):Connect(function()
         if _G.deleteRooms then
-            local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom")
-            if playerRoom then
+            local playerRoom = Players.LocalPlayer:GetAttribute("CurrentRoom") or 0
+            if playerRoom > lastPlayerRoom then
+                lastPlayerRoom = playerRoom
                 DeletarSalasAnteriores(playerRoom)
             end
         end
