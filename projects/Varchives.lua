@@ -199,9 +199,10 @@ local function SalvarEntidadesECodigos(state)
 end
 
 local function DeletarSalasAnteriores(limite)
+    local limiteSeguro = limite - 1
     for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
         local num = tonumber(room.Name)
-        if num and num < limite then
+        if num and num < limiteSeguro then
             if salasClonadas[num] or ReplicatedStorage["msproject-rooms"]:FindFirstChild(tostring(num)) then
                 room:Destroy()
             end
@@ -236,7 +237,7 @@ local function MonitorarTrocaDeSala()
 
             for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
                 local num = tonumber(room.Name)
-                if num and num < 1300 then
+                if num and num < 1299 then
                     room:Destroy()
                 end
             end
