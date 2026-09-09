@@ -233,6 +233,13 @@ local function MonitorarTrocaDeSala()
                 "O sistema de salvamento foi desativado automaticamente."
             )
 
+            for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
+                local num = tonumber(room.Name)
+                if num and num < 1300 then
+                    room:Destroy()
+                end
+            end
+
             return
         end
 
