@@ -355,13 +355,8 @@ Tab:AddLabel("")
 Tab:AddButton({
     Name = "Salvar Mapa no dispositivo atual[PORTA 1300]",
     Callback = function()
-        if (LatestRoom.Value + 1) ~= 1300 then
-            ConsoleLog("TENTATIVA DE SALVAR MAPA FORA DA PORTA 1300!")
-            Notify("Erro", "Você precisa estar na porta 1300 para salvar o mapa.", "#FF0000")
-        else
             ConsoleLog("SALVANDO MAPA NO DISPOSITIVO ATUAL...")
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Sc-Rhyan57/MsProject/refs/heads/main/projects/SaveAll.lua"))()
-        end
     end
 })
 
