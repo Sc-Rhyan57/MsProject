@@ -136,8 +136,8 @@ local Core = {
     entities = {
         common = {"Eyes","Screech"},
         uncommon = {"Rush","Ambush","Glitch"},
-        rare = {"Figure","A-60","Blitz","A-90"},
-        legendary = {"A-120","Jeff The Killer","Lookman"},
+        rare = {"Figure","Bash","Blitz","A-90"},
+        legendary = {"Scribbles","Jeff The Killer","Lookman"},
     },
 
     specialEntities = {"A-90"},
