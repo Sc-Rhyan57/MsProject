@@ -52,3 +52,7 @@ end))
 
 
 now you need bypass Hook detection by yourself ;)
+
+
+"I know how to detect every single thing you did here."
+- I created a separate, closed-source UniversalSaveInstance, which of course bypasses even the kick detection (why Bro is tryning crash the client? LOL!).
